@@ -1,6 +1,6 @@
 package com.doding2
 
-import presntation.App
+import App
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

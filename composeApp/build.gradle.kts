@@ -1,4 +1,4 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinCocoapods)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -17,7 +18,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -42,10 +43,16 @@ kotlin {
     }
 
     sourceSets {
-        
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
+            // ktor client
+            implementation(libs.ktor.client.okhttp)
+
+            // koin
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -54,6 +61,27 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+            // ktor
+            implementation(libs.bundles.ktor)
+
+            // koin
+            api(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            // viewModel
+            implementation(libs.lifecycle.viewmodel)
+
+            // navigation
+            implementation(libs.navigation.compose)
+
+            // datetime
+            implementation(libs.datetime)
+        }
+        nativeMain.dependencies {
+            // ktor client
+            implementation(libs.ktor.client.darwin)
         }
     }
 }
