@@ -78,6 +78,9 @@ kotlin {
 
             // datetime
             implementation(libs.datetime)
+
+            // logger
+            api(libs.kermit.logger)
         }
         nativeMain.dependencies {
             // ktor client

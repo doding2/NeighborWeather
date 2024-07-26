@@ -6,14 +6,12 @@ import weather.data.dto.neighbor_weather.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
-import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 
-fun NeighborWeatherDto.toWeather(neighbors: List<Neighbor>): Weather {
+fun NeighborWeatherDto.toWeather(): Weather {
     return Weather(
         latitude = latitude,
         longitude = longitude,
-        neighbors = neighbors,
         current = current.run {
             CurrentWeather(
                 time = LocalDateTime.parse(time, LocalDateTime.Formats.ISO),

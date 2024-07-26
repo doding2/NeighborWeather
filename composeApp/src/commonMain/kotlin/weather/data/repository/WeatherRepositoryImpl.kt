@@ -32,7 +32,7 @@ class WeatherRepositoryImpl(
                             latitude = latitude,
                             longitude = longitude,
                             neighbor = neighbor
-                        ).map { it.toWeather(neighbors) }
+                        ).map { it.toWeather() }
                     } catch (e: Exception) {
                         if (e is CancellationException) throw e
                         e.printStackTrace()
