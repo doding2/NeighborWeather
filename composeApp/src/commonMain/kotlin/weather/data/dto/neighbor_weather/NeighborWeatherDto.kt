@@ -19,7 +19,7 @@ data class NeighborWeatherDto(
     @SerialName("timezone_abbreviation")
     val timezoneAbbreviation: String,
     @SerialName("elevation")
-    val elevation: Int,
+    val elevation: Double,
     @SerialName("current_units")
     val currentUnits: CurrentUnits,
     @SerialName("current")

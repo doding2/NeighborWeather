@@ -1,8 +1,9 @@
 package home.presentation
 
 import androidx.compose.runtime.Stable
+import weather.domain.model.Weather
 
 @Stable
 data class HomeState(
-    val text: String = ""
+    val weather: Weather? = null
 )

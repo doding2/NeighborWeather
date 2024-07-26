@@ -25,5 +25,5 @@ data class Daily(
     @SerialName("precipitation_sum")
     val precipitationSum: List<Double>,
     @SerialName("precipitation_hours")
-    val precipitationHours: List<Int>
+    val precipitationHours: List<Double>
 )

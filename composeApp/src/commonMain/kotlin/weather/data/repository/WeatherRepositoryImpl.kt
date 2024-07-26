@@ -3,6 +3,7 @@ package weather.data.repository
 import core.util.NetworkError
 import core.util.Result
 import core.util.map
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -23,16 +24,22 @@ class WeatherRepositoryImpl(
         longitude: Double
     ): Result<Weather, NetworkError> {
         return withContext(Dispatchers.IO) {
-            val result = listOf(Neighbor.Japan, Neighbor.China)
-                .map { neighbor ->
-                    async {
+            val neighbors = listOf(Neighbor.Japan, Neighbor.China)
+            val result = neighbors.map { neighbor ->
+                async {
+                    try {
                         weatherClient.getNeighborWeather(
                             latitude = latitude,
                             longitude = longitude,
                             neighbor = neighbor
-                        ).map { it.toWeather(neighbor) }
+                        ).map { it.toWeather(neighbors) }
+                    } catch (e: Exception) {
+                        if (e is CancellationException) throw e
+                        e.printStackTrace()
+                        Result.Error(NetworkError.UNKNOWN)
                     }
-                }.awaitAll()
+                }
+            }.awaitAll()
 
             result[0]
         }

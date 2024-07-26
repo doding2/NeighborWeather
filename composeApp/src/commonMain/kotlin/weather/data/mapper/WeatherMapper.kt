@@ -1,9 +1,7 @@
 package weather.data.mapper
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import weather.data.dto.neighbor_weather.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
@@ -11,16 +9,14 @@ import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 
-fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
+fun NeighborWeatherDto.toWeather(neighbors: List<Neighbor>): Weather {
     return Weather(
         latitude = latitude,
         longitude = longitude,
-        neighbor = neighbor,
+        neighbors = neighbors,
         current = current.run {
             CurrentWeather(
-                time = LocalDateTime.parse(time, LocalDateTime.Formats.ISO)
-                    .toInstant(TimeZone.of("Asia/Tokyo"))
-                    .toLocalDateTime(TimeZone.currentSystemDefault()),
+                time = LocalDateTime.parse(time, LocalDateTime.Formats.ISO),
                 temperature = temperature2m,
                 relativeHumidity = relativeHumidity2m,
                 apparentTemperature = apparentTemperature,
@@ -30,11 +26,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
         },
         hourly = hourly.run {
             HourlyWeather(
-                time = time.map {
-                    LocalDateTime.parse(it, LocalDateTime.Formats.ISO)
-                        .toInstant(TimeZone.of("Asia/Tokyo"))
-                        .toLocalDateTime(TimeZone.currentSystemDefault())
-                },
+                time = time.map { LocalDateTime.parse(it, LocalDateTime.Formats.ISO) },
                 temperature = temperature2m,
                 relativeHumidity = relativeHumidity2m,
                 apparentTemperature = apparentTemperature,
@@ -44,12 +36,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
         },
         daily = daily.run {
             DailyWeather(
-                time = time.map {
-                    LocalDateTime.parse(it, LocalDateTime.Formats.ISO)
-                        .toInstant(TimeZone.of("Asia/Tokyo"))
-                        .toLocalDateTime(TimeZone.currentSystemDefault())
-                        .date
-                },
+                time = time.map { LocalDate.parse(it, LocalDate.Formats.ISO) },
                 temperatureMean = temperature2mMax.zip(temperature2mMin) { max, min -> (max + min) / 2 },
                 apparentTemperatureMean = apparentTemperatureMax.zip(apparentTemperatureMin) { max, min -> (max + min) / 2 },
                 sunrise = sunrise.map { LocalDateTime.parse(it) },

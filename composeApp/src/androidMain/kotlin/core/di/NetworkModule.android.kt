@@ -14,11 +14,13 @@ actual val networkModule = module {
     single {
         HttpClient(get()) {
             install(Logging) {
-                level = LogLevel.BODY
+                level = LogLevel.ALL
             }
             install(ContentNegotiation) {
                 json(
                     json = Json {
+                        prettyPrint = true
+                        isLenient = true
                         ignoreUnknownKeys = true
                     }
                 )

@@ -1,11 +1,11 @@
 package home.presentation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 
@@ -18,10 +18,12 @@ fun HomeScreen(
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = state.text)
+        LazyColumn {
+            state.weather?.daily?.temperatureMean?.let { tem ->
+                items(tem) {
+                    Text(text = it.toString())
+                }
+            }
         }
     }
 }

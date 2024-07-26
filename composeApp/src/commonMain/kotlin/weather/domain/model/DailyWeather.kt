@@ -10,6 +10,6 @@ data class DailyWeather(
     val sunrise: List<LocalDateTime>,
     val sunset: List<LocalDateTime>,
     val precipitationSum: List<Double>,
-    val precipitationHours: List<Int>,
+    val precipitationHours: List<Double>,
     val weatherCode: List<Int>
 )

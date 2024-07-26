@@ -13,7 +13,7 @@ data class Current(
     @SerialName("temperature_2m")
     val temperature2m: Double,
     @SerialName("relative_humidity_2m")
-    val relativeHumidity2m: Int,
+    val relativeHumidity2m: Double,
     @SerialName("apparent_temperature")
     val apparentTemperature: Double,
     @SerialName("precipitation")
