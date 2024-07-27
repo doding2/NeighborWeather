@@ -9,4 +9,6 @@ data class CurrentWeather(
     val apparentTemperature: Double,
     val precipitation: Double,
     val weatherCode: Int,
+    val windSpeed: Double,
+    val windDirection: Int
 )

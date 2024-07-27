@@ -25,7 +25,7 @@ class HomeViewModel(
                     state = state.copy(weather = it)
                 }
                 .onError {
-                    println(it.name)
+                    println(it.toString())
                 }
         }
     }

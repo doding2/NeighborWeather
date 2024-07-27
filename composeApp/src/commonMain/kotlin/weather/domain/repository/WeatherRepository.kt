@@ -1,9 +1,9 @@
 package weather.domain.repository
 
-import core.util.NetworkError
+import core.util.Error
 import core.util.Result
 import weather.domain.model.Weather
 
 interface WeatherRepository {
-    suspend fun getWeather(latitude: Double, longitude: Double): Result<Weather, NetworkError>
+    suspend fun getWeather(latitude: Double, longitude: Double): Result<Weather, Error>
 }

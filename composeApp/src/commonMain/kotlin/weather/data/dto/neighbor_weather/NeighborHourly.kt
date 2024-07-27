@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Hourly(
+data class NeighborHourly(
     @SerialName("time")
     val time: List<String>,
     @SerialName("temperature_2m")
@@ -17,5 +17,9 @@ data class Hourly(
     @SerialName("precipitation")
     val precipitation: List<Double>,
     @SerialName("weather_code")
-    val weatherCode: List<Int>
+    val weatherCode: List<Int>,
+    @SerialName("wind_speed_10m")
+    val windSpeed10m: List<Double>,
+    @SerialName("wind_direction_10m")
+    val windDirection10m: List<Int>
 )

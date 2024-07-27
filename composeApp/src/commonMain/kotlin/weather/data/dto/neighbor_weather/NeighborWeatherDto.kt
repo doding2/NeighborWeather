@@ -21,15 +21,15 @@ data class NeighborWeatherDto(
     @SerialName("elevation")
     val elevation: Double,
     @SerialName("current_units")
-    val currentUnits: CurrentUnits,
+    val currentUnits: NeighborCurrentUnits,
     @SerialName("current")
-    val current: Current,
+    val current: NeighborCurrent,
     @SerialName("hourly_units")
-    val hourlyUnits: HourlyUnits,
+    val hourlyUnits: NeighborHourlyUnits,
     @SerialName("hourly")
-    val hourly: Hourly,
+    val hourly: NeighborHourly,
     @SerialName("daily_units")
-    val dailyUnits: DailyUnits,
+    val dailyUnits: NeighborDailyUnits,
     @SerialName("daily")
-    val daily: Daily
+    val daily: NeighborDaily
 )

@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DailyUnits(
+data class NeighborDailyUnits(
     @SerialName("time")
     val time: String,
     @SerialName("weather_code")
@@ -25,5 +25,9 @@ data class DailyUnits(
     @SerialName("precipitation_sum")
     val precipitationSum: String,
     @SerialName("precipitation_hours")
-    val precipitationHours: String
+    val precipitationHours: String,
+    @SerialName("wind_speed_10m_max")
+    val windSpeed10mMax: String,
+    @SerialName("wind_direction_10m_dominant")
+    val windDirection10mDominant: String
 )

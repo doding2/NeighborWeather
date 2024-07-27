@@ -1,6 +1,8 @@
 
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -9,6 +11,17 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.konfig)
+}
+
+val localProperties = Properties()
+localProperties.load(rootProject.file("local.properties").reader())
+
+buildkonfig {
+    packageName = "com.doding2.neighborweather"
+    defaultConfigs {
+        buildConfigField(STRING, "KOREA_WEATHER_SERVICE_KEY", localProperties.getProperty("korea_weather_service_key"))
+    }
 }
 
 kotlin {
@@ -81,6 +94,10 @@ kotlin {
 
             // logger
             api(libs.kermit.logger)
+
+            // ksoup
+            implementation(libs.ksoup)
+            implementation(libs.ksoup.entities)
         }
         nativeMain.dependencies {
             // ktor client

@@ -1,5 +1,7 @@
 package core.util
 
 enum class CommonError : Error {
-    IllegalArgument;
+    ILLEGAL_ARGUMENT,
+    NULL_POINTER,
+    UNKNOWN;
 }
