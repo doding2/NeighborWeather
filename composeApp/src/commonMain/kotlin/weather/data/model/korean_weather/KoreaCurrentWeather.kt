@@ -1,15 +1,13 @@
-package weather.domain.model
+package weather.data.model.korean_weather
 
 import kotlinx.datetime.LocalDateTime
 
-data class CurrentWeather(
+data class KoreaCurrentWeather(
     val time: LocalDateTime,
     val temperature: Double,
     val relativeHumidity: Double,
     val apparentTemperature: Double,
-    val precipitation: Double,
-    val precipitationProbability: Double,
-    val weatherCode: Int,
+    val weather: String,
     val windSpeed: Double,
-    val windDirection: Double
+    val windDirection: String
 )

@@ -19,8 +19,8 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn {
-            state.weather?.daily?.temperatureMean?.let { tem ->
-                items(tem) {
+            state.weather?.hourly?.temperature?.let { item ->
+                items(item) {
                     Text(text = it.toString())
                 }
             }

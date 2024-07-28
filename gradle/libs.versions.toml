@@ -22,7 +22,7 @@ lifecycleViewModel = "2.8.4"
 datetime = "0.6.0"
 kermit-logger = "2.0.4"
 konfig = "0.15.1"
-ksoup = "0.4.0"
+ksoup = "0.1.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -52,8 +52,7 @@ lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", versi
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "datetime" }
 kermit-logger = { group = "co.touchlab", name = "kermit", version.ref = "kermit-logger" }
-ksoup = { group = "com.mohamedrejeb.ksoup", name = "ksoup-html", version.ref = "ksoup" }
-ksoup-entities = { group = "com.mohamedrejeb.ksoup", name = "ksoup-entities", version.ref = "ksoup" }
+ksoup = { group = "com.fleeksoft.ksoup", name = "ksoup", version.ref = "ksoup" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

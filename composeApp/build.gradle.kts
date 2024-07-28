@@ -1,5 +1,4 @@
 
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -20,7 +19,7 @@ localProperties.load(rootProject.file("local.properties").reader())
 buildkonfig {
     packageName = "com.doding2.neighborweather"
     defaultConfigs {
-        buildConfigField(STRING, "KOREA_WEATHER_SERVICE_KEY", localProperties.getProperty("korea_weather_service_key"))
+//        buildConfigField(STRING, "KOREA_WEATHER_SERVICE_KEY", localProperties.getProperty("korea_weather_service_key"))
     }
 }
 
@@ -44,8 +43,8 @@ kotlin {
     }
 
     cocoapods {
-        summary = "Some description for the Shared Module"
-        homepage = "Link to the Shared Module homepage"
+        summary = "Neighbor Weather App"
+        homepage = "https://github.com/doding2/NeighborWeather"
         version = "1.0"
         ios.deploymentTarget = "16.0"
         podfile = project.file("../iosApp/Podfile")
@@ -95,9 +94,8 @@ kotlin {
             // logger
             api(libs.kermit.logger)
 
-            // ksoup
+            // html parser
             implementation(libs.ksoup)
-            implementation(libs.ksoup.entities)
         }
         nativeMain.dependencies {
             // ktor client

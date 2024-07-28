@@ -5,5 +5,5 @@ import core.util.Result
 import weather.domain.model.Weather
 
 interface WeatherRepository {
-    suspend fun getWeather(latitude: Double, longitude: Double): Result<Weather, Error>
+    suspend fun getWeather(latitude: Double, longitude: Double, locationName: String): Result<Weather, Error>
 }

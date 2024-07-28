@@ -1,46 +1,81 @@
-//package weather.data.mapper
-//
-//import kotlinx.datetime.LocalDateTime
-//import kotlinx.datetime.format.FormatStringsInDatetimeFormats
-//import kotlinx.datetime.format.byUnicodePattern
-//import weather.data.dto.korean_weather.KoreaWeatherDto
-//import weather.domain.model.CurrentWeather
-//
-//@OptIn(FormatStringsInDatetimeFormats::class)
-//fun KoreaWeatherDto.toCurrentWeather(): CurrentWeather? {
-//    val time = LocalDateTime.parse(
-//        input = response.body.items.item.first().run { baseDate + baseTime },
-//        format = LocalDateTime.Format {
-//            byUnicodePattern("yyyyMMddHHmm")
-//        }
-//    )
-//
-//    val values = response.body.items.item.mapNotNull { item ->
-//        item.obsrValue?.let {  value ->
-//            item.category to value
-//        }
-//    }.toMap()
-//
-//    // SKY: 맑음(1), 구름많음(3), 흐림(4)
-//    // PTY: 없음(0), 비(1), 비/눈(2), 눈(3), 빗방울(5), 빗방울눈날림(6), 눈날림(7)
-//    // TODO: apparentTemperature, weatherCode 부분 수정 해야됨
-//
-//    val temperature = values["T1H"]?.toDoubleOrNull() ?: return null
-//    val relativeHumidity = values["REH"]?.toDoubleOrNull() ?: return null
-//    val apparentTemperature = temperature
-//    val precipitation = values["RN1"]?.toDoubleOrNull() ?: 0.0
-//    val weatherCode = values["PTY"]?.toIntOrNull() ?: return null
-//    val windSpeed = values["WSD"]?.toDoubleOrNull() ?: return null
-//    val windDirection = values["VEC"]?.toIntOrNull() ?: return null
-//
-//    return CurrentWeather(
-//        time = time,
-//        temperature = temperature,
-//        relativeHumidity = relativeHumidity,
-//        apparentTemperature = apparentTemperature,
-//        precipitation = precipitation,
-//        weatherCode = weatherCode,
-//        windSpeed = windSpeed,
-//        windDirection = windDirection
-//    )
-//}
+package weather.data.mapper
+
+import weather.data.model.korean_weather.KoreaWeather
+import weather.domain.model.CurrentWeather
+import weather.domain.model.DailyWeather
+import weather.domain.model.HourlyWeather
+import weather.domain.model.Neighbor
+import weather.domain.model.Weather
+import kotlin.math.max
+
+fun KoreaWeather.toWeather(): Weather {
+    val weatherMap = mapOf(
+        "맑음" to 0,
+        "비" to 1,
+        "구름많음" to 2,
+        "흐림" to 3,
+        "흐리고 한때 비" to 4,
+        "흐리고 비" to 4,
+        "구름많고 한때 비 곳" to 5,
+        "구름많고 한때 비" to 5,
+        "구름많고 비" to 5,
+    )
+    val unitDegree = 22.5
+    val windDirectionMap = mapOf(
+        "북" to 0,
+        "북북동" to 1,
+        "북동" to 2,
+        "동북동" to 3,
+        "동" to 4,
+        "동남동" to 5,
+        "남동" to 6,
+        "남남동" to 7,
+        "남" to 8,
+        "남남서" to 9,
+        "남서" to 10,
+        "서남서" to 11,
+        "서" to 12,
+        "서북서" to 13,
+        "북서" to 14,
+        "북북서" to 15
+    ).mapValues { it.value * unitDegree }
+    return Weather(
+        latitude = latitude,
+        longitude = longitude,
+        neighbor = Neighbor.Korea,
+        current = CurrentWeather(
+            time = current.time,
+            temperature = current.temperature,
+            relativeHumidity = current.relativeHumidity,
+            apparentTemperature = current.apparentTemperature,
+            precipitation = hourly.precipitation[0],
+            precipitationProbability = hourly.precipitationProbability[0],
+            weatherCode = weatherMap[current.weather] ?: 0,
+            windSpeed = current.windSpeed,
+            windDirection = windDirectionMap[current.windDirection] ?: windDirectionMap.values.first()
+        ),
+        hourly = HourlyWeather(
+            time = hourly.time,
+            temperature = hourly.temperature,
+            relativeHumidity = hourly.relativeHumidity,
+            precipitation = hourly.precipitation,
+            precipitationProbability = hourly.precipitationProbability,
+            weatherCode = hourly.weather.map { weatherMap[it] ?: 0 },
+            windSpeed = hourly.windSpeed,
+            windDirection = hourly.windDirection.map { windDirectionMap[it] ?: windDirectionMap.values.first() }
+        ),
+        daily = DailyWeather(
+            time = daily.time,
+            temperatureMax = daily.temperatureMax,
+            temperatureMin = daily.temperatureMin,
+            precipitationProbability = daily.precipitationProbabilityAM
+                .zip(daily.precipitationProbabilityPM, ::max),
+            weatherCode = daily.weatherAM.zip(daily.weatherPM) { am, pm ->
+                val amCode = weatherMap[am] ?: 0
+                val pmCode = weatherMap[pm] ?: 0
+                if (amCode > pmCode) amCode else pmCode
+            },
+
+        )
+    )
+}

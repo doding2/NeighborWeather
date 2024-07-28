@@ -19,7 +19,7 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch {
-            weatherRepository.getWeather(36.0, 127.0)
+            weatherRepository.getWeather(36.0, 127.0, "서울")
                 .onSuccess {
                     println(it.toString())
                     state = state.copy(weather = it)

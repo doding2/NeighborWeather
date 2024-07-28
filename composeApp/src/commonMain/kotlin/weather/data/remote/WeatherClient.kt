@@ -1,20 +1,28 @@
 package weather.data.remote
 
+import core.util.CommonError
+import core.util.Error
 import core.util.NetworkError
 import core.util.Result
 import core.util.toNetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 import io.ktor.util.network.UnresolvedAddressException
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.SerializationException
-import weather.data.dto.neighbor_weather.NeighborWeatherDto
+import weather.data.model.korean_weather.KoreaWeather
+import weather.data.model.neighbor_weather.NeighborWeatherDto
+import weather.data.util.NaverWeatherParser
 import weather.domain.model.Neighbor
 
 class WeatherClient(
     private val httpClient: HttpClient,
+    private val weatherParser: NaverWeatherParser
 ) {
     suspend fun getNeighborWeather(
         latitude: Double,
@@ -28,8 +36,8 @@ class WeatherClient(
                 parameter("latitude", latitude.toString())
                 parameter("longitude", longitude.toString())
                 parameter("current", "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m")
-                parameter("hourly", "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m")
-                parameter("daily", "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_direction_10m_dominant")
+                parameter("hourly", "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,precipitation_probability")
+                parameter("daily", "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_probability_max")
                 parameter("timezone", TimeZone.currentSystemDefault().toString())
                 parameter("past_days", "0")
                 parameter("forecast_days", "7")
@@ -49,48 +57,39 @@ class WeatherClient(
             }
         }
     }
+    suspend fun getKoreaWeather(
+        latitude: Double,
+        longitude: Double,
+        locationName: String
+    ): Result<KoreaWeather, Error> {
+        val url = "https://search.naver.com/search.naver?&query=${locationName.replace(" ", "+")}+날씨"
 
-//    suspend fun getKoreaCurrentWeather(
-//        latitude: Double,
-//        longitude: Double
-//    ): Result<KoreaWeatherDto, NetworkError> {
-//        val (nx, ny) = LocationGridConverter.convertToGrid(latitude, longitude)
-//        val now = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Seoul"))
-//        val baseDate = now.date.run { "$year${monthNumber.toString().padStart(2, '0')}${dayOfMonth.toString().padStart(2, '0')}" }
-//        val baseTime = now.time.run { "${hour.toString().padStart(2, '0')}00" }
-//
-//        // 초단기 실황 (current)
-//        // https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst
-//        // 초단기 예보
-//        // https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst
-//        // 단기 예보
-//        // https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst
-//
-//        val response = try {
-//            httpClient.get(
-//                urlString = "http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"
-//            ) {
-//                parameter("serviceKey", BuildKonfig.KOREA_WEATHER_SERVICE_KEY)
-//                parameter("pageNo", 1)
-//                parameter("numOfRows", 1000)
-//                parameter("dataType", "JSON")
-//                parameter("base_date", baseDate)
-//                parameter("base_time", baseTime)
-//                parameter("nx", nx)
-//                parameter("ny", ny)
-//            }
-//        } catch (e: UnresolvedAddressException) {
-//            return Result.Error(NetworkError.NO_INTERNET)
-//        } catch (e: SerializationException) {
-//            return Result.Error(NetworkError.SERIALIZATION)
-//        }
-//
-//        return response.status.value.let {
-//            if (it in 200..299) {
-//                Result.Success(response.body<KoreaWeatherDto>())
-//            } else {
-//                Result.Error(it.toNetworkError())
-//            }
-//        }
-//    }
+        val response = try {
+            httpClient.get(url) {
+                header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36")
+            }
+        } catch (e: UnresolvedAddressException) {
+            return Result.Error(NetworkError.NO_INTERNET)
+        } catch (e: SerializationException) {
+            return Result.Error(NetworkError.SERIALIZATION)
+        }
+
+        val html = response.status.value.let {
+            if (it in 200..299) {
+                response.bodyAsText()
+            } else {
+                return Result.Error(it.toNetworkError())
+            }
+        }
+
+        val weather = try {
+            weatherParser.parseWeather(latitude, longitude, html)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            e.printStackTrace()
+            return Result.Error(CommonError.PARSING_FAILED)
+        }
+
+        return Result.Success(weather)
+    }
 }

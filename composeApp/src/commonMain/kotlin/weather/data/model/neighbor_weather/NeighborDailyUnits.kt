@@ -1,4 +1,4 @@
-package weather.data.dto.neighbor_weather
+package weather.data.model.neighbor_weather
 
 
 import kotlinx.serialization.SerialName
@@ -26,6 +26,8 @@ data class NeighborDailyUnits(
     val precipitationSum: String,
     @SerialName("precipitation_hours")
     val precipitationHours: String,
+    @SerialName("precipitation_probability_max")
+    val precipitationProbabilityMax: String,
     @SerialName("wind_speed_10m_max")
     val windSpeed10mMax: String,
     @SerialName("wind_direction_10m_dominant")

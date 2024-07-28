@@ -1,4 +1,4 @@
-package weather.data.dto.neighbor_weather
+package weather.data.model.neighbor_weather
 
 
 import kotlinx.serialization.SerialName
@@ -16,6 +16,8 @@ data class NeighborHourly(
     val apparentTemperature: List<Double>,
     @SerialName("precipitation")
     val precipitation: List<Double>,
+    @SerialName("precipitation_probability")
+    val precipitationProbability: List<Double?>,
     @SerialName("weather_code")
     val weatherCode: List<Int>,
     @SerialName("wind_speed_10m")

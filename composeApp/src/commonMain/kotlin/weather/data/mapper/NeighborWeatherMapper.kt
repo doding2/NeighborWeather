@@ -2,7 +2,7 @@ package weather.data.mapper
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import weather.data.dto.neighbor_weather.NeighborWeatherDto
+import weather.data.model.neighbor_weather.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
@@ -21,9 +21,10 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 relativeHumidity = relativeHumidity2m,
                 apparentTemperature = apparentTemperature,
                 precipitation = precipitation,
+                precipitationProbability = hourly.precipitationProbability[0] ?: 0.0,
                 weatherCode = weatherCode,
                 windSpeed = windSpeed10m,
-                windDirection = windDirection10m
+                windDirection = windDirection10m.toDouble()
             )
         },
         hourly = hourly.run {
@@ -32,9 +33,10 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 temperature = temperature2m,
                 relativeHumidity = relativeHumidity2m,
                 precipitation = precipitation,
+                precipitationProbability = precipitationProbability.filterNotNull(),
                 weatherCode = weatherCode,
                 windSpeed = windSpeed10m,
-                windDirection = windDirection10m
+                windDirection = windDirection10m.map { it.toDouble() }
             )
         },
         daily = daily.run {
@@ -42,13 +44,14 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 time = time.map { LocalDate.parse(it, LocalDate.Formats.ISO) },
                 temperatureMax = temperature2mMax,
                 temperatureMin = temperature2mMin,
-                sunrise = sunrise.map { LocalDateTime.parse(it) },
-                sunset = sunset.map { LocalDateTime.parse(it) },
-                precipitationSum = precipitationSum,
-                precipitationHours = precipitationHours,
+                precipitationProbability = precipitationProbabilityMax.filterNotNull(),
+//                sunrise = sunrise.map { LocalDateTime.parse(it) },
+//                sunset = sunset.map { LocalDateTime.parse(it) },
+//                precipitationSum = precipitationSum,
+//                precipitationHours = precipitationHours,
                 weatherCode = weatherCode,
-                windSpeed = windSpeed10mMax,
-                windDirection = windDirection10mDominant
+//                windSpeed = windSpeed10mMax,
+//                windDirection = windDirection10mDominant.map { it.toDouble() }
             )
         }
     )
