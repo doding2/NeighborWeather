@@ -2,12 +2,13 @@ package weather.data.util
 
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.select.Elements
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import weather.data.model.korean_weather.KoreaCurrentWeather
 import weather.data.model.korean_weather.KoreaDailyWeather
@@ -15,13 +16,13 @@ import weather.data.model.korean_weather.KoreaHourlyWeather
 import weather.data.model.korean_weather.KoreaWeather
 
 class NaverWeatherParser {
-    fun parseWeather(latitude: Double, longitude: Double, html: String): KoreaWeather {
+    fun parseWeather(latitude: Double, longitude: Double, html: String, now: Instant): KoreaWeather {
         val content = Ksoup.parse(html)
             .select("section.sc_new.cs_weather_new._cs_weather")
 
-        val current = getCurrentWeather(content)
-        val hourly = getHourlyWeather(content)
-        val daily = getDailyWeather(content)
+        val current = getCurrentWeather(content, now)
+        val hourly = getHourlyWeather(content, now)
+        val daily = getDailyWeather(content, now)
 
         return KoreaWeather(
             latitude = latitude,
@@ -32,7 +33,7 @@ class NaverWeatherParser {
         )
     }
 
-    private fun getCurrentWeather(content: Elements): KoreaCurrentWeather {
+    private fun getCurrentWeather(content: Elements, now: Instant): KoreaCurrentWeather {
         val currentArea = content.select("div.api_subject_bx")
             .select("div.content_area")[0]
         val temperature = currentArea.select("div.temperature_text")
@@ -65,7 +66,7 @@ class NaverWeatherParser {
             .toDouble()
 
         return KoreaCurrentWeather(
-            time = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            time = now.toLocalDateTime(TimeZone.currentSystemDefault()),
             temperature = temperature,
             relativeHumidity = humidity,
             apparentTemperature = apparentTemperature,
@@ -75,7 +76,7 @@ class NaverWeatherParser {
         )
     }
 
-    private fun getHourlyWeather(content: Elements): KoreaHourlyWeather {
+    private fun getHourlyWeather(content: Elements, now: Instant): KoreaHourlyWeather {
         val hourlyArea = content.select("div.api_subject_bx")
             .select("div.content_area")[1]
             .select("div.hourly_forecast._tab_content")
@@ -95,7 +96,6 @@ class NaverWeatherParser {
             temperatureList.add(temperature)
         }
 
-        val now = Clock.System.now()
         var isTomorrow = false
         var isDayAfterTomorrow = false
         var isThreeDaysFromToday = false
@@ -182,11 +182,11 @@ class NaverWeatherParser {
         )
     }
 
-    private fun getDailyWeather(content: Elements): KoreaDailyWeather {
+    private fun getDailyWeather(content: Elements, now: Instant): KoreaDailyWeather {
         val dailyArea = content.select("div.api_subject_bx._weekly_weather_wrap")
             .select("ul.week_list > li")
 
-        val now = Clock.System.now().toLocalDateTime(TimeZone.of("Asia/Seoul"))
+        val koreaDatetime = now.toLocalDateTime(TimeZone.of("Asia/Seoul"))
         val dateList = mutableListOf<LocalDate>()
         val temperatureMaxList = mutableListOf<Double>()
         val temperatureMinList = mutableListOf<Double>()
@@ -198,7 +198,10 @@ class NaverWeatherParser {
             val date = it.select("div.cell_date > span.date_inner > span.date").text().trim().run {
                 val month = this.substringBefore('.').toInt()
                 val day = this.substringAfter('.').substringBefore('.').toInt()
-                LocalDate(now.year, month, day)
+                LocalDateTime(koreaDatetime.year, month, day, 0, 0, 0)
+                    .toInstant(TimeZone.of("Asia/Seoul"))
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
             }
             dateList.add(date)
 

@@ -10,6 +10,7 @@ import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 
 fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
+    val UNIT_WIND_SPEED = 3.6
     return Weather(
         latitude = latitude,
         longitude = longitude,
@@ -23,7 +24,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 precipitation = precipitation,
                 precipitationProbability = hourly.precipitationProbability[0] ?: 0.0,
                 weatherCode = weatherCode,
-                windSpeed = windSpeed10m,
+                windSpeed = windSpeed10m / UNIT_WIND_SPEED,
                 windDirection = windDirection10m.toDouble()
             )
         },
@@ -35,7 +36,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 precipitation = precipitation,
                 precipitationProbability = precipitationProbability.filterNotNull(),
                 weatherCode = weatherCode,
-                windSpeed = windSpeed10m,
+                windSpeed = windSpeed10m.map { it / UNIT_WIND_SPEED },
                 windDirection = windDirection10m.map { it.toDouble() }
             )
         },
@@ -45,13 +46,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 temperatureMax = temperature2mMax,
                 temperatureMin = temperature2mMin,
                 precipitationProbability = precipitationProbabilityMax.filterNotNull(),
-//                sunrise = sunrise.map { LocalDateTime.parse(it) },
-//                sunset = sunset.map { LocalDateTime.parse(it) },
-//                precipitationSum = precipitationSum,
-//                precipitationHours = precipitationHours,
                 weatherCode = weatherCode,
-//                windSpeed = windSpeed10mMax,
-//                windDirection = windDirection10mDominant.map { it.toDouble() }
             )
         }
     )

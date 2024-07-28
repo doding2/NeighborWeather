@@ -13,6 +13,8 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.SerializationException
 import weather.data.model.korean_weather.KoreaWeather
@@ -60,7 +62,8 @@ class WeatherClient(
     suspend fun getKoreaWeather(
         latitude: Double,
         longitude: Double,
-        locationName: String
+        locationName: String,
+        now: Instant = Clock.System.now()
     ): Result<KoreaWeather, Error> {
         val url = "https://search.naver.com/search.naver?&query=${locationName.replace(" ", "+")}+날씨"
 
@@ -83,11 +86,11 @@ class WeatherClient(
         }
 
         val weather = try {
-            weatherParser.parseWeather(latitude, longitude, html)
+            weatherParser.parseWeather(latitude, longitude, html, now)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             e.printStackTrace()
-            return Result.Error(CommonError.PARSING_FAILED)
+            return Result.Error(CommonError.HTML_PARSING_FAILED)
         }
 
         return Result.Success(weather)
