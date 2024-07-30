@@ -36,6 +36,20 @@ class NaverWeatherParser {
     private fun getCurrentWeather(content: Elements, now: Instant): KoreaCurrentWeather {
         val currentArea = content.select("div.api_subject_bx")
             .select("div.content_area")[0]
+        val koreaDatetime = now.toLocalDateTime(TimeZone.of("Asia/Seoul"))
+        val time = content.select("div.relate_info._related_info > dl.info > dd")
+            .textNodes()[0]
+            .text()
+            .let {
+                val datetime = it.substringAfter("예보").substringBefore(",").trim()
+                val month = datetime.substringBefore(".").toInt()
+                val day = datetime.substringAfter(".").substringBefore(".").toInt()
+                val hour = datetime.substringAfter(". ").substringBefore(":").toInt()
+                val minute = datetime.substringAfter(":").toInt()
+                LocalDateTime(koreaDatetime.year, month, day, hour, minute, 0)
+                    .toInstant(TimeZone.of("Asia/Seoul"))
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+            }
         val temperature = currentArea.select("div.temperature_text")
             .select("strong")
             .textNodes()[0]
@@ -66,7 +80,7 @@ class NaverWeatherParser {
             .toDouble()
 
         return KoreaCurrentWeather(
-            time = now.toLocalDateTime(TimeZone.currentSystemDefault()),
+            time = time,
             temperature = temperature,
             relativeHumidity = humidity,
             apparentTemperature = apparentTemperature,
@@ -128,9 +142,11 @@ class NaverWeatherParser {
                     now.plus(1, DateTimeUnit.DAY, TimeZone.of("Asia/Seoul"))
                 } else {
                     now
-                }).toLocalDateTime(TimeZone.currentSystemDefault())
+                }).toLocalDateTime(TimeZone.of("Asia/Seoul"))
 
                 LocalDateTime(datetime.year, datetime.monthNumber, datetime.dayOfMonth, hour, 0, 0)
+                    .toInstant(TimeZone.of("Asia/Seoul"))
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
             }
 
         val precipitationProbabilityList = mutableListOf<Double>()

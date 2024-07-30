@@ -11,14 +11,20 @@ import kotlin.math.max
 fun KoreaWeather.toWeather(): Weather {
     val weatherMap = mapOf(
         "맑음" to 0,
-        "비" to 1,
+        "비" to 65,
         "구름많음" to 2,
         "흐림" to 3,
-        "흐리고 한때 비" to 4,
-        "흐리고 비" to 4,
-        "구름많고 한때 비 곳" to 5,
-        "구름많고 한때 비" to 5,
-        "구름많고 비" to 5,
+        "흐리고 한때 비" to 61,
+        "흐리고 비" to 63,
+        "구름많고 한때 비 곳" to 61,
+        "구름많고 한때 비" to 61,
+        "구름많고 비" to 63,
+        "눈" to 75,
+        "흐리고 한때 눈" to 71,
+        "흐리고 눈" to 73,
+        "구름많고 한때 눈 곳" to 71,
+        "구름많고 한때 눈" to 71,
+        "구름많고 눈" to 73,
     )
     val unitDegree = 22.5
     val windDirectionMap = mapOf(

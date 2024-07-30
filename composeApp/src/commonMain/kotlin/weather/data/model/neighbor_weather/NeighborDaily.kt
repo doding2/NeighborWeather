@@ -27,7 +27,7 @@ data class NeighborDaily(
     @SerialName("precipitation_hours")
     val precipitationHours: List<Double>,
     @SerialName("precipitation_probability_max")
-    val precipitationProbabilityMax: List<Double?>,
+    val precipitationProbabilityMax: List<Double?> = emptyList(),
     @SerialName("wind_speed_10m_max")
     val windSpeed10mMax: List<Double>,
     @SerialName("wind_direction_10m_dominant")

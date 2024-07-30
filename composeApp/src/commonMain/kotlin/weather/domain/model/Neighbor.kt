@@ -8,9 +8,11 @@ sealed interface Neighbor {
     data object Canada: Neighbor
     data object Australia: Neighbor
     data object Germany: Neighbor
+    data object ALL: Neighbor
 
     fun toModelsString(): String {
         return when (this) {
+            is ALL -> "best_match"
             is Korea -> "best_match"
             is Japan -> "jma_seamless"
             is China -> "cma_grapes_global"

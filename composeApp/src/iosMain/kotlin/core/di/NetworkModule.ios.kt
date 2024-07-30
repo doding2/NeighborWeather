@@ -6,6 +6,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
@@ -15,7 +16,7 @@ actual val networkModule = module {
     single {
         HttpClient(get()) {
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.BODY
                 logger = object: Logger {
                     override fun log(message: String) {
                         co.touchlab.kermit.Logger.d(message, tag = "HttpCall")
@@ -24,6 +25,7 @@ actual val networkModule = module {
             }
             install(ContentNegotiation) {
                 json(
+                    contentType = ContentType.Any,
                     json = Json {
                         prettyPrint = true
                         isLenient = true

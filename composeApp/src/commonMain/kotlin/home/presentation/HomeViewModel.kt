@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import core.util.onError
 import core.util.onSuccess
 import kotlinx.coroutines.launch
+import weather.domain.model.Neighbor
 import weather.domain.repository.WeatherRepository
 
 class HomeViewModel(
@@ -19,14 +20,22 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch {
-            weatherRepository.getWeather(36.0, 127.0, "서울")
-                .onSuccess {
-                    println(it.toString())
-                    state = state.copy(weather = it)
-                }
-                .onError {
-                    println(it.toString())
-                }
+            weatherRepository.getWeather(
+                latitude = 36.0,
+                longitude = 127.0,
+                locationName = "서울",
+                targetToWeight = mapOf(
+                    Neighbor.Korea to 0.5,
+                    Neighbor.Japan to 0.2,
+                    Neighbor.China to 0.2,
+                    Neighbor.USA to 0.1
+                )
+            ).onSuccess {
+                state = state.copy(weather = it)
+            }
+            .onError {
+                println(it.toString())
+            }
         }
     }
 
