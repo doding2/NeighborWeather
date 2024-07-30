@@ -1,5 +1,6 @@
 package weather.data.repository
 
+import co.touchlab.kermit.Logger
 import core.util.CommonError
 import core.util.Error
 import core.util.Result
@@ -22,6 +23,8 @@ class WeatherRepositoryImpl(
     private val weatherClient: WeatherClient,
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
+
+    private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
     override suspend fun getWeather(
         latitude: Double, longitude: Double,
@@ -58,7 +61,7 @@ class WeatherRepositoryImpl(
                         }
                     } catch (e: Exception) {
                         if (e is CancellationException) throw e
-                        e.printStackTrace()
+                        logger.e(e.stackTraceToString())
                         Result.Error(CommonError.UNKNOWN)
                     }
                 }

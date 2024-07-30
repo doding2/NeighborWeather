@@ -2,13 +2,13 @@ package weather.data.util
 
 import core.util.Error
 import core.util.Result
+import core.util.roundToSecond
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 import kotlin.math.max
-import kotlin.math.round
 
 class WeatherWeightCalculator {
 
@@ -32,14 +32,14 @@ class WeatherWeightCalculator {
         val weightSum = targetToWeight.values.sum()
         val firstWeather = mutableTargetWeathers.removeFirstOrNull()
             ?: return Result.Error(WeatherCalculatorError.INDEX_OUT_OF_BOUNDS)
-        val firstWeight = round(targetToWeight[firstWeather.neighbor]!! / weightSum * 100) / 100
+        val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
         val initial = calculateWeight(
             weather = firstWeather,
             weight = firstWeight
         )
 
         val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
-            val weight = round(targetToWeight[weather.neighbor]!! / weightSum * 100) / 100
+            val weight = targetToWeight[weather.neighbor]!! / weightSum
             val weighted = calculateWeight(weather, weight)
 
             Weather(
@@ -52,7 +52,9 @@ class WeatherWeightCalculator {
             )
         }
 
-        return Result.Success(sum)
+        val rounded = sum.roundToSecond()
+
+        return Result.Success(rounded)
     }
 
     private fun List<Weather>.fillMissingValues(best: Weather): List<Weather> {
@@ -150,6 +152,37 @@ class WeatherWeightCalculator {
             temperatureMin = acc.temperatureMin.zip(add.temperatureMin) { a, b -> a + b },
             precipitationProbability = acc.precipitationProbability.zip(add.precipitationProbability) { a, b -> a + b },
             weatherCode = acc.weatherCode.zip(add.weatherCode) { a, b -> max(a, b) }
+        )
+    }
+
+    private fun Weather.roundToSecond(): Weather {
+        return this.copy(
+            latitude = latitude,
+            longitude = longitude,
+            neighbor = neighbor,
+            current = current.copy(
+                time = current.time,
+                temperature = roundToSecond(current.temperature),
+                relativeHumidity = roundToSecond(current.relativeHumidity),
+                apparentTemperature = roundToSecond(current.apparentTemperature),
+                precipitation = roundToSecond(current.precipitation),
+                precipitationProbability = roundToSecond(current.precipitationProbability),
+                windSpeed = roundToSecond(current.windSpeed),
+                windDirection = roundToSecond(current.windDirection)
+            ),
+            hourly = hourly.copy(
+                temperature = hourly.temperature.map { roundToSecond(it) },
+                relativeHumidity = hourly.relativeHumidity.map { roundToSecond(it) },
+                precipitation = hourly.precipitation.map { roundToSecond(it) },
+                precipitationProbability = hourly.precipitationProbability.map { roundToSecond(it) },
+                windSpeed = hourly.windSpeed.map { roundToSecond(it) },
+                windDirection = hourly.windDirection.map { roundToSecond(it) }
+            ),
+            daily = daily.copy(
+                temperatureMax = daily.temperatureMax.map { roundToSecond(it) },
+                temperatureMin = daily.temperatureMin.map { roundToSecond(it) },
+                precipitationProbability = daily.precipitationProbability.map { roundToSecond(it) },
+            )
         )
     }
 

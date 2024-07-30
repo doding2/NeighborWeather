@@ -1,5 +1,6 @@
 package weather.data.remote
 
+import co.touchlab.kermit.Logger
 import core.util.CommonError
 import core.util.Error
 import core.util.NetworkError
@@ -26,6 +27,8 @@ class WeatherClient(
     private val httpClient: HttpClient,
     private val weatherParser: NaverWeatherParser
 ) {
+    private val logger by lazy { Logger.withTag("WeatherClient") }
+
     suspend fun getNeighborWeather(
         latitude: Double,
         longitude: Double,
@@ -46,8 +49,10 @@ class WeatherClient(
                 parameter("models", neighbor.toModelsString())
             }
         } catch (e: UnresolvedAddressException) {
+            logger.e(e.stackTraceToString())
             return Result.Error(NetworkError.NO_INTERNET)
         } catch (e: SerializationException) {
+            logger.e(e.stackTraceToString())
             return Result.Error(NetworkError.SERIALIZATION)
         }
 
@@ -72,8 +77,10 @@ class WeatherClient(
                 header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.70 Safari/537.36")
             }
         } catch (e: UnresolvedAddressException) {
+            logger.e(e.stackTraceToString())
             return Result.Error(NetworkError.NO_INTERNET)
         } catch (e: SerializationException) {
+            logger.e(e.stackTraceToString())
             return Result.Error(NetworkError.SERIALIZATION)
         }
 
@@ -89,7 +96,7 @@ class WeatherClient(
             weatherParser.parseWeather(latitude, longitude, html, now)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-            e.printStackTrace()
+            logger.e(e.stackTraceToString())
             return Result.Error(CommonError.HTML_PARSING_FAILED)
         }
 
