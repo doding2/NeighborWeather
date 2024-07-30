@@ -31,5 +31,5 @@ data class NeighborDaily(
     @SerialName("wind_speed_10m_max")
     val windSpeed10mMax: List<Double> = emptyList(),
     @SerialName("wind_direction_10m_dominant")
-    val windDirection10mDominant: List<Int> = emptyList()
+    val windDirection10mDominant: List<Double> = emptyList()
 )

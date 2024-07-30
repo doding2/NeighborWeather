@@ -18,14 +18,14 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
         current = current.run {
             CurrentWeather(
                 time = LocalDateTime.parse(time, LocalDateTime.Formats.ISO),
-                temperature = temperature2m,
-                relativeHumidity = relativeHumidity2m,
-                apparentTemperature = apparentTemperature,
-                precipitation = precipitation,
+                temperature = temperature2m ?: hourly.temperature2m.getOrNull(0) ?: 0.0,
+                relativeHumidity = relativeHumidity2m ?: hourly.relativeHumidity2m.getOrNull(0) ?: 0.0,
+                apparentTemperature = apparentTemperature ?: hourly.apparentTemperature.getOrNull(0) ?: 0.0,
+                precipitation = precipitation ?: hourly.precipitation.getOrNull(0) ?: 0.0,
                 precipitationProbability = hourly.precipitationProbability[0] ?: 0.0,
                 weatherCode = weatherCode,
-                windSpeed = windSpeed10m / UNIT_WIND_SPEED,
-                windDirection = windDirection10m.toDouble()
+                windSpeed = (windSpeed10m ?: hourly.windSpeed10m.getOrNull(0) ?: 0.0) / UNIT_WIND_SPEED,
+                windDirection = windDirection10m ?: hourly.windDirection10m.getOrNull(0) ?: 0.0
             )
         },
         hourly = hourly.run {
@@ -37,7 +37,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 precipitationProbability = precipitationProbability.filterNotNull(),
                 weatherCode = weatherCode,
                 windSpeed = windSpeed10m.map { it / UNIT_WIND_SPEED },
-                windDirection = windDirection10m.map { it.toDouble() }
+                windDirection = windDirection10m
             )
         },
         daily = daily.run {
