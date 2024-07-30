@@ -20,8 +20,8 @@ fun HomeScreen(
     ) {
         LazyColumn {
             state.weather?.hourly?.temperature?.let { item ->
-                items(item) {
-                    Text(text = it.toString())
+                items(item.withIndex().toList(), key = { it.index }) {
+                    Text(text = it.value.toString())
                 }
             }
         }

@@ -67,6 +67,12 @@ class WeatherRepositoryImpl(
                 }
             }.awaitAll()
 
+            neighborResults.forEach {
+                if (it is Result.Error) {
+                    return@withContext it
+                }
+            }
+
             neighborResults
                 .mapNotNull { it.getDataOrNull() }
                 .let { weathers ->

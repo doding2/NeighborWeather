@@ -8,8 +8,6 @@ import kotlinx.serialization.Serializable
 data class NeighborCurrent(
     @SerialName("time")
     val time: String,
-    @SerialName("interval")
-    val interval: Int,
     @SerialName("temperature_2m")
     val temperature2m: Double,
     @SerialName("relative_humidity_2m")

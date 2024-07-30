@@ -25,12 +25,13 @@ actual val networkModule = module {
             }
             install(ContentNegotiation) {
                 json(
-                    contentType = ContentType.Any,
                     json = Json {
                         prettyPrint = true
                         isLenient = true
                         ignoreUnknownKeys = true
-                    }
+                        coerceInputValues = true
+                    },
+                    contentType = ContentType.Any
                 )
             }
         }
