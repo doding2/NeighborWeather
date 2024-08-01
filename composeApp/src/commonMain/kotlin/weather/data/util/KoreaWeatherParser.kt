@@ -1,7 +1,12 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.select.Elements
+import core.util.Error
+import core.util.Result
+import io.ktor.utils.io.charsets.MalformedInputException
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -15,22 +20,42 @@ import weather.data.model.korean_weather.KoreaDailyWeather
 import weather.data.model.korean_weather.KoreaHourlyWeather
 import weather.data.model.korean_weather.KoreaWeather
 
-class NaverWeatherParser {
-    fun parseWeather(latitude: Double, longitude: Double, html: String, now: Instant): KoreaWeather {
-        val content = Ksoup.parse(html)
-            .select("section.sc_new.cs_weather_new._cs_weather")
+class KoreaWeatherParser {
 
-        val current = getCurrentWeather(content, now)
-        val hourly = getHourlyWeather(content, now)
-        val daily = getDailyWeather(content, now)
+    private val logger by lazy { Logger.withTag("KoreaWeatherParser") }
 
-        return KoreaWeather(
-            latitude = latitude,
-            longitude = longitude,
-            current = current,
-            hourly = hourly,
-            daily = daily
-        )
+    fun parseWeather(
+        latitude: Double,
+        longitude: Double,
+        html: String,
+        now: Instant
+    ): Result<KoreaWeather, KoreaWeatherParserException> {
+        return try {
+            val doc = Ksoup.parse(html)
+            val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
+            val current = getCurrentWeather(content, now)
+            val hourly = getHourlyWeather(content, now)
+            val daily = getDailyWeather(content, now)
+
+            val weather = KoreaWeather(
+                latitude = latitude,
+                longitude = longitude,
+                current = current,
+                hourly = hourly,
+                daily = daily
+            )
+
+            Result.Success(
+                data = weather
+            )
+        } catch (e: MalformedInputException) {
+            logger.e(e.stackTraceToString())
+            Result.Error(KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION)
+        } catch (e: Throwable) {
+            logger.e(e.stackTraceToString())
+            if (e is CancellationException) throw e
+            Result.Error(KoreaWeatherParserException.HTML_PARSING_FAILED)
+        }
     }
 
     private fun getCurrentWeather(content: Elements, now: Instant): KoreaCurrentWeather {
@@ -60,28 +85,51 @@ class NaverWeatherParser {
             .text()
         val summaryList = currentArea.select("div.temperature_info")
             .select("div.sort")
-        val apparentTemperature = summaryList[0]
-            .select("dd.desc")
-            .text()
-            .dropLast(1)
-            .toDouble()
-        val humidity = summaryList[1]
-            .select("dd.desc")
-            .text()
-            .dropLast(1)
-            .toDouble()
-        val windDirection = summaryList[2]
-            .select("dt.term")
-            .text()
-        val windSpeed = summaryList[2]
-            .select("dd.desc")
-            .text()
-            .dropLast(3)
-            .toDouble()
+
+        var apparentTemperature = temperature
+        var precipitation = 0.0
+        var humidity = 0.0
+        var windDirection = "북풍"
+        var windSpeed = 0.0
+
+        summaryList.forEachIndexed { index, element ->
+            if (element.select("dt.term").text().trim().startsWith("체감")) {
+                apparentTemperature = element.select("dd.desc")
+                    .text()
+                    .trim()
+                    .dropLast(1)
+                    .toDouble()
+            }
+            else if (element.select("dt.term").text().trim().startsWith("강수")) {
+                precipitation = element.select("dd.desc")
+                    .text()
+                    .trim()
+                    .dropLast(2)
+                    .toDouble()
+            }
+            else if (element.select("dt.term").text().trim().startsWith("습도")) {
+                humidity = element.select("dd.desc")
+                    .text()
+                    .trim()
+                    .dropLast(1)
+                    .toDouble()
+            }
+            else if (index == summaryList.size - 1) {
+                windDirection = element.select("dt.term")
+                    .text()
+                    .trim()
+                windSpeed = element.select("dd.desc")
+                    .text()
+                    .trim()
+                    .dropLast(3)
+                    .toDouble()
+            }
+        }
 
         return KoreaCurrentWeather(
             time = time,
             temperature = temperature,
+            precipitation = precipitation,
             relativeHumidity = humidity,
             apparentTemperature = apparentTemperature,
             weather = weather,
@@ -252,5 +300,11 @@ class NaverWeatherParser {
             weatherAM = weatherAMList,
             weatherPM = weatherPMList
         )
+    }
+
+
+    enum class KoreaWeatherParserException: Error {
+        MALFORMED_INPUT_EXCEPTION,
+        HTML_PARSING_FAILED;
     }
 }

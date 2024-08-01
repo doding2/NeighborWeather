@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDateTime
 data class KoreaCurrentWeather(
     val time: LocalDateTime,
     val temperature: Double,
+    val precipitation: Double,
     val relativeHumidity: Double,
     val apparentTemperature: Double,
     val weather: String,

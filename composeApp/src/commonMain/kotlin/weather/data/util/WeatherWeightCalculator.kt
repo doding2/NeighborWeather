@@ -1,8 +1,10 @@
 package weather.data.util
 
+import core.util.CommonError
 import core.util.Error
 import core.util.Result
 import core.util.roundToSecond
+import kotlinx.coroutines.CancellationException
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
@@ -16,45 +18,50 @@ class WeatherWeightCalculator {
         weathers: List<Weather>,
         targetToWeight: Map<Neighbor, Double>
     ): Result<Weather, Error> {
-        val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
-            ?: return Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
-        val mutableTargetWeathers = weathers
-            .filter { it.neighbor in targetToWeight.keys }
-            .fillMissingValues(bestWeather)
-            .toMutableList()
+        try {
+            val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
+                ?: return Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
+            val mutableTargetWeathers = weathers
+                .filter { it.neighbor in targetToWeight.keys }
+                .fillMissingValues(bestWeather)
+                .toMutableList()
 
-        val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
-        val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
-        if (!isValidTarget) {
-            return Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
-        }
+            val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
+            val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
+            if (!isValidTarget) {
+                return Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
+            }
 
-        val weightSum = targetToWeight.values.sum()
-        val firstWeather = mutableTargetWeathers.removeFirstOrNull()
-            ?: return Result.Error(WeatherCalculatorError.INDEX_OUT_OF_BOUNDS)
-        val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
-        val initial = calculateWeight(
-            weather = firstWeather,
-            weight = firstWeight
-        )
-
-        val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
-            val weight = targetToWeight[weather.neighbor]!! / weightSum
-            val weighted = calculateWeight(weather, weight)
-
-            Weather(
-                latitude = acc.latitude,
-                longitude = acc.longitude,
-                neighbor = Neighbor.ALL,
-                current = accumulateCurrentWeather(acc.current, weighted.current),
-                hourly = accumulateHourlyWeather(acc.hourly, weighted.hourly),
-                daily = accumulateDailyWeather(acc.daily, weighted.daily)
+            val weightSum = targetToWeight.values.sum()
+            val firstWeather = mutableTargetWeathers.removeFirstOrNull()
+                ?: return Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
+            val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
+            val initial = calculateWeight(
+                weather = firstWeather,
+                weight = firstWeight
             )
+
+            val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
+                val weight = targetToWeight[weather.neighbor]!! / weightSum
+                val weighted = calculateWeight(weather, weight)
+
+                Weather(
+                    latitude = acc.latitude,
+                    longitude = acc.longitude,
+                    neighbor = Neighbor.ALL,
+                    current = accumulateCurrentWeather(acc.current, weighted.current),
+                    hourly = accumulateHourlyWeather(acc.hourly, weighted.hourly),
+                    daily = accumulateDailyWeather(acc.daily, weighted.daily)
+                )
+            }
+
+            return Result.Success(
+                data = sum.roundToSecond()
+            )
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            return Result.Error(WeatherCalculatorError.CALCULATION_FAILED)
         }
-
-        val rounded = sum.roundToSecond()
-
-        return Result.Success(rounded)
     }
 
     private fun List<Weather>.fillMissingValues(best: Weather): List<Weather> {
@@ -189,7 +196,7 @@ class WeatherWeightCalculator {
 
     enum class WeatherCalculatorError: Error {
         INVALID_TARGET_NEIGHBOR,
-        INDEX_OUT_OF_BOUNDS,
-        NO_BEST_WEATHER;
+        NO_BEST_WEATHER,
+        CALCULATION_FAILED;
     }
 }

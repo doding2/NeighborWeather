@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
 import core.util.onError
 import core.util.onSuccess
 import kotlinx.coroutines.launch
@@ -32,9 +33,11 @@ class HomeViewModel(
                 )
             ).onSuccess {
                 state = state.copy(weather = it)
+                Logger.d("weather: $it")
             }
             .onError {
-                println(it.toString())
+                state = state.copy(error = it)
+                Logger.e(it.toString())
             }
         }
     }

@@ -1,12 +1,8 @@
 package weather.data.repository
 
-import co.touchlab.kermit.Logger
-import core.util.CommonError
 import core.util.Error
 import core.util.Result
-import core.util.getDataOrNull
 import core.util.map
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -14,6 +10,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import weather.data.mapper.toWeather
 import weather.data.remote.WeatherClient
+import weather.data.util.KoreaWeatherParser.KoreaWeatherParserException
 import weather.data.util.WeatherWeightCalculator
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
@@ -24,63 +21,58 @@ class WeatherRepositoryImpl(
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
 
-    private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
-
     override suspend fun getWeather(
         latitude: Double, longitude: Double,
         locationName: String,
         targetToWeight: Map<Neighbor, Double>
     ): Result<Weather, Error> {
         return withContext(Dispatchers.IO) {
-            val neighbors = listOf(
-                Neighbor.Korea,
-                Neighbor.Japan,
-                Neighbor.China,
-                Neighbor.USA,
-                Neighbor.ALL
-            )
-            val neighborResults = neighbors.map { neighbor ->
+            val targetNeighbors = setOf(*targetToWeight.keys.toTypedArray(), Neighbor.ALL)
+            val weatherResults = targetNeighbors.map { neighbor ->
                 async {
-                    try {
-                        if (neighbor == Neighbor.Korea) {
-                            weatherClient.getKoreaWeather(
-                                latitude = latitude,
-                                longitude = longitude,
-                                locationName = locationName
-                            ).map {
-                                it.toWeather()
-                            }
-                        } else {
-                            weatherClient.getNeighborWeather(
-                                latitude = latitude,
-                                longitude = longitude,
-                                neighbor = neighbor
-                            ).map {
-                                it.toWeather(neighbor)
-                            }
+                    if (neighbor == Neighbor.Korea) {
+                        weatherClient.getKoreaWeather(
+                            latitude = latitude,
+                            longitude = longitude,
+                            locationName = locationName
+                        ).map {
+                            it.toWeather()
                         }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        logger.e(e.stackTraceToString())
-                        Result.Error(CommonError.UNKNOWN)
+                    } else {
+                        weatherClient.getNeighborWeather(
+                            latitude = latitude,
+                            longitude = longitude,
+                            neighbor = neighbor
+                        ).map {
+                            it.toWeather(neighbor)
+                        }
                     }
                 }
             }.awaitAll()
 
-            neighborResults.forEach {
-                if (it is Result.Error) {
-                    return@withContext it
+            // MalformedInputException is occurred in
+            // iOS internal charset encoding process randomly.
+            // We can't expect it, so this error is ignored until bug is fixed.
+            // Otherwise, unwrap the result data or return the error.
+            val weathers = weatherResults.mapNotNull {
+                when (it) {
+                    is Result.Success -> it.data
+                    is Result.Error -> {
+                        if (it.error == KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION) {
+                            null
+                        } else {
+                            return@withContext it
+                        }
+                    }
                 }
             }
+            val successNeighbors = weathers.map { it.neighbor }
+            val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
-            neighborResults
-                .mapNotNull { it.getDataOrNull() }
-                .let { weathers ->
-                    weightCalculator.calculateWeightedSum(
-                        weathers = weathers,
-                        targetToWeight = targetToWeight
-                    )
-                }
+            return@withContext weightCalculator.calculateWeightedSum(
+                weathers = weathers,
+                targetToWeight = successTargetToWeight
+            )
         }
     }
 

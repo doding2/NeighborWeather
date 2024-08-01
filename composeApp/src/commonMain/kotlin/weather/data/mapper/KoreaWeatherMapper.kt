@@ -28,22 +28,22 @@ fun KoreaWeather.toWeather(): Weather {
     )
     val unitDegree = 22.5
     val windDirectionMap = mapOf(
-        "북" to 0,
-        "북북동" to 1,
-        "북동" to 2,
-        "동북동" to 3,
-        "동" to 4,
-        "동남동" to 5,
-        "남동" to 6,
-        "남남동" to 7,
-        "남" to 8,
-        "남남서" to 9,
-        "남서" to 10,
-        "서남서" to 11,
-        "서" to 12,
-        "서북서" to 13,
-        "북서" to 14,
-        "북북서" to 15
+        "북풍" to 0,
+        "북북동풍" to 1,
+        "북동풍" to 2,
+        "동북동풍" to 3,
+        "동풍" to 4,
+        "동남동풍" to 5,
+        "남동풍" to 6,
+        "남남동풍" to 7,
+        "남풍" to 8,
+        "남남서풍" to 9,
+        "남서풍" to 10,
+        "서남서풍" to 11,
+        "서풍" to 12,
+        "서북서풍" to 13,
+        "북서풍" to 14,
+        "북북서풍" to 15
     ).mapValues { it.value * unitDegree }
     return Weather(
         latitude = latitude,
@@ -54,11 +54,14 @@ fun KoreaWeather.toWeather(): Weather {
             temperature = current.temperature,
             relativeHumidity = current.relativeHumidity,
             apparentTemperature = current.apparentTemperature,
-            precipitation = hourly.precipitation[0],
+            precipitation = current.precipitation,
             precipitationProbability = hourly.precipitationProbability[0],
             weatherCode = weatherMap[current.weather] ?: 0,
             windSpeed = current.windSpeed,
-            windDirection = windDirectionMap[current.windDirection] ?: windDirectionMap.values.first()
+            windDirection = windDirectionMap.let { map ->
+                map[current.windDirection]
+                    ?: map[hourly.windDirection.getOrElse(0) { map.keys.first() }]!!
+            }
         ),
         hourly = HourlyWeather(
             time = hourly.time,
