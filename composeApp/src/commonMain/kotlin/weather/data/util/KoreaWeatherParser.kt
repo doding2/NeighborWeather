@@ -7,6 +7,9 @@ import core.util.Error
 import core.util.Result
 import io.ktor.utils.io.charsets.MalformedInputException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -24,37 +27,39 @@ class KoreaWeatherParser {
 
     private val logger by lazy { Logger.withTag("KoreaWeatherParser") }
 
-    fun parseWeather(
+    suspend fun parseWeather(
         latitude: Double,
         longitude: Double,
         html: String,
         now: Instant
     ): Result<KoreaWeather, KoreaWeatherParserException> {
-        return try {
-            val doc = Ksoup.parse(html)
-            val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
-            val current = getCurrentWeather(content, now)
-            val hourly = getHourlyWeather(content, now)
-            val daily = getDailyWeather(content, now)
+        return withContext(Dispatchers.IO) {
+            try {
+                val doc = Ksoup.parse(html)
+                val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
+                val current = getCurrentWeather(content, now)
+                val hourly = getHourlyWeather(content, now)
+                val daily = getDailyWeather(content, now)
 
-            val weather = KoreaWeather(
-                latitude = latitude,
-                longitude = longitude,
-                current = current,
-                hourly = hourly,
-                daily = daily
-            )
+                val weather = KoreaWeather(
+                    latitude = latitude,
+                    longitude = longitude,
+                    current = current,
+                    hourly = hourly,
+                    daily = daily
+                )
 
-            Result.Success(
-                data = weather
-            )
-        } catch (e: MalformedInputException) {
-            logger.e(e.stackTraceToString())
-            Result.Error(KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION)
-        } catch (e: Throwable) {
-            logger.e(e.stackTraceToString())
-            if (e is CancellationException) throw e
-            Result.Error(KoreaWeatherParserException.HTML_PARSING_FAILED)
+                Result.Success(
+                    data = weather
+                )
+            } catch (e: MalformedInputException) {
+                logger.e(e.stackTraceToString())
+                Result.Error(KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION)
+            } catch (e: Throwable) {
+                logger.e(e.stackTraceToString())
+                if (e is CancellationException) throw e
+                Result.Error(KoreaWeatherParserException.HTML_PARSING_FAILED)
+            }
         }
     }
 

@@ -5,6 +5,9 @@ import core.util.Error
 import core.util.Result
 import core.util.roundToSecond
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
@@ -14,53 +17,55 @@ import kotlin.math.max
 
 class WeatherWeightCalculator {
 
-    fun calculateWeightedSum(
+    suspend fun calculateWeightedSum(
         weathers: List<Weather>,
         targetToWeight: Map<Neighbor, Double>
     ): Result<Weather, Error> {
-        try {
-            val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
-                ?: return Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
-            val mutableTargetWeathers = weathers
-                .filter { it.neighbor in targetToWeight.keys }
-                .fillMissingValues(bestWeather)
-                .toMutableList()
+        return withContext(Dispatchers.IO) {
+            try {
+                val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
+                    ?: return@withContext Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
+                val mutableTargetWeathers = weathers
+                    .filter { it.neighbor in targetToWeight.keys }
+                    .fillMissingValues(bestWeather)
+                    .toMutableList()
 
-            val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
-            val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
-            if (!isValidTarget) {
-                return Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
-            }
+                val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
+                val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
+                if (!isValidTarget) {
+                    return@withContext Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
+                }
 
-            val weightSum = targetToWeight.values.sum()
-            val firstWeather = mutableTargetWeathers.removeFirstOrNull()
-                ?: return Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
-            val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
-            val initial = calculateWeight(
-                weather = firstWeather,
-                weight = firstWeight
-            )
-
-            val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
-                val weight = targetToWeight[weather.neighbor]!! / weightSum
-                val weighted = calculateWeight(weather, weight)
-
-                Weather(
-                    latitude = acc.latitude,
-                    longitude = acc.longitude,
-                    neighbor = Neighbor.ALL,
-                    current = accumulateCurrentWeather(acc.current, weighted.current),
-                    hourly = accumulateHourlyWeather(acc.hourly, weighted.hourly),
-                    daily = accumulateDailyWeather(acc.daily, weighted.daily)
+                val weightSum = targetToWeight.values.sum()
+                val firstWeather = mutableTargetWeathers.removeFirstOrNull()
+                    ?: return@withContext Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
+                val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
+                val initial = calculateWeight(
+                    weather = firstWeather,
+                    weight = firstWeight
                 )
-            }
 
-            return Result.Success(
-                data = sum.roundToSecond()
-            )
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            return Result.Error(WeatherCalculatorError.CALCULATION_FAILED)
+                val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
+                    val weight = targetToWeight[weather.neighbor]!! / weightSum
+                    val weighted = calculateWeight(weather, weight)
+
+                    Weather(
+                        latitude = acc.latitude,
+                        longitude = acc.longitude,
+                        neighbor = Neighbor.ALL,
+                        current = accumulateCurrentWeather(acc.current, weighted.current),
+                        hourly = accumulateHourlyWeather(acc.hourly, weighted.hourly),
+                        daily = accumulateDailyWeather(acc.daily, weighted.daily)
+                    )
+                }
+
+                return@withContext Result.Success(
+                    data = sum.roundToSecond()
+                )
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                return@withContext Result.Error(WeatherCalculatorError.CALCULATION_FAILED)
+            }
         }
     }
 
