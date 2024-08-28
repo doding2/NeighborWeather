@@ -9,12 +9,12 @@ import org.koin.dsl.module
 import weather.data.local.WeatherDatabase
 
 actual val weatherDatabaseModule: Module = module {
-    single<WeatherDatabase> {
+    factory<WeatherDatabase> {
         val context: Context = getKoin().get()
         val dbFile = context.getDatabasePath("weather.db")
         Room.databaseBuilder<WeatherDatabase>(
             context = context.applicationContext,
-            name = dbFile.name
+            name = dbFile.absolutePath
         ).setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()

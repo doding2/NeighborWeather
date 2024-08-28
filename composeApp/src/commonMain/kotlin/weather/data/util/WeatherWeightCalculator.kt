@@ -31,13 +31,17 @@ class WeatherWeightCalculator {
                     .fillMissingValues(bestWeather)
                     .toMutableList()
 
+                // In iOS, if MALFORMED_INPUT_EXCEPTION is occurred,
+                // korean weather data may not be available.
+                // So this may block calculating process.
                 val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
-                val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
-                if (!isValidTarget) {
-                    return@withContext Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
-                }
+//                val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
+//                if (!isValidTarget) {
+//                    return@withContext Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
+//                }
 
-                val weightSum = targetToWeight.values.sum()
+//                val weightSum = targetToWeight.values.sum()
+                val weightSum = targetToWeight.filterKeys { it in targetNeighbors }.values.sum()
                 val firstWeather = mutableTargetWeathers.removeFirstOrNull()
                     ?: return@withContext Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
                 val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
@@ -49,7 +53,6 @@ class WeatherWeightCalculator {
                 val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
                     val weight = targetToWeight[weather.neighbor]!! / weightSum
                     val weighted = calculateWeight(weather, weight)
-
 
                     Weather(
                         latitude = acc.latitude,

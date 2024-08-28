@@ -16,6 +16,8 @@ class HomeViewModel(
     private val weatherRepository: WeatherRepository
 ): ViewModel() {
 
+    private val logger by lazy { Logger.withTag("HomeViewModel") }
+
     var state by mutableStateOf(HomeState())
         private set
 
@@ -31,14 +33,25 @@ class HomeViewModel(
                     Neighbor.China to 0.2,
                     Neighbor.USA to 0.1
                 )
-            ).onSuccess {
-                state = state.copy(weather = it)
-                Logger.d("weather: $it")
+            ).collect { result ->
+                result.onSuccess {
+                    state = state.copy(weather = it)
+                    logger.d {
+                        """
+                            [UI] ${it.neighbor}
+                                current: ${it.current.time}
+                                hourly: ${it.hourly.map { it.time }}
+                                daily: ${it.daily.map { it.time }}
+                        """.trimIndent()
+                    }
+                }
+                .onError {
+                    state = state.copy(error = it)
+                    logger.e("[error] $it")
+                }
             }
-            .onError {
-                state = state.copy(error = it)
-                Logger.e(it.toString())
-            }
+
+
         }
     }
 

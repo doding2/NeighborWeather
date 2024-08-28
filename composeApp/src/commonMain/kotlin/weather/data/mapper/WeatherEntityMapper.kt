@@ -18,7 +18,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
         latitude = latitude,
         longitude = longitude,
         neighbor = neighbor,
-        epochTime = current.time.toInstant(TimeZone.UTC).epochSeconds,
+        epochTime = current.time.toInstant(TimeZone.currentSystemDefault()) .epochSeconds,
         temperature = current.temperature,
         relativeHumidity = current.relativeHumidity,
         apparentTemperature = current.apparentTemperature,
@@ -33,7 +33,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
             latitude = latitude,
             longitude = longitude,
             neighbor = neighbor,
-            epochTime = it.time.toInstant(TimeZone.UTC).epochSeconds,
+            epochTime = it.time.toInstant(TimeZone.currentSystemDefault()).epochSeconds,
             temperature = it.temperature,
             relativeHumidity = it.relativeHumidity,
             precipitation = it.precipitation,
@@ -51,7 +51,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
             longitude = longitude,
             neighbor = neighbor,
             epochTime = LocalDateTime(it.time.year, it.time.monthNumber, it.time.dayOfMonth, 0, 0, 0)
-                .toInstant(TimeZone.UTC).epochSeconds,
+                .toInstant(TimeZone.currentSystemDefault()).epochSeconds,
             temperatureMax = it.temperatureMax,
             temperatureMin = it.temperatureMin,
             precipitationProbability =
@@ -70,7 +70,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
         neighbor = first.neighbor,
         current = CurrentWeather(
             time = Instant.fromEpochSeconds(first.epochTime)
-                .toLocalDateTime(TimeZone.UTC),
+                .toLocalDateTime(TimeZone.currentSystemDefault()),
             temperature = first.temperature,
             relativeHumidity = first.relativeHumidity,
             apparentTemperature = first.apparentTemperature,
@@ -83,7 +83,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
         hourly = second.map {
             HourlyWeather(
                 time = Instant.fromEpochSeconds(it.epochTime)
-                    .toLocalDateTime(TimeZone.UTC),
+                    .toLocalDateTime(TimeZone.currentSystemDefault()),
                 temperature = it.temperature,
                 relativeHumidity = it.relativeHumidity,
                 precipitation = it.precipitation,
@@ -96,7 +96,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
         daily = third.map {
             DailyWeather(
                 time = Instant.fromEpochSeconds(it.epochTime)
-                    .toLocalDateTime(TimeZone.UTC).date,
+                    .toLocalDateTime(TimeZone.currentSystemDefault()).date,
                 temperatureMax = it.temperatureMax,
                 temperatureMin = it.temperatureMin,
                 precipitationProbability = it.precipitationProbability ?: -1.0,
