@@ -2,7 +2,7 @@ package weather.data.mapper
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import weather.data.model.neighbor_weather.NeighborWeatherDto
+import weather.data.model.neighbor_weather_dto.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather

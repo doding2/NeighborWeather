@@ -1,4 +1,4 @@
-package weather.data.model.neighbor_weather
+package weather.data.remote.model.neighbor_weather
 
 
 import kotlinx.serialization.SerialName

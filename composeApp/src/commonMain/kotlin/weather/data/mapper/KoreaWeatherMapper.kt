@@ -1,6 +1,6 @@
 package weather.data.mapper
 
-import weather.data.model.korean_weather.KoreaWeather
+import weather.data.remote.model.korean_weather.KoreaWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
@@ -8,7 +8,7 @@ import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 import kotlin.math.max
 
-fun KoreaWeather.toWeather(): Weather {
+fun KoreaWeatherDto.toWeather(): Weather {
     val weatherMap = mapOf(
         "맑음" to 0,
         "비" to 65,

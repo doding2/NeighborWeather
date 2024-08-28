@@ -1,8 +1,8 @@
-package weather.data.model.korean_weather
+package weather.data.remote.model.korean_weather
 
 import kotlinx.datetime.LocalDateTime
 
-data class KoreaCurrentWeather(
+data class KoreaCurrentWeatherDto(
     val time: LocalDateTime,
     val temperature: Double,
     val precipitation: Double,

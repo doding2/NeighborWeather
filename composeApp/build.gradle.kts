@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.konfig)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 val localProperties = Properties()
@@ -24,6 +26,11 @@ buildkonfig {
 }
 
 kotlin {
+
+    sourceSets.commonMain {
+        kotlin.srcDir("build/generated/ksp/metadata")
+    }
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
@@ -45,7 +52,7 @@ kotlin {
     cocoapods {
         summary = "Neighbor Weather App"
         homepage = "https://github.com/doding2/NeighborWeather"
-        version = "1.0"
+        version = "1.0.0"
         ios.deploymentTarget = "16.0"
         podfile = project.file("../iosApp/Podfile")
         framework {
@@ -96,6 +103,10 @@ kotlin {
 
             // html parser
             implementation(libs.ksoup)
+
+            // room database
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
         }
         nativeMain.dependencies {
             // ktor client
@@ -117,7 +128,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
     }
     packaging {
         resources {
@@ -141,3 +152,20 @@ android {
     }
 }
 
+// define database schemas
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+// for recognizing ksp, add another dependencies block
+dependencies {
+    // add room annotation complier using ksp
+    add("kspCommonMainMetadata", libs.room.compiler)
+}
+
+// for  ksp
+tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
+    if (name != "kspCommonMainKotlinMetadata" ) {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+}

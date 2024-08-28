@@ -1,11 +1,11 @@
-package weather.data.model.neighbor_weather
+package weather.data.remote.model.neighbor_weather
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NeighborHourly(
+data class NeighborHourlyDto(
     @SerialName("time")
     val time: List<String> = emptyList(),
     @SerialName("temperature_2m")

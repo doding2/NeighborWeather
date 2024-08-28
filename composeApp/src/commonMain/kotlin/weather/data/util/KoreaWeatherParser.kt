@@ -18,10 +18,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import weather.data.model.korean_weather.KoreaCurrentWeather
-import weather.data.model.korean_weather.KoreaDailyWeather
-import weather.data.model.korean_weather.KoreaHourlyWeather
-import weather.data.model.korean_weather.KoreaWeather
+import weather.data.remote.model.korean_weather.KoreaCurrentWeatherDto
+import weather.data.remote.model.korean_weather.KoreaDailyWeatherDto
+import weather.data.remote.model.korean_weather.KoreaHourlyWeatherDto
+import weather.data.remote.model.korean_weather.KoreaWeatherDto
 
 class KoreaWeatherParser {
 
@@ -32,7 +32,7 @@ class KoreaWeatherParser {
         longitude: Double,
         html: String,
         now: Instant
-    ): Result<KoreaWeather, KoreaWeatherParserException> {
+    ): Result<KoreaWeatherDto, KoreaWeatherParserException> {
         return withContext(Dispatchers.IO) {
             try {
                 val doc = Ksoup.parse(html)
@@ -41,7 +41,7 @@ class KoreaWeatherParser {
                 val hourly = getHourlyWeather(content, now)
                 val daily = getDailyWeather(content, now)
 
-                val weather = KoreaWeather(
+                val weather = KoreaWeatherDto(
                     latitude = latitude,
                     longitude = longitude,
                     current = current,
@@ -63,7 +63,7 @@ class KoreaWeatherParser {
         }
     }
 
-    private fun getCurrentWeather(content: Elements, now: Instant): KoreaCurrentWeather {
+    private fun getCurrentWeather(content: Elements, now: Instant): KoreaCurrentWeatherDto {
         val currentArea = content.select("div.api_subject_bx")
             .select("div.content_area")[0]
         val koreaDatetime = now.toLocalDateTime(TimeZone.of("Asia/Seoul"))
@@ -131,7 +131,7 @@ class KoreaWeatherParser {
             }
         }
 
-        return KoreaCurrentWeather(
+        return KoreaCurrentWeatherDto(
             time = time,
             temperature = temperature,
             precipitation = precipitation,
@@ -143,7 +143,7 @@ class KoreaWeatherParser {
         )
     }
 
-    private fun getHourlyWeather(content: Elements, now: Instant): KoreaHourlyWeather {
+    private fun getHourlyWeather(content: Elements, now: Instant): KoreaHourlyWeatherDto {
         val hourlyArea = content.select("div.api_subject_bx")
             .select("div.content_area")[1]
             .select("div.hourly_forecast._tab_content")
@@ -239,7 +239,7 @@ class KoreaWeatherParser {
                 it.text().toDoubleOrNull() ?: 0.0
             }
 
-        return KoreaHourlyWeather(
+        return KoreaHourlyWeatherDto(
             time = timeList,
             temperature = temperatureList,
             relativeHumidity = humidityList,
@@ -251,7 +251,7 @@ class KoreaWeatherParser {
         )
     }
 
-    private fun getDailyWeather(content: Elements, now: Instant): KoreaDailyWeather {
+    private fun getDailyWeather(content: Elements, now: Instant): KoreaDailyWeatherDto {
         val dailyArea = content.select("div.api_subject_bx._weekly_weather_wrap")
             .select("ul.week_list > li")
 
@@ -296,7 +296,7 @@ class KoreaWeatherParser {
             temperatureMaxList.add(temperatureMax)
         }
 
-        return KoreaDailyWeather(
+        return KoreaDailyWeatherDto(
             time = dateList,
             temperatureMax = temperatureMaxList,
             temperatureMin = temperatureMinList,

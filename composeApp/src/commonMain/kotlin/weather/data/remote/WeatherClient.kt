@@ -17,8 +17,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.SerializationException
-import weather.data.model.korean_weather.KoreaWeather
-import weather.data.model.neighbor_weather.NeighborWeatherDto
+import weather.data.model.neighbor_weather_dto.NeighborWeatherDto
+import weather.data.remote.model.korean_weather.KoreaWeatherDto
 import weather.data.util.KoreaWeatherParser
 import weather.domain.model.Neighbor
 
@@ -80,7 +80,7 @@ class WeatherClient(
         longitude: Double,
         locationName: String,
         now: Instant = Clock.System.now()
-    ): Result<KoreaWeather, Error> {
+    ): Result<KoreaWeatherDto, Error> {
         val url = "https://search.naver.com/search.naver"
 
         val response = try {
