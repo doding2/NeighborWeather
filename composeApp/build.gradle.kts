@@ -159,7 +159,7 @@ room {
 
 // for recognizing ksp, add another dependencies block
 dependencies {
-    // add room annotation complier using ksp
+    // add room annotation compiler using ksp
     add("kspCommonMainMetadata", libs.room.compiler)
 }
 

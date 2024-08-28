@@ -64,7 +64,12 @@ class WeatherClient(
         return response.status.value.let {
             if (it in 200..299) {
                 try {
-                    Result.Success(response.body<NeighborWeatherDto>())
+                    Result.Success(
+                        response.body<NeighborWeatherDto>().copy(
+                            latitude = latitude,
+                            longitude = longitude,
+                        )
+                    )
                 } catch (e: Throwable) {
                     logger.e(e.stackTraceToString())
                     if (e is CancellationException) throw e

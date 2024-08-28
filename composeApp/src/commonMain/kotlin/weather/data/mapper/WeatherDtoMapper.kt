@@ -28,25 +28,25 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 windDirection = windDirection10m ?: hourly.windDirection10m.getOrNull(0) ?: 0.0
             )
         },
-        hourly = hourly.run {
+        hourly = List(hourly.time.size) { index ->
             HourlyWeather(
-                time = time.map { LocalDateTime.parse(it, LocalDateTime.Formats.ISO) },
-                temperature = temperature2m,
-                relativeHumidity = relativeHumidity2m,
-                precipitation = precipitation,
-                precipitationProbability = precipitationProbability.filterNotNull(),
-                weatherCode = weatherCode,
-                windSpeed = windSpeed10m.map { it / UNIT_WIND_SPEED },
-                windDirection = windDirection10m
+                time = hourly.time[index].let { LocalDateTime.parse(it, LocalDateTime.Formats.ISO) },
+                temperature = hourly.temperature2m[index],
+                relativeHumidity = hourly.relativeHumidity2m[index],
+                precipitation = hourly.precipitation[index],
+                precipitationProbability = hourly.precipitationProbability[index] ?: -1.0,
+                weatherCode = hourly.weatherCode[index],
+                windSpeed = hourly.windSpeed10m[index] / UNIT_WIND_SPEED,
+                windDirection = hourly.windDirection10m[index]
             )
         },
-        daily = daily.run {
+        daily = List(daily.time.size) { index ->
             DailyWeather(
-                time = time.map { LocalDate.parse(it, LocalDate.Formats.ISO) },
-                temperatureMax = temperature2mMax,
-                temperatureMin = temperature2mMin,
-                precipitationProbability = precipitationProbabilityMax.filterNotNull(),
-                weatherCode = weatherCode,
+                time = daily.time[index].let { LocalDate.parse(it, LocalDate.Formats.ISO) },
+                temperatureMax = daily.temperature2mMax[index],
+                temperatureMin = daily.temperature2mMin[index],
+                precipitationProbability = daily.precipitationProbabilityMax[index] ?: -1.0,
+                weatherCode = daily.weatherCode[index]
             )
         }
     )

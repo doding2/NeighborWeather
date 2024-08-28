@@ -63,28 +63,32 @@ fun KoreaWeatherDto.toWeather(): Weather {
                     ?: map[hourly.windDirection.getOrElse(0) { map.keys.first() }]!!
             }
         ),
-        hourly = HourlyWeather(
-            time = hourly.time,
-            temperature = hourly.temperature,
-            relativeHumidity = hourly.relativeHumidity,
-            precipitation = hourly.precipitation,
-            precipitationProbability = hourly.precipitationProbability,
-            weatherCode = hourly.weather.map { weatherMap[it] ?: 0 },
-            windSpeed = hourly.windSpeed,
-            windDirection = hourly.windDirection.map { windDirectionMap[it] ?: windDirectionMap.values.first() }
-        ),
-        daily = DailyWeather(
-            time = daily.time,
-            temperatureMax = daily.temperatureMax,
-            temperatureMin = daily.temperatureMin,
-            precipitationProbability = daily.precipitationProbabilityAM
-                .zip(daily.precipitationProbabilityPM, ::max),
-            weatherCode = daily.weatherAM.zip(daily.weatherPM) { am, pm ->
-                val amCode = weatherMap[am] ?: 0
-                val pmCode = weatherMap[pm] ?: 0
-                if (amCode > pmCode) amCode else pmCode
-            },
-
-        )
+        hourly = List(hourly.time.size) { index ->
+            HourlyWeather(
+                time = hourly.time[index],
+                temperature = hourly.temperature[index],
+                relativeHumidity = hourly.relativeHumidity[index],
+                precipitation = hourly.precipitation[index],
+                precipitationProbability = hourly.precipitationProbability[index],
+                weatherCode = weatherMap[hourly.weather[index]] ?: 0,
+                windSpeed = hourly.windSpeed[index],
+                windDirection = windDirectionMap[hourly.windDirection[index]] ?: windDirectionMap.values.first()
+            )
+        },
+        daily = List(daily.time.size) { index ->
+            DailyWeather(
+                time = daily.time[index],
+                temperatureMax = daily.temperatureMax[index],
+                temperatureMin = daily.temperatureMin[index],
+                precipitationProbability = max(
+                    daily.precipitationProbabilityAM[index],
+                    daily.precipitationProbabilityPM[index]
+                ),
+                weatherCode = max(
+                    weatherMap[daily.weatherAM[index]] ?: 0,
+                    weatherMap[daily.weatherPM[index]] ?: 0
+                )
+            )
+        }
     )
 }

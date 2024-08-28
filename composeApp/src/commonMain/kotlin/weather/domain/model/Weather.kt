@@ -5,6 +5,6 @@ data class Weather(
     val longitude: Double,
     val neighbor: Neighbor,
     val current: CurrentWeather,
-    val hourly: HourlyWeather,
-    val daily: DailyWeather
+    val hourly: List<HourlyWeather>,
+    val daily: List<DailyWeather>
 )

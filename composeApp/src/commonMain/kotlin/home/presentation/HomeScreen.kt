@@ -23,9 +23,9 @@ fun HomeScreen(
     ) {
         if (state.error == null) {
             LazyColumn {
-                state.weather?.hourly?.temperature?.let { item ->
-                    items(item.withIndex().toList(), key = { it.index }) {
-                        Text(text = it.value.toString())
+                state.weather?.hourly?.let { hourly ->
+                    items(hourly.withIndex().toList(), key = { it.index }) {
+                        Text(text = it.value.temperature.toString())
                     }
                 }
             }

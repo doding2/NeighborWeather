@@ -25,6 +25,7 @@ class WeatherWeightCalculator {
             try {
                 val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
                     ?: return@withContext Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
+
                 val mutableTargetWeathers = weathers
                     .filter { it.neighbor in targetToWeight.keys }
                     .fillMissingValues(bestWeather)
@@ -49,13 +50,18 @@ class WeatherWeightCalculator {
                     val weight = targetToWeight[weather.neighbor]!! / weightSum
                     val weighted = calculateWeight(weather, weight)
 
+
                     Weather(
                         latitude = acc.latitude,
                         longitude = acc.longitude,
                         neighbor = Neighbor.ALL,
                         current = accumulateCurrentWeather(acc.current, weighted.current),
-                        hourly = accumulateHourlyWeather(acc.hourly, weighted.hourly),
-                        daily = accumulateDailyWeather(acc.daily, weighted.daily)
+                        hourly =  acc.hourly.zip(weighted.hourly) { a, w ->
+                            accumulateHourlyWeather(a, w)
+                        },
+                        daily = acc.daily.zip(weighted.daily) { a, w ->
+                            accumulateDailyWeather(a, w)
+                        }
                     )
                 }
 
@@ -73,29 +79,32 @@ class WeatherWeightCalculator {
         return map { target ->
             target.copy(
                 current = target.current.copy(
-                    precipitationProbability = if (target.hourly.precipitationProbability.isEmpty()) {
+                    precipitationProbability = if (target.hourly.map { it.precipitationProbability }.isEmpty()) {
                         best.current.precipitationProbability
                     } else {
                         target.current.precipitationProbability
                     }
                 ),
-                hourly = HourlyWeather(
-                    time = target.hourly.time.ifEmpty { best.hourly.time },
-                    temperature = target.hourly.temperature.ifEmpty { best.hourly.temperature },
-                    relativeHumidity = target.hourly.relativeHumidity.ifEmpty { best.hourly.relativeHumidity },
-                    precipitation = target.hourly.precipitation.ifEmpty { best.hourly.precipitation },
-                    precipitationProbability = target.hourly.precipitationProbability.ifEmpty { best.hourly.precipitationProbability },
-                    weatherCode = target.hourly.weatherCode.ifEmpty { best.hourly.weatherCode },
-                    windSpeed = target.hourly.windSpeed.ifEmpty { best.hourly.windSpeed },
-                    windDirection = target.hourly.windDirection.ifEmpty { best.hourly.windDirection }
-                ),
-                daily = DailyWeather(
-                    time = target.daily.time.ifEmpty { best.daily.time },
-                    temperatureMax = target.daily.temperatureMax.ifEmpty { best.daily.temperatureMax },
-                    temperatureMin = target.daily.temperatureMin.ifEmpty { best.daily.temperatureMin },
-                    precipitationProbability = target.daily.precipitationProbability.ifEmpty { best.daily.precipitationProbability },
-                    weatherCode = target.daily.weatherCode.ifEmpty { best.daily.weatherCode }
-                )
+                hourly = target.hourly
+                    .mapIndexed { index, item ->
+                        item.copy(
+                            precipitationProbability = if (item.precipitationProbability == -1.0) {
+                                best.hourly.getOrNull(index)?.precipitationProbability ?: 0.0
+                            } else {
+                                item.precipitationProbability
+                            }
+                        )
+                    }.ifEmpty { best.hourly },
+                daily = target.daily
+                    .mapIndexed { index, item ->
+                        item.copy(
+                            precipitationProbability = if (item.precipitationProbability == -1.0) {
+                                best.daily.getOrNull(index)?.precipitationProbability ?: 0.0
+                            } else {
+                                item.precipitationProbability
+                            }
+                        )
+                    }.ifEmpty { best.daily }
             )
         }
     }
@@ -113,19 +122,23 @@ class WeatherWeightCalculator {
                     windSpeed = current.windSpeed * weight,
                     windDirection = current.windDirection * weight
                 ),
-                hourly = hourly.copy(
-                    temperature = hourly.temperature.map { it  * weight },
-                    relativeHumidity = hourly.relativeHumidity.map { it * weight },
-                    precipitation = hourly.precipitation.map { it * weight },
-                    precipitationProbability = hourly.precipitationProbability.map { it * weight },
-                    windSpeed = hourly.windSpeed.map { it * weight },
-                    windDirection = hourly.windDirection.map { it * weight }
-                ),
-                daily = daily.copy(
-                    temperatureMax = daily.temperatureMax.map { it * weight },
-                    temperatureMin = daily.temperatureMin.map { it * weight },
-                    precipitationProbability = daily.precipitationProbability.map { it * weight },
-                )
+                hourly = hourly.map {
+                    it.copy(
+                        temperature = it.temperature  * weight,
+                        relativeHumidity = it.relativeHumidity * weight,
+                        precipitation = it.precipitation * weight,
+                        precipitationProbability = it.precipitationProbability * weight,
+                        windSpeed = it.windSpeed * weight,
+                        windDirection = it.windDirection * weight
+                    )
+                },
+                daily = daily.map {
+                    it.copy(
+                        temperatureMax = it.temperatureMax * weight,
+                        temperatureMin = it.temperatureMin * weight,
+                        precipitationProbability = it.precipitationProbability * weight
+                    )
+                }
             )
         }
     }
@@ -146,24 +159,24 @@ class WeatherWeightCalculator {
 
     private fun accumulateHourlyWeather(acc: HourlyWeather, add: HourlyWeather): HourlyWeather {
         return HourlyWeather(
-            time = acc.time.zip(add.time) { a, b -> minOf(a, b) },
-            temperature = acc.temperature.zip(add.temperature) { a, b -> a + b },
-            relativeHumidity = acc.relativeHumidity.zip(add.relativeHumidity) { a, b -> a + b },
-            precipitation = acc.precipitation.zip(add.precipitation) { a, b -> a + b },
-            precipitationProbability = acc.precipitationProbability.zip(add.precipitationProbability) { a, b -> a + b },
-            weatherCode = acc.weatherCode.zip(add.weatherCode) { a, b -> max(a, b) },
-            windSpeed = acc.windSpeed.zip(add.windSpeed) { a, b -> a + b },
-            windDirection = acc.windDirection.zip(add.windDirection) { a, b -> a + b }
+            time = minOf(acc.time, add.time),
+            temperature = acc.temperature + add.temperature,
+            relativeHumidity = acc.relativeHumidity + add.relativeHumidity,
+            precipitation = acc.precipitation + add.precipitation,
+            precipitationProbability = acc.precipitationProbability + add.precipitationProbability,
+            weatherCode = max(acc.weatherCode, add.weatherCode) ,
+            windSpeed = acc.windSpeed + add.windSpeed,
+            windDirection = acc.windDirection + add.windDirection
         )
     }
 
     private fun accumulateDailyWeather(acc: DailyWeather, add: DailyWeather): DailyWeather {
         return DailyWeather(
-            time = acc.time.zip(add.time) { a, b -> minOf(a, b)},
-            temperatureMax = acc.temperatureMax.zip(add.temperatureMax) { a, b -> a + b },
-            temperatureMin = acc.temperatureMin.zip(add.temperatureMin) { a, b -> a + b },
-            precipitationProbability = acc.precipitationProbability.zip(add.precipitationProbability) { a, b -> a + b },
-            weatherCode = acc.weatherCode.zip(add.weatherCode) { a, b -> max(a, b) }
+            time = minOf(acc.time, add.time),
+            temperatureMax = acc.temperatureMax + add.temperatureMax,
+            temperatureMin = acc.temperatureMin + add.temperatureMin,
+            precipitationProbability = acc.precipitationProbability + add.precipitationProbability,
+            weatherCode = max(acc.weatherCode, add.weatherCode)
         )
     }
 
@@ -182,19 +195,23 @@ class WeatherWeightCalculator {
                 windSpeed = roundToSecond(current.windSpeed),
                 windDirection = roundToSecond(current.windDirection)
             ),
-            hourly = hourly.copy(
-                temperature = hourly.temperature.map { roundToSecond(it) },
-                relativeHumidity = hourly.relativeHumidity.map { roundToSecond(it) },
-                precipitation = hourly.precipitation.map { roundToSecond(it) },
-                precipitationProbability = hourly.precipitationProbability.map { roundToSecond(it) },
-                windSpeed = hourly.windSpeed.map { roundToSecond(it) },
-                windDirection = hourly.windDirection.map { roundToSecond(it) }
-            ),
-            daily = daily.copy(
-                temperatureMax = daily.temperatureMax.map { roundToSecond(it) },
-                temperatureMin = daily.temperatureMin.map { roundToSecond(it) },
-                precipitationProbability = daily.precipitationProbability.map { roundToSecond(it) },
-            )
+            hourly = hourly.map {
+                it.copy(
+                    temperature = roundToSecond(it.temperature),
+                    relativeHumidity = roundToSecond(it.relativeHumidity),
+                    precipitation = roundToSecond(it.precipitation),
+                    precipitationProbability = roundToSecond(it.precipitationProbability),
+                    windSpeed = roundToSecond(it.windSpeed),
+                    windDirection = roundToSecond(it.windDirection)
+                )
+            },
+            daily = daily.map {
+                it.copy(
+                    temperatureMax = roundToSecond(it.temperatureMax),
+                    temperatureMin = roundToSecond(it.temperatureMin),
+                    precipitationProbability = roundToSecond(it.precipitationProbability),
+                )
+            }
         )
     }
 

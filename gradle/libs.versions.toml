@@ -23,9 +23,9 @@ datetime = "0.6.0"
 kermit-logger = "2.0.4"
 konfig = "0.15.1"
 ksoup = "0.1.2"
-room = "2.7.0-alpha07"
-ksp = "2.0.10-1.0.24"
-sqlite = "2.5.0-alpha07"
+room = "2.7.0-alpha02"
+ksp = "2.0.0-1.0.21"
+sqlite = "2.5.0-SNAPSHOT"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

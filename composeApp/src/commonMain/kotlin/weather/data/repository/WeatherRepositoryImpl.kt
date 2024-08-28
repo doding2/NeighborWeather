@@ -8,6 +8,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.remote.WeatherClient
 import weather.data.util.KoreaWeatherParser.KoreaWeatherParserException
@@ -17,6 +18,7 @@ import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
 class WeatherRepositoryImpl(
+    private val weatherDatabase: WeatherDatabase,
     private val weatherClient: WeatherClient,
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
