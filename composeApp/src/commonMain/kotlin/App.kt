@@ -1,3 +1,4 @@
+
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -26,6 +27,7 @@ fun App() {
                     HomeScreen(
                         state = viewModel.state,
                         onEvent = viewModel::onEvent,
+                        effect = viewModel.effect,
                         navController = navController
                     )
                 }

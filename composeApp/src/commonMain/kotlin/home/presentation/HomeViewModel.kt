@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import core.util.onError
 import core.util.onSuccess
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import weather.domain.model.Neighbor
 import weather.domain.repository.WeatherRepository
@@ -20,6 +22,9 @@ class HomeViewModel(
 
     var state by mutableStateOf(HomeState())
         private set
+
+    private val _effect = Channel<HomeSideEffect>()
+    val effect = _effect.receiveAsFlow()
 
     init {
         viewModelScope.launch {
@@ -35,7 +40,6 @@ class HomeViewModel(
                 )
             ).collect { result ->
                 result.onSuccess {
-                    state = state.copy(weather = it)
                     logger.d {
                         """
                             [UI] ${it.neighbor}
@@ -44,18 +48,22 @@ class HomeViewModel(
                                 daily: ${it.daily.map { it.time }}
                         """.trimIndent()
                     }
+                    state = state.copy(weather = it)
+                    sendEffect(HomeSideEffect.ShowSnackbar("Update weather"))
                 }
                 .onError {
-                    state = state.copy(error = it)
                     logger.e("[error] $it")
+                    sendEffect(HomeSideEffect.ShowSnackbar(it.toString()))
                 }
             }
-
-
         }
     }
 
     fun onEvent(event: HomeEvent) {
 
+    }
+
+    private suspend fun sendEffect(effect: HomeSideEffect) {
+        _effect.send(effect)
     }
 }

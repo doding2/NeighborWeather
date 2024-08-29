@@ -18,8 +18,6 @@ import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
