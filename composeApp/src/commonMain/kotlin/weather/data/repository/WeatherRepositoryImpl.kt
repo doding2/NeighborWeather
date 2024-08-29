@@ -92,7 +92,6 @@ class WeatherRepositoryImpl(
                     )
                 }.collect(::send)
             }
-
         }
     }
 

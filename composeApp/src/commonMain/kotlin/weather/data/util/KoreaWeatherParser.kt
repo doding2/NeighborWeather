@@ -67,19 +67,33 @@ class KoreaWeatherParser {
         val currentArea = content.select("div.api_subject_bx")
             .select("div.content_area")[0]
         val koreaDatetime = now.toLocalDateTime(TimeZone.of("Asia/Seoul"))
-        val time = content.select("div.relate_info._related_info > dl.info > dd")
+        val time = content.select("div.notice_area._related_info._info_layer_wrap > div.layer_pop._select_panel > p.desc")
             .textNodes()[0]
             .text()
+            .trim()
             .let {
-                val datetime = it.substringAfter("예보").substringBefore(",").trim()
-                val month = datetime.substringBefore(".").toInt()
-                val day = datetime.substringAfter(".").substringBefore(".").toInt()
-                val hour = datetime.substringAfter(". ").substringBefore(":").toInt()
-                val minute = datetime.substringAfter(":").toInt()
+                val datetime = it.substringAfter("예보").substringBefore("업데이트").trim()
+                val month = datetime.substringBefore(".").trim().toInt()
+                val day = datetime.substringAfter(".").substringBefore(".").trim().toInt()
+                val hour = datetime.substringAfter(". ").substringBefore(":").trim().toInt()
+                val minute = datetime.substringAfter(":").trim().toInt()
                 LocalDateTime(koreaDatetime.year, month, day, hour, minute, 0)
                     .toInstant(TimeZone.of("Asia/Seoul"))
                     .toLocalDateTime(TimeZone.currentSystemDefault())
             }
+//        val time = content.select("div.relate_info._related_info > dl.info > dd")
+//            .textNodes()[0]
+//            .text()
+//            .let {
+//                val datetime = it.substringAfter("예보").substringBefore(",").trim()
+//                val month = datetime.substringBefore(".").toInt()
+//                val day = datetime.substringAfter(".").substringBefore(".").toInt()
+//                val hour = datetime.substringAfter(". ").substringBefore(":").toInt()
+//                val minute = datetime.substringAfter(":").toInt()
+//                LocalDateTime(koreaDatetime.year, month, day, hour, minute, 0)
+//                    .toInstant(TimeZone.of("Asia/Seoul"))
+//                    .toLocalDateTime(TimeZone.currentSystemDefault())
+//            }
         val temperature = currentArea.select("div.temperature_text")
             .select("strong")
             .textNodes()[0]
