@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import core.util.onError
 import core.util.onSuccess
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -26,8 +27,30 @@ class HomeViewModel(
     private val _effect = Channel<HomeSideEffect>()
     val effect = _effect.receiveAsFlow()
 
+    private var job: Job? = null
+
     init {
-        viewModelScope.launch {
+        updateWeather()
+    }
+
+    private suspend fun sendEffect(effect: HomeSideEffect) {
+        _effect.send(effect)
+    }
+
+    fun onEvent(event: HomeEvent) {
+
+    }
+
+    private fun updateWeather() {
+//        latitude = 42.0,
+//        longitude = 4.0,
+//        locationName = "파리",
+
+//        latitude = 36.0,
+//        longitude = 127.0,
+//        locationName = "서울",
+        job?.cancel()
+        job = viewModelScope.launch {
             weatherRepository.getWeathers(
                 latitude = 36.0,
                 longitude = 127.0,
@@ -39,32 +62,27 @@ class HomeViewModel(
                     Neighbor.USA to 0.1
                 )
             ).collect { result ->
-                result.onSuccess {
-                    logger.d {
-                        """
-                            [UI] ${it.neighbor}
-                                current: ${it.current.time}
-                                hourly: ${it.hourly.map { it.time }}
-                                daily: ${it.daily.map { it.time }}
-                        """.trimIndent()
-                    }
+                result
+                    .onSuccess {
+                        logger.d {
+                            """
+                                [UI] ${it.neighbor}
+                                    current: ${it.current.time}
+                                    hourly: ${it.hourly.map { it.time }}
+                                    daily: ${it.daily.map { it.time }}
+                            """.trimIndent()
+                        }
 
-                    state = state.copy(weather = it)
-                    sendEffect(HomeSideEffect.ShowSnackbar("Update weather"))
-                }
-                .onError {
-                    logger.e("[error] $it")
-                    sendEffect(HomeSideEffect.ShowSnackbar(it.toString()))
-                }
+                        state = state.copy(weather = it)
+//                        sendEffect(HomeSideEffect.ShowSnackbar("Update weather"))
+                    }
+                    .onError {
+                        logger.e("[error] $it")
+                        sendEffect(
+                            HomeSideEffect.ShowSnackbar(it.toString())
+                        )
+                    }
             }
         }
-    }
-
-    fun onEvent(event: HomeEvent) {
-
-    }
-
-    private suspend fun sendEffect(effect: HomeSideEffect) {
-        _effect.send(effect)
     }
 }

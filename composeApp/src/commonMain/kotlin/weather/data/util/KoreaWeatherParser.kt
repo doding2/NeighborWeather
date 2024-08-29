@@ -36,6 +36,13 @@ class KoreaWeatherParser {
         return withContext(Dispatchers.IO) {
             try {
                 val doc = Ksoup.parse(html)
+
+                val overseasContent = doc.select("section.sc_new.cs_weather_overseas._cs_weather_abroad")
+                val isOverseas = overseasContent.size > 0
+                if (isOverseas) {
+                    return@withContext Result.Error(KoreaWeatherParserException.NO_OVERSEAS_SUPPORT)
+                }
+
                 val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
                 val current = getCurrentWeather(content, now)
                 val hourly = getHourlyWeather(content, now)
@@ -314,8 +321,193 @@ class KoreaWeatherParser {
     }
 
 
+
+//    private fun getCurrentOverseasWeather(content: Elements, now: Instant): KoreaCurrentWeatherDto {
+//        val currentArea = content.select("div.api_subject_bx")
+//            .select("div.status_wrap._today_weather")
+//        val temperature = currentArea.select("div.temperature_text")
+//            .select("strong")
+//            .textNodes()[0]
+//            .text()
+//            .toDouble()
+//        val weather = currentArea.select("div.weather_main")
+//            .select("span.blind")
+//            .text()
+//        val apparentTemperature = currentArea.select("div.temperature_text")
+//            .select("p.summary > span.text > em")
+//            .text()
+//            .trim()
+//            .dropLast(1)
+//            .toDouble()
+//        val koreaDatetime = now.toLocalDateTime(TimeZone.of("Asia/Seoul"))
+//        val time = currentArea.select("div.temperature_info")
+//            .select("dl.summary_list")
+//            .firstOrNull()
+//            ?.select("dd.desc")
+//            ?.firstOrNull()
+//            ?.text()
+//            ?.trim()
+//            ?.runCatching {
+//                val datetime = this.trim()
+//                val month = datetime.substringBefore(".").toInt()
+//                val day = datetime.substringAfter(".").substringBefore(".").toInt()
+//                val hour = datetime.substringAfter(". ").substringBefore(":").toInt()
+//                val minute = datetime.substringAfter(":").toInt()
+//                LocalDateTime(koreaDatetime.year, month, day, hour, minute, 0)
+//                    .toInstant(TimeZone.of("Asia/Seoul"))
+//                    .toLocalDateTime(TimeZone.currentSystemDefault())
+//            }?.getOrNull()
+//            ?: koreaDatetime
+//                .toInstant(TimeZone.of("Asia/Seoul"))
+//                .toLocalDateTime(TimeZone.currentSystemDefault())
+//        val summaryList = currentArea.select("div.temperature_info")
+//            .select("dl.summary_list")[1]
+//            .children()
+//        val precipitation = summaryList.select("dd.desc")[0]
+//            .text()
+//            .trim()
+//            .dropWhile { it == 'm' }
+//            .toDoubleOrNull()
+//            ?: 0.0
+//        val humidity = summaryList.select("dd.desc")[1]
+//            .text()
+//            .trim()
+//            .dropWhile { it == '%' }
+//            .toDoubleOrNull() ?: 0.0
+//        val windDirection = summaryList.select("dt.term").lastOrNull()
+//            ?.text()
+//            ?.trim()
+//            ?.takeIf { it.isNotBlank() }
+//            ?: "북풍"
+//        val windSpeed = summaryList.select("dd.desc")[2]
+//            .text()
+//            .trim()
+//            .dropLast(3)
+//            .toDoubleOrNull()
+//            ?: 0.0
+//        return KoreaCurrentWeatherDto(
+//            time = now.toLocalDateTime(TimeZone.currentSystemDefault()),
+//            temperature = temperature,
+//            precipitation = precipitation,
+//            relativeHumidity = humidity,
+//            apparentTemperature = apparentTemperature,
+//            weather = weather,
+//            windSpeed = windSpeed,
+//            windDirection = windDirection
+//        )
+//    }
+
+//    private fun getHourlyOverseasWeather(content: Elements, now: Instant): KoreaHourlyWeatherDto {
+//        val hourlyArea = content.select("div.api_subject_bx")
+//            .select("div.forecast_wrap._tab_graph")
+//            .select("div.hourly_forecast")
+//
+//        val weatherArea = hourlyArea[0]
+//        val precipitationArea = hourlyArea[1]
+//        val windArea = hourlyArea[2]
+//        val humidityArea = hourlyArea[3]
+//
+//        val weatherList = mutableListOf<String>()
+//        val temperatureList = mutableListOf<Double>()
+//        weatherArea.select("div.graph_inner._hourly_weather > ul > li").forEach {
+//            val weather = it.select("dd.weather_box").text()
+//            weatherList.add(weather)
+//            val temperature = it.select("dd.degree_point > div.inner > div.point_box > span.num")
+//                .textNodes()[0].text().toDouble()
+//            temperatureList.add(temperature)
+//        }
+//
+//        var isTomorrow = false
+//        var isDayAfterTomorrow = false
+//        var isThreeDaysFromToday = false
+//        val timeList = mutableListOf<LocalDateTime>()
+//        precipitationArea
+//            .select("div.climate_box > div.time_wrap > ul > li")
+//            .mapTo(timeList) {
+//                val hourStr = it.text().trim()
+//                val hour = if (hourStr.endsWith("시")) {
+//                    hourStr.dropLast(1).toInt()
+//                } else {
+//                    0
+//                }
+//
+//                if (!isThreeDaysFromToday) {
+//                    isThreeDaysFromToday = hourStr.endsWith('.')
+//                }
+//                if (!isDayAfterTomorrow) {
+//                    isDayAfterTomorrow = hourStr == "모레"
+//                }
+//                if (!isTomorrow) {
+//                    isTomorrow = hourStr == "내일"
+//                }
+//
+//                val datetime = (if (isThreeDaysFromToday) {
+//                    now.plus(3, DateTimeUnit.DAY, TimeZone.of("Asia/Seoul"))
+//                } else if (isDayAfterTomorrow) {
+//                    now.plus(2, DateTimeUnit.DAY, TimeZone.of("Asia/Seoul"))
+//                } else if (isTomorrow) {
+//                    now.plus(1, DateTimeUnit.DAY, TimeZone.of("Asia/Seoul"))
+//                } else {
+//                    now
+//                }).toLocalDateTime(TimeZone.of("Asia/Seoul"))
+//
+//                LocalDateTime(datetime.year, datetime.monthNumber, datetime.dayOfMonth, hour, 0, 0)
+//                    .toInstant(TimeZone.of("Asia/Seoul"))
+//                    .toLocalDateTime(TimeZone.currentSystemDefault())
+//            }
+//
+//        val precipitationProbabilityList = mutableListOf<Double>()
+//        precipitationArea.select("div.climate_box > div.icon_wrap > ul > li")
+//            .mapTo(precipitationProbabilityList) {
+//                it.select("em.value").text()
+//                    .dropLast(1).toDoubleOrNull() ?: 0.0
+//            }
+//
+//        val precipitationList = mutableListOf<Double>()
+//        precipitationArea.select("div.climate_box > div.graph_wrap.rainfall > ul > li")
+//            .mapTo(precipitationList) {
+//                it.text().trim().let { text ->
+//                    if (text.firstOrNull()?.isDigit() == false) {
+//                        text.drop(1)
+//                    } else {
+//                        text
+//                    }
+//                }.toDoubleOrNull() ?: 0.0
+//            }
+//
+//        val windDirectionList = mutableListOf<String>()
+//        windArea.select("div.climate_box > div.icon_wrap > ul > li")
+//            .mapTo(windDirectionList) {
+//                it.text()
+//            }
+//
+//        val windSpeedList = mutableListOf<Double>()
+//        windArea.select("div.climate_box > div.graph_wrap > ul > li")
+//            .mapTo(windSpeedList) {
+//                it.text().toDoubleOrNull() ?: 0.0
+//            }
+//
+//        val humidityList = mutableListOf<Double>()
+//        humidityArea.select("div.climate_box > div.graph_wrap > ul > li")
+//            .mapTo(humidityList) {
+//                it.text().toDoubleOrNull() ?: 0.0
+//            }
+//
+//        return KoreaHourlyWeatherDto(
+//            time = timeList,
+//            temperature = temperatureList,
+//            relativeHumidity = humidityList,
+//            precipitation = precipitationList,
+//            precipitationProbability = precipitationProbabilityList,
+//            weather = weatherList,
+//            windSpeed = windSpeedList,
+//            windDirection = windDirectionList
+//        )
+//    }
+
     enum class KoreaWeatherParserException: Error {
         MALFORMED_INPUT_EXCEPTION,
+        NO_OVERSEAS_SUPPORT,
         HTML_PARSING_FAILED;
     }
 }

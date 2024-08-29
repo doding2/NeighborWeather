@@ -1,5 +1,7 @@
 package home.presentation
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,6 +37,7 @@ fun HomeScreen(
         val snackbarHostState = remember {
             SnackbarHostState()
         }
+        val snackbarInteractionSource = remember { MutableInteractionSource() }
         val scope = rememberCoroutineScope()
         ObserveEffectsOnLifecycle(
             flow = effect,
@@ -43,7 +46,9 @@ fun HomeScreen(
             scope.launch {
                 when (it) {
                     is HomeSideEffect.ShowSnackbar -> {
-                        snackbarHostState.currentSnackbarData?.dismiss()
+                        if (it.isImmediate) {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                        }
                         snackbarHostState.showSnackbar(it.message)
                     }
                 }
@@ -52,7 +57,14 @@ fun HomeScreen(
         Scaffold(
             snackbarHost = {
                 SnackbarHost(
-                    hostState = snackbarHostState
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .clickable(
+                            interactionSource = snackbarInteractionSource,
+                            indication = null
+                        ) {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                        }
                 )
             },
             modifier = Modifier.fillMaxSize()

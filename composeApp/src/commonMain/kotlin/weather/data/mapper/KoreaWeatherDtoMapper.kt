@@ -11,7 +11,14 @@ import kotlin.math.max
 fun KoreaWeatherDto.toWeather(): Weather {
     val weatherMap = mapOf(
         "맑음" to 0,
+        "대체로 화창" to 0,   // 아큐웨더 (overseas)
+        "일부 화창" to 0,   // 아큐웨더 (overseas)
+        "화창" to 0,   // 아큐웨더 (overseas)
+        "구름조금" to 0,
         "비" to 65,
+        "소나기" to 65,   // 아큐웨더 (overseas)
+        "번개뇌우" to 65,   // 아큐웨더 (overseas)
+        "일부 흐림/소나기" to 65,   // 아큐웨더 (overseas)
         "구름많음" to 2,
         "흐림" to 3,
         "흐리고 한때 비" to 61,
@@ -56,7 +63,10 @@ fun KoreaWeatherDto.toWeather(): Weather {
             apparentTemperature = current.apparentTemperature,
             precipitation = current.precipitation,
             precipitationProbability = hourly.precipitationProbability[0],
-            weatherCode = weatherMap[current.weather] ?: 0,
+            weatherCode = weatherMap[current.weather]
+                ?: weatherMap.entries.reversed()
+                    .firstOrNull { current.weather.contains(it.key) }?.value
+                ?: 0,
             windSpeed = current.windSpeed,
             windDirection = windDirectionMap.let { map ->
                 map[current.windDirection]
@@ -70,7 +80,10 @@ fun KoreaWeatherDto.toWeather(): Weather {
                 relativeHumidity = hourly.relativeHumidity[index],
                 precipitation = hourly.precipitation[index],
                 precipitationProbability = hourly.precipitationProbability[index],
-                weatherCode = weatherMap[hourly.weather[index]] ?: 0,
+                weatherCode = weatherMap[hourly.weather[index]]
+                    ?: weatherMap.entries.reversed()
+                        .firstOrNull { current.weather.contains(it.key) }?.value
+                    ?: 0,
                 windSpeed = hourly.windSpeed[index],
                 windDirection = windDirectionMap[hourly.windDirection[index]] ?: windDirectionMap.values.first()
             )
@@ -85,8 +98,14 @@ fun KoreaWeatherDto.toWeather(): Weather {
                     daily.precipitationProbabilityPM[index]
                 ),
                 weatherCode = max(
-                    weatherMap[daily.weatherAM[index]] ?: 0,
-                    weatherMap[daily.weatherPM[index]] ?: 0
+                    weatherMap[daily.weatherAM[index]]
+                        ?: weatherMap.entries.reversed()
+                            .firstOrNull { current.weather.contains(it.key) }?.value
+                        ?: 0,
+                    weatherMap[daily.weatherPM[index]]
+                        ?: weatherMap.entries.reversed()
+                            .firstOrNull { current.weather.contains(it.key) }?.value
+                        ?: 0
                 )
             )
         }

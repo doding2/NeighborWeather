@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -53,11 +53,28 @@ class WeatherRepositoryImpl(
                         targetNeighbors = targetNeighbors,
                     )
 
-                    val remoteWeathers = when (remoteWeatherResults) {
-                        is Result.Success -> remoteWeatherResults.data
-                        is Result.Error -> {
-                            send(Result.Error(remoteWeatherResults.error))
-                            return@launch
+                    val remoteWeathers = remoteWeatherResults.mapNotNull {
+                        when (it) {
+                            is Result.Success -> it.data
+                            is Result.Error -> {
+                                /*
+                                FIXME: MalformedInputException is occurred in
+                                 iOS internal charset encoding process randomly.
+                                 We can't expect it, so this error is ignored until bug is fixed.
+                                 Otherwise, unwrap the result data or return the error.
+                                 (MalformedInputException implement KoreaWeatherParserException)
+                                 */
+                                when (it.error) {
+                                    is KoreaWeatherParserException -> {
+                                        send(Result.Error(it.error))
+                                        null
+                                    }
+                                    else -> {
+                                        send(Result.Error(it.error))
+                                        return@launch
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -82,7 +99,18 @@ class WeatherRepositoryImpl(
                     it.toList()
                 }
                 .distinctUntilChanged()
-                .map { weathers ->
+                .mapNotNull { nullableWeathers ->
+                    val weathers = nullableWeathers.filterNotNull()
+
+                    /*
+                    When best matched weathers (all neighbor) is not exist,
+                    pass this flow iteration and wait for remote weather data.
+                     */
+                    if (weathers.isEmpty())
+                        return@mapNotNull null
+                    if (Neighbor.ALL !in weathers.map { it.neighbor })
+                        return@mapNotNull null
+
                     val successNeighbors = weathers.map { it.neighbor }
                     val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
@@ -100,7 +128,7 @@ class WeatherRepositoryImpl(
         longitude: Double,
         locationName: String,
         targetNeighbors: Set<Neighbor>,
-    ): Result<List<Weather>, Error> {
+    ): List<Result<Weather, Error>> {
         return withContext(Dispatchers.IO) {
             val weatherResults = targetNeighbors.map { neighbor ->
                 async {
@@ -124,25 +152,7 @@ class WeatherRepositoryImpl(
                 }
             }.awaitAll()
 
-            // MalformedInputException is occurred in
-            // iOS internal charset encoding process randomly.
-            // We can't expect it, so this error is ignored until bug is fixed.
-            // Otherwise, unwrap the result data or return the error.
-            val weathers = weatherResults.mapNotNull {
-                when (it) {
-                    is Result.Success -> it.data
-                    is Result.Error -> {
-                        if (it.error == KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION) {
-                            null
-                        } else {
-                            logger.e { "[error] ${it.error}" }
-                            return@withContext Result.Error(it.error)
-                        }
-                    }
-                }
-            }
-
-            return@withContext Result.Success(weathers)
+            return@withContext weatherResults
         }
     }
 
@@ -150,7 +160,7 @@ class WeatherRepositoryImpl(
         latitude: Double,
         longitude: Double,
         targetNeighbors: Set<Neighbor>
-    ): List<Flow<Weather>> {
+    ): List<Flow<Weather?>> {
         val now = Clock.System.now().epochSeconds
 
         val localWeatherListFlows = targetNeighbors.map { neighbor ->
@@ -158,30 +168,31 @@ class WeatherRepositoryImpl(
                 latitude = latitude,
                 longitude = longitude,
                 neighbor = neighbor.toString(),
-            ).filter { it.isNotEmpty() }
+            )
 
             val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(
                 latitude = latitude,
                 longitude = longitude,
                 neighbor = neighbor.toString(),
                 now = now
-            ).filter { it.isNotEmpty() }
+            )
 
             val dailyFlow = weatherDatabase.dailyWeatherDao.searchDailyWeatherListFlow(
                 latitude = latitude,
                 longitude = longitude,
                 neighbor = neighbor.toString(),
                 now = now
-            ).filter { it.isNotEmpty() }
+            )
 
             return@map combine(
                 currentFlow,
                 hourlyFlow,
                 dailyFlow
             ) { current, hourlyList, dailyList ->
-                Triple(current.last(), hourlyList, dailyList)
+                val lastCurrent = current.lastOrNull() ?: return@combine null
+                Triple(lastCurrent, hourlyList, dailyList)
             }.map {
-                it.toWeather()
+                it?.toWeather()
             }
         }
 

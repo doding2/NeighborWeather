@@ -18,6 +18,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.SerializationException
+import okio.IOException
 import weather.data.model.neighbor_weather_dto.NeighborWeatherDto
 import weather.data.remote.model.korean_weather.KoreaWeatherDto
 import weather.data.util.KoreaWeatherParser
@@ -54,6 +55,7 @@ class WeatherClient(
             logger.e(e.stackTraceToString())
             return when (e) {
                 is CancellationException -> throw e
+                is IOException,
                 is UnresolvedAddressException -> Result.Error(NetworkError.NO_INTERNET)
                 else -> Result.Error(NetworkError.UNKNOWN)
             }
@@ -101,6 +103,7 @@ class WeatherClient(
             logger.e(e.stackTraceToString())
             return when (e) {
                 is CancellationException -> throw e
+                is IOException,
                 is UnresolvedAddressException -> Result.Error(NetworkError.NO_INTERNET)
                 is SerializationException -> Result.Error(NetworkError.SERIALIZATION)
                 else -> Result.Error(NetworkError.UNKNOWN)
