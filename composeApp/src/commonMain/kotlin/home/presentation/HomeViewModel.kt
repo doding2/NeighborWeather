@@ -48,6 +48,7 @@ class HomeViewModel(
                                 daily: ${it.daily.map { it.time }}
                         """.trimIndent()
                     }
+
                     state = state.copy(weather = it)
                     sendEffect(HomeSideEffect.ShowSnackbar("Update weather"))
                 }

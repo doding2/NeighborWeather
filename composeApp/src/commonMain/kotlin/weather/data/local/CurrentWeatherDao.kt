@@ -12,6 +12,9 @@ interface CurrentWeatherDao {
     @Upsert
     suspend fun upsertCurrentWeather(current: CurrentWeatherEntity)
 
+    @Upsert
+    suspend fun upsertCurrentWeatherList(currentList: List<CurrentWeatherEntity>)
+
     @Query("SELECT * FROM CurrentWeatherEntity " +
             "WHERE latitude = :latitude AND longitude = :longitude " +
             "AND neighbor = :neighbor AND epochTime BETWEEN :hourAgo AND :now " +

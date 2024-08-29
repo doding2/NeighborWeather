@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import core.util.Error
 import core.util.Result
 import core.util.map
+import core.util.unzip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -87,14 +87,14 @@ class WeatherRepositoryImpl(
                         }
                     }
 
-                    weathers.forEach {
-                        val (current, hourlyList, dailyList) = it.toWeatherEntity()
-                        weatherDatabase.currentWeatherDao.upsertCurrentWeather(current)
-                        weatherDatabase.hourlyWeatherDao.upsertHourlyWeatherList(hourlyList)
-                        weatherDatabase.dailyWeatherDao.upsertDailyWeatherList(dailyList)
-                    }
-                }
+                    val (currentList, hourlyList, dailyList) = weathers.map {
+                        it.toWeatherEntity()
+                    }.unzip()
 
+                    weatherDatabase.currentWeatherDao.upsertCurrentWeatherList(currentList)
+                    weatherDatabase.hourlyWeatherDao.upsertHourlyWeatherList(hourlyList.flatten())
+                    weatherDatabase.dailyWeatherDao.upsertDailyWeatherList(dailyList.flatten())
+                }
 
 
                 // load from Database
@@ -122,22 +122,20 @@ class WeatherRepositoryImpl(
                         now = now
                     ).filter { it.isNotEmpty() }
 
-                    return@map currentFlow
-                        .zip(hourlyFlow) { current, hourlyList ->
-                            current.last() to hourlyList
-                        }.zip(dailyFlow) { (current, hourlyList), dailyList ->
-                            Triple(current, hourlyList, dailyList)
-                        }.map {
-                            it.toWeather()
-                        }
+                    return@map combine(
+                        currentFlow,
+                        hourlyFlow,
+                        dailyFlow
+                    ) { current, hourlyList, dailyList ->
+                        Triple(current.last(), hourlyList, dailyList)
+                    }.map {
+                        it.toWeather()
+                    }
                 }
 
-
-
-                val resultFlow = combine(*neighborWeatherFlows.toTypedArray()) {
+                combine(*neighborWeatherFlows.toTypedArray()) {
                     it.toList()
-                }.distinctUntilChanged()
-                .map { weathers ->
+                }.map { weathers ->
                     val successNeighbors = weathers.map { it.neighbor }
                     val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
@@ -145,11 +143,8 @@ class WeatherRepositoryImpl(
                         weathers = weathers,
                         targetToWeight = successTargetToWeight
                     )
-                }
-
-                resultFlow.collect {
-                    send(it)
-                }
+                }.distinctUntilChanged()
+                    .collect(::send)
             }
 
         }

@@ -1,4 +1,4 @@
-package core.util
+package core.presentation.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
