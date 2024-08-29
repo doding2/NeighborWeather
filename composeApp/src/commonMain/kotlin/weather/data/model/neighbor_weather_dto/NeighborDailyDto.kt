@@ -9,7 +9,7 @@ data class NeighborDailyDto(
     @SerialName("time")
     val time: List<String> = emptyList(),
     @SerialName("weather_code")
-    val weatherCode: List<Int> = emptyList(),
+    val weatherCode: List<Int?> = emptyList(),
     @SerialName("temperature_2m_max")
     val temperature2mMax: List<Double> = emptyList(),
     @SerialName("temperature_2m_min")

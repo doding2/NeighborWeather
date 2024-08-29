@@ -19,7 +19,7 @@ data class NeighborHourlyDto(
     @SerialName("precipitation_probability")
     val precipitationProbability: List<Double?> = emptyList(),
     @SerialName("weather_code")
-    val weatherCode: List<Int> = emptyList(),
+    val weatherCode: List<Int?> = emptyList(),
     @SerialName("wind_speed_10m")
     val windSpeed10m: List<Double> = emptyList(),
     @SerialName("wind_direction_10m")

@@ -35,7 +35,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 relativeHumidity = hourly.relativeHumidity2m[index],
                 precipitation = hourly.precipitation[index],
                 precipitationProbability = hourly.precipitationProbability[index] ?: -1.0,
-                weatherCode = hourly.weatherCode[index],
+                weatherCode = hourly.weatherCode[index] ?: 0,
                 windSpeed = hourly.windSpeed10m[index] / UNIT_WIND_SPEED,
                 windDirection = hourly.windDirection10m[index]
             )
@@ -46,7 +46,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 temperatureMax = daily.temperature2mMax[index],
                 temperatureMin = daily.temperature2mMin[index],
                 precipitationProbability = daily.precipitationProbabilityMax[index] ?: -1.0,
-                weatherCode = daily.weatherCode[index]
+                weatherCode = daily.weatherCode[index] ?: 0
             )
         }
     )

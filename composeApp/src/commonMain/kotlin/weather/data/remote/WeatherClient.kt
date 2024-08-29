@@ -11,6 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
+import io.ktor.serialization.JsonConvertException
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
@@ -49,16 +50,13 @@ class WeatherClient(
                     parameter("models", neighbor.toModelsString())
                 }
             }
-        } catch (e: UnresolvedAddressException) {
-            logger.e(e.stackTraceToString())
-            return Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: SerializationException) {
-            logger.e(e.stackTraceToString())
-            return Result.Error(NetworkError.SERIALIZATION)
         } catch (e: Throwable) {
             logger.e(e.stackTraceToString())
-            if (e is CancellationException) throw e
-            return Result.Error(NetworkError.UNKNOWN)
+            return when (e) {
+                is CancellationException -> throw e
+                is UnresolvedAddressException -> Result.Error(NetworkError.NO_INTERNET)
+                else -> Result.Error(NetworkError.UNKNOWN)
+            }
         }
 
         return response.status.value.let {
@@ -72,8 +70,12 @@ class WeatherClient(
                     )
                 } catch (e: Throwable) {
                     logger.e(e.stackTraceToString())
-                    if (e is CancellationException) throw e
-                    Result.Error(NetworkError.UNKNOWN)
+                    return when (e) {
+                        is CancellationException -> throw e
+                        is SerializationException,
+                        is JsonConvertException -> Result.Error(NetworkError.SERIALIZATION)
+                        else -> Result.Error(NetworkError.UNKNOWN)
+                    }
                 }
             } else {
                 Result.Error(it.toNetworkError())
@@ -95,16 +97,14 @@ class WeatherClient(
                     parameter("query", "$locationName 날씨")
                 }
             }
-        } catch (e: UnresolvedAddressException) {
+        }  catch (e: Throwable) {
             logger.e(e.stackTraceToString())
-            return Result.Error(NetworkError.NO_INTERNET)
-        } catch (e: SerializationException) {
-            logger.e(e.stackTraceToString())
-            return Result.Error(NetworkError.SERIALIZATION)
-        } catch (e: Throwable) {
-            logger.e(e.stackTraceToString())
-            if (e is CancellationException) throw e
-            return Result.Error(NetworkError.UNKNOWN)
+            return when (e) {
+                is CancellationException -> throw e
+                is UnresolvedAddressException -> Result.Error(NetworkError.NO_INTERNET)
+                is SerializationException -> Result.Error(NetworkError.SERIALIZATION)
+                else -> Result.Error(NetworkError.UNKNOWN)
+            }
         }
 
         val html = response.status.value.let {
