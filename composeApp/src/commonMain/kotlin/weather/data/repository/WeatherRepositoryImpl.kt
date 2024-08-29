@@ -159,7 +159,6 @@ class WeatherRepositoryImpl(
                 latitude = latitude,
                 longitude = longitude,
                 neighbor = neighbor.toString(),
-                now = now
             ).filter { it.isNotEmpty() }
 
             val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(

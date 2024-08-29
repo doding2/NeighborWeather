@@ -63,7 +63,7 @@ fun HomeScreen(
                 state.weather?.current?.let { current ->
                     item {
                         Text(
-                            text = "[${current.time.time}] ${current.temperature.toString().padEnd(4, '0')} °C",
+                            text = "[${current.time}]\n${current.temperature.toString().padEnd(4, '0')} °C",
                             fontSize = 24.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
