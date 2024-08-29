@@ -3,7 +3,7 @@ package weather.data.util
 import core.util.CommonError
 import core.util.Error
 import core.util.Result
-import core.util.roundToSecond
+import core.util.roundToFirst
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -69,7 +69,7 @@ class WeatherWeightCalculator {
                 }
 
                 return@withContext Result.Success(
-                    data = sum.roundToSecond()
+                    data = sum.roundToFirst()
                 )
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -183,36 +183,36 @@ class WeatherWeightCalculator {
         )
     }
 
-    private fun Weather.roundToSecond(): Weather {
+    private fun Weather.roundToFirst(): Weather {
         return this.copy(
             latitude = latitude,
             longitude = longitude,
             neighbor = neighbor,
             current = current.copy(
                 time = current.time,
-                temperature = roundToSecond(current.temperature),
-                relativeHumidity = roundToSecond(current.relativeHumidity),
-                apparentTemperature = roundToSecond(current.apparentTemperature),
-                precipitation = roundToSecond(current.precipitation),
-                precipitationProbability = roundToSecond(current.precipitationProbability),
-                windSpeed = roundToSecond(current.windSpeed),
-                windDirection = roundToSecond(current.windDirection)
+                temperature = roundToFirst(current.temperature),
+                relativeHumidity = roundToFirst(current.relativeHumidity),
+                apparentTemperature = roundToFirst(current.apparentTemperature),
+                precipitation = roundToFirst(current.precipitation),
+                precipitationProbability = roundToFirst(current.precipitationProbability),
+                windSpeed = roundToFirst(current.windSpeed),
+                windDirection = roundToFirst(current.windDirection)
             ),
             hourly = hourly.map {
                 it.copy(
-                    temperature = roundToSecond(it.temperature),
-                    relativeHumidity = roundToSecond(it.relativeHumidity),
-                    precipitation = roundToSecond(it.precipitation),
-                    precipitationProbability = roundToSecond(it.precipitationProbability),
-                    windSpeed = roundToSecond(it.windSpeed),
-                    windDirection = roundToSecond(it.windDirection)
+                    temperature = roundToFirst(it.temperature),
+                    relativeHumidity = roundToFirst(it.relativeHumidity),
+                    precipitation = roundToFirst(it.precipitation),
+                    precipitationProbability = roundToFirst(it.precipitationProbability),
+                    windSpeed = roundToFirst(it.windSpeed),
+                    windDirection = roundToFirst(it.windDirection)
                 )
             },
             daily = daily.map {
                 it.copy(
-                    temperatureMax = roundToSecond(it.temperatureMax),
-                    temperatureMin = roundToSecond(it.temperatureMin),
-                    precipitationProbability = roundToSecond(it.precipitationProbability),
+                    temperatureMax = roundToFirst(it.temperatureMax),
+                    temperatureMin = roundToFirst(it.temperatureMin),
+                    precipitationProbability = roundToFirst(it.precipitationProbability),
                 )
             }
         )

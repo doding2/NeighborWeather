@@ -63,7 +63,7 @@ fun HomeScreen(
                 state.weather?.current?.let { current ->
                     item {
                         Text(
-                            text = "${current.time.time}: ${current.temperature.toString().padEnd(5, '0')} °C",
+                            text = "[${current.time.time}] ${current.temperature.toString().padEnd(4, '0')} °C",
                             fontSize = 24.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
@@ -74,7 +74,7 @@ fun HomeScreen(
                 state.weather?.hourly?.let { hourly ->
                     items(hourly.withIndex().toList(), key = { it.index }) {
                         Text(
-                            text = "${it.value.time.time}: ${it.value.temperature.toString().padEnd(5, '0')} °C",
+                            text = "[${it.value.time.time}] ${it.value.temperature.toString().padEnd(4, '0')} °C",
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

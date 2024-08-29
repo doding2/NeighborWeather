@@ -35,7 +35,7 @@ class WeatherRepositoryImpl(
 ): WeatherRepository {
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
-    override suspend fun getWeather(
+    override suspend fun getWeathers(
         latitude: Double, longitude: Double,
         locationName: String,
         targetToWeight: Map<Neighbor, Double>
@@ -46,48 +46,22 @@ class WeatherRepositoryImpl(
 
                 // load from Remote API
                 launch {
-                    val weatherResults = targetNeighbors.map { neighbor ->
-                        async {
-                            if (neighbor == Neighbor.Korea) {
-                                weatherClient.getKoreaWeather(
-                                    latitude = latitude,
-                                    longitude = longitude,
-                                    locationName = locationName
-                                ).map {
-                                    it.toWeather()
-                                }
-                            } else {
-                                weatherClient.getNeighborWeather(
-                                    latitude = latitude,
-                                    longitude = longitude,
-                                    neighbor = neighbor
-                                ).map {
-                                    it.toWeather(neighbor)
-                                }
-                            }
-                        }
-                    }.awaitAll()
+                    val remoteWeatherResults = getRemoteWeathers(
+                        latitude = latitude,
+                        longitude = longitude,
+                        locationName = locationName,
+                        targetNeighbors = targetNeighbors,
+                    )
 
-                    // MalformedInputException is occurred in
-                    // iOS internal charset encoding process randomly.
-                    // We can't expect it, so this error is ignored until bug is fixed.
-                    // Otherwise, unwrap the result data or return the error.
-                    val weathers = weatherResults.mapNotNull {
-                        when (it) {
-                            is Result.Success -> it.data
-                            is Result.Error -> {
-                                if (it.error == KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION) {
-                                    null
-                                } else {
-                                    logger.e { "[error] ${it.error}" }
-                                    send(Result.Error(it.error))
-                                    return@launch
-                                }
-                            }
+                    val remoteWeathers = when (remoteWeatherResults) {
+                        is Result.Success -> remoteWeatherResults.data
+                        is Result.Error -> {
+                            send(Result.Error(remoteWeatherResults.error))
+                            return@launch
                         }
                     }
 
-                    val (currentList, hourlyList, dailyList) = weathers.map {
+                    val (currentList, hourlyList, dailyList) = remoteWeathers.map {
                         it.toWeatherEntity()
                     }.unzip()
 
@@ -98,44 +72,17 @@ class WeatherRepositoryImpl(
 
 
                 // load from Database
-                val now = Clock.System.now().epochSeconds
+                val localWeatherFlows = getLocalWeatherFlows(
+                    latitude = latitude,
+                    longitude = longitude,
+                    targetNeighbors = targetNeighbors
+                )
 
-                val neighborWeatherFlows = targetNeighbors.map { neighbor ->
-                    val currentFlow = weatherDatabase.currentWeatherDao.searchCurrentWeatherListFlow(
-                        latitude = latitude,
-                        longitude = longitude,
-                        neighbor = neighbor.toString(),
-                        now = now
-                    ).filter { it.isNotEmpty() }
-
-                    val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(
-                        latitude = latitude,
-                        longitude = longitude,
-                        neighbor = neighbor.toString(),
-                        now = now
-                    ).filter { it.isNotEmpty() }
-
-                    val dailyFlow = weatherDatabase.dailyWeatherDao.searchDailyWeatherListFlow(
-                        latitude = latitude,
-                        longitude = longitude,
-                        neighbor = neighbor.toString(),
-                        now = now
-                    ).filter { it.isNotEmpty() }
-
-                    return@map combine(
-                        currentFlow,
-                        hourlyFlow,
-                        dailyFlow
-                    ) { current, hourlyList, dailyList ->
-                        Triple(current.last(), hourlyList, dailyList)
-                    }.map {
-                        it.toWeather()
-                    }
-                }
-
-                combine(*neighborWeatherFlows.toTypedArray()) {
+                combine(*localWeatherFlows.toTypedArray()) {
                     it.toList()
-                }.map { weathers ->
+                }
+                .distinctUntilChanged()
+                .map { weathers ->
                     val successNeighbors = weathers.map { it.neighbor }
                     val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
@@ -143,11 +90,103 @@ class WeatherRepositoryImpl(
                         weathers = weathers,
                         targetToWeight = successTargetToWeight
                     )
-                }.distinctUntilChanged()
-                    .collect(::send)
+                }.collect(::send)
             }
 
         }
     }
 
+    private suspend fun getRemoteWeathers(
+        latitude: Double,
+        longitude: Double,
+        locationName: String,
+        targetNeighbors: Set<Neighbor>,
+    ): Result<List<Weather>, Error> {
+        return withContext(Dispatchers.IO) {
+            val weatherResults = targetNeighbors.map { neighbor ->
+                async {
+                    if (neighbor == Neighbor.Korea) {
+                        weatherClient.getKoreaWeather(
+                            latitude = latitude,
+                            longitude = longitude,
+                            locationName = locationName
+                        ).map {
+                            it.toWeather()
+                        }
+                    } else {
+                        weatherClient.getNeighborWeather(
+                            latitude = latitude,
+                            longitude = longitude,
+                            neighbor = neighbor
+                        ).map {
+                            it.toWeather(neighbor)
+                        }
+                    }
+                }
+            }.awaitAll()
+
+            // MalformedInputException is occurred in
+            // iOS internal charset encoding process randomly.
+            // We can't expect it, so this error is ignored until bug is fixed.
+            // Otherwise, unwrap the result data or return the error.
+            val weathers = weatherResults.mapNotNull {
+                when (it) {
+                    is Result.Success -> it.data
+                    is Result.Error -> {
+                        if (it.error == KoreaWeatherParserException.MALFORMED_INPUT_EXCEPTION) {
+                            null
+                        } else {
+                            logger.e { "[error] ${it.error}" }
+                            return@withContext Result.Error(it.error)
+                        }
+                    }
+                }
+            }
+
+            return@withContext Result.Success(weathers)
+        }
+    }
+
+    private fun getLocalWeatherFlows(
+        latitude: Double,
+        longitude: Double,
+        targetNeighbors: Set<Neighbor>
+    ): List<Flow<Weather>> {
+        val now = Clock.System.now().epochSeconds
+
+        val localWeatherListFlows = targetNeighbors.map { neighbor ->
+            val currentFlow = weatherDatabase.currentWeatherDao.searchCurrentWeatherListFlow(
+                latitude = latitude,
+                longitude = longitude,
+                neighbor = neighbor.toString(),
+                now = now
+            ).filter { it.isNotEmpty() }
+
+            val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(
+                latitude = latitude,
+                longitude = longitude,
+                neighbor = neighbor.toString(),
+                now = now
+            ).filter { it.isNotEmpty() }
+
+            val dailyFlow = weatherDatabase.dailyWeatherDao.searchDailyWeatherListFlow(
+                latitude = latitude,
+                longitude = longitude,
+                neighbor = neighbor.toString(),
+                now = now
+            ).filter { it.isNotEmpty() }
+
+            return@map combine(
+                currentFlow,
+                hourlyFlow,
+                dailyFlow
+            ) { current, hourlyList, dailyList ->
+                Triple(current.last(), hourlyList, dailyList)
+            }.map {
+                it.toWeather()
+            }
+        }
+
+        return localWeatherListFlows
+    }
 }

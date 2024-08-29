@@ -28,7 +28,7 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch {
-            weatherRepository.getWeather(
+            weatherRepository.getWeathers(
                 latitude = 36.0,
                 longitude = 127.0,
                 locationName = "서울",
