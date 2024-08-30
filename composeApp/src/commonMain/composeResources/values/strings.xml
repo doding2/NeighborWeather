@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Neighbor Weather</string>
+    <string name="temperature_unit">°C</string>
+    <string name="humidity_unit">%</string>
+    <string name="precipitation_unit">mm</string>
+    <string name="precipitation_hours_unit">h</string>
+    <string name="wind_speed_unit">m/s</string>
+    <string name="wind_direction_unit">°</string>
+</resources>
