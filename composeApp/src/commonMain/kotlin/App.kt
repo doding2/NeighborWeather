@@ -6,6 +6,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import home.presentation.HomeScreen
 import home.presentation.HomeViewModel
+import map.presentation.MapScreen
+import map.presentation.MapViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
@@ -20,11 +22,20 @@ fun App() {
             val navController = rememberNavController()
             NavHost(
                 navController = navController,
-                startDestination = "home"
+                startDestination = "map"
             ) {
                 composable(route = "home") {
                     val viewModel = koinViewModel<HomeViewModel>()
                     HomeScreen(
+                        state = viewModel.state,
+                        onEvent = viewModel::onEvent,
+                        effect = viewModel.effect,
+                        navController = navController
+                    )
+                }
+                composable(route = "map") {
+                    val viewModel = koinViewModel<MapViewModel>()
+                    MapScreen(
                         state = viewModel.state,
                         onEvent = viewModel::onEvent,
                         effect = viewModel.effect,

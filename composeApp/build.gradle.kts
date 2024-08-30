@@ -1,6 +1,8 @@
 
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import java.util.Properties
 
 plugins {
@@ -13,28 +15,31 @@ plugins {
     alias(libs.plugins.konfig)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.google.secrets)
 }
 
-val localProperties = Properties()
-localProperties.load(rootProject.file("local.properties").reader())
+val secretsProperties = Properties()
+secretsProperties.load(rootProject.file("secrets.properties").reader())
 
 buildkonfig {
     packageName = "com.doding2.neighborweather"
     defaultConfigs {
-//        buildConfigField(STRING, "KOREA_WEATHER_SERVICE_KEY", localProperties.getProperty("korea_weather_service_key"))
+        buildConfigField(FieldSpec.Type.STRING, "GOOGLE_MAPS_ANDROID_API_KEY", secretsProperties.getProperty("google_maps_android_api_key"))
     }
 }
 
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
+    ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
+}
+
 kotlin {
-
-    sourceSets.commonMain {
-        kotlin.srcDir("build/generated/ksp/metadata")
-    }
-
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
@@ -59,6 +64,15 @@ kotlin {
             baseName = "composeApp"
             isStatic = true
         }
+        pod("GoogleMaps") {
+            version = "8.4.0"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
+    }
+
+    // ksp
+    sourceSets.commonMain {
+        kotlin.srcDir("build/generated/ksp/metadata")
     }
 
     sourceSets {
@@ -72,6 +86,10 @@ kotlin {
             // koin
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
+
+            // google maps compose
+            api(libs.google.maps.android.play.services)
+            implementation(libs.google.maps.compose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -141,8 +159,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -164,7 +182,7 @@ dependencies {
 }
 
 // for  ksp
-tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().configureEach {
+tasks.withType<KotlinCompilationTask<*>>().configureEach {
     if (name != "kspCommonMainKotlinMetadata" ) {
         dependsOn("kspCommonMainKotlinMetadata")
     }
