@@ -125,6 +125,9 @@ kotlin {
             // room database
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+
+            // permission request helper
+            api(libs.moko.permissions.compose)
         }
         nativeMain.dependencies {
             // ktor client

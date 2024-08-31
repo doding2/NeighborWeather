@@ -4,8 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 class MapViewModel : ViewModel() {
 
@@ -16,7 +18,9 @@ class MapViewModel : ViewModel() {
     val effect = _effect.receiveAsFlow()
 
     init {
+        viewModelScope.launch {
 
+        }
     }
 
     private suspend fun sendEffect(effect: MapSideEffect) {
@@ -24,7 +28,16 @@ class MapViewModel : ViewModel() {
     }
 
     fun onEvent(event: MapEvent) {
-
+        when (event) {
+            MapEvent.CanceledLocationPermission,
+            MapEvent.DeniedAlwaysLocationPermission,
+            MapEvent.DeniedLocationPermission -> {
+                // TODO: Show dialog or etc
+                viewModelScope.launch {
+                    sendEffect(MapSideEffect.OpenPermissionSettingPage)
+                }
+            }
+        }
     }
 
 }

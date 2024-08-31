@@ -28,6 +28,7 @@ sqlite = "2.5.0-SNAPSHOT"
 google-mapsAndroidPlayService = "19.0.0"
 google-mapsCompose = "6.0.0"
 google-secrets-plugin = "2.0.1"
+moko-permissions-compose = "0.18.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -64,6 +65,7 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 google-maps-android-play-services = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "google-mapsAndroidPlayService" }
 google-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "google-mapsCompose" }
+moko-permissions-compose = { group = "dev.icerock.moko", name = "permissions-compose", version.ref = "moko-permissions-compose" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
