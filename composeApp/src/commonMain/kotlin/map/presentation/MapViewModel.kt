@@ -29,8 +29,11 @@ class MapViewModel : ViewModel() {
 
     fun onEvent(event: MapEvent) {
         when (event) {
-            MapEvent.CanceledLocationPermission,
-            MapEvent.DeniedAlwaysLocationPermission,
+            MapEvent.NavigateUp -> {
+                viewModelScope.launch {
+                    sendEffect(MapSideEffect.NavigateUp)
+                }
+            }
             MapEvent.DeniedLocationPermission -> {
                 // TODO: Show dialog or etc
                 viewModelScope.launch {

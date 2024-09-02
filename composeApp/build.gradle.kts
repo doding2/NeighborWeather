@@ -95,6 +95,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -111,7 +112,8 @@ kotlin {
             implementation(libs.lifecycle.viewmodel)
 
             // navigation
-            implementation(libs.navigation.compose)
+            implementation(libs.compose.navigation)
+            implementation(libs.kotlinx.serialization.json)
 
             // datetime
             implementation(libs.datetime)

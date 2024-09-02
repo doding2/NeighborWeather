@@ -38,7 +38,13 @@ class HomeViewModel(
     }
 
     fun onEvent(event: HomeEvent) {
-
+        when (event) {
+            is HomeEvent.NavigateToMap -> {
+                viewModelScope.launch {
+                    sendEffect(HomeSideEffect.NavigateToMap)
+                }
+            }
+        }
     }
 
     private fun updateWeather() {
@@ -74,7 +80,6 @@ class HomeViewModel(
                         }
 
                         state = state.copy(weather = it)
-//                        sendEffect(HomeSideEffect.ShowSnackbar("Update weather"))
                     }
                     .onError {
                         logger.e("[error] $it")

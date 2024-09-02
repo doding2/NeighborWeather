@@ -22,9 +22,9 @@ fun App() {
             val navController = rememberNavController()
             NavHost(
                 navController = navController,
-                startDestination = "map"
+                startDestination = HomeScreen
             ) {
-                composable(route = "home") {
+                composable<HomeScreen> {
                     val viewModel = koinViewModel<HomeViewModel>()
                     HomeScreen(
                         state = viewModel.state,
@@ -33,7 +33,7 @@ fun App() {
                         navController = navController
                     )
                 }
-                composable(route = "map") {
+                composable<MapScreen> {
                     val viewModel = koinViewModel<MapViewModel>()
                     MapScreen(
                         state = viewModel.state,
