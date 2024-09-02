@@ -18,10 +18,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import weather.data.remote.model.korean_weather.KoreaCurrentWeatherDto
-import weather.data.remote.model.korean_weather.KoreaDailyWeatherDto
-import weather.data.remote.model.korean_weather.KoreaHourlyWeatherDto
-import weather.data.remote.model.korean_weather.KoreaWeatherDto
+import weather.data.model.dto.korean_weather_dto.KoreaCurrentWeatherDto
+import weather.data.model.dto.korean_weather_dto.KoreaDailyWeatherDto
+import weather.data.model.dto.korean_weather_dto.KoreaHourlyWeatherDto
+import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
 
 class KoreaWeatherParser {
 

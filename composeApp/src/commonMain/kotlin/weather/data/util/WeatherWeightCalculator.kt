@@ -23,12 +23,8 @@ class WeatherWeightCalculator {
     ): Result<Weather, Error> {
         return withContext(Dispatchers.IO) {
             try {
-                val bestWeather = weathers.find { it.neighbor == Neighbor.ALL }
-                    ?: return@withContext Result.Error(WeatherCalculatorError.NO_BEST_WEATHER)
-
                 val mutableTargetWeathers = weathers
                     .filter { it.neighbor in targetToWeight.keys }
-                    .fillMissingValues(bestWeather)
                     .toMutableList()
 
                 // In iOS, if MALFORMED_INPUT_EXCEPTION is occurred,
@@ -75,40 +71,6 @@ class WeatherWeightCalculator {
                 if (e is CancellationException) throw e
                 return@withContext Result.Error(WeatherCalculatorError.CALCULATION_FAILED)
             }
-        }
-    }
-
-    private fun List<Weather>.fillMissingValues(best: Weather): List<Weather> {
-        return map { target ->
-            target.copy(
-                current = target.current.copy(
-                    precipitationProbability = if (target.hourly.map { it.precipitationProbability }.isEmpty()) {
-                        best.current.precipitationProbability
-                    } else {
-                        target.current.precipitationProbability
-                    }
-                ),
-                hourly = target.hourly
-                    .mapIndexed { index, item ->
-                        item.copy(
-                            precipitationProbability = if (item.precipitationProbability == -1.0) {
-                                best.hourly.getOrNull(index)?.precipitationProbability ?: 0.0
-                            } else {
-                                item.precipitationProbability
-                            }
-                        )
-                    }.ifEmpty { best.hourly },
-                daily = target.daily
-                    .mapIndexed { index, item ->
-                        item.copy(
-                            precipitationProbability = if (item.precipitationProbability == -1.0) {
-                                best.daily.getOrNull(index)?.precipitationProbability ?: 0.0
-                            } else {
-                                item.precipitationProbability
-                            }
-                        )
-                    }.ifEmpty { best.daily }
-            )
         }
     }
 
@@ -221,7 +183,6 @@ class WeatherWeightCalculator {
 
     enum class WeatherCalculatorError: Error {
         INVALID_TARGET_NEIGHBOR,
-        NO_BEST_WEATHER,
         CALCULATION_FAILED;
     }
 }

@@ -3,7 +3,6 @@ package weather.data.repository
 import co.touchlab.kermit.Logger
 import core.util.Error
 import core.util.Result
-import core.util.map
 import core.util.unzip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -21,8 +20,10 @@ import kotlinx.datetime.Clock
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
+import weather.data.model.dto.WeatherDto
 import weather.data.remote.WeatherClient
 import weather.data.util.KoreaWeatherParser.KoreaWeatherParserException
+import weather.data.util.WeatherPreprocessor
 import weather.data.util.WeatherWeightCalculator
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
@@ -31,6 +32,7 @@ import weather.domain.repository.WeatherRepository
 class WeatherRepositoryImpl(
     private val weatherDatabase: WeatherDatabase,
     private val weatherClient: WeatherClient,
+    private val weatherPreprocessor: WeatherPreprocessor,
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
@@ -46,14 +48,18 @@ class WeatherRepositoryImpl(
 
                 // load from Remote API
                 launch {
-                    val remoteWeatherResults = getRemoteWeathers(
+                    val remoteWeatherDtoResults = getRemoteWeathers(
                         latitude = latitude,
                         longitude = longitude,
                         locationName = locationName,
                         targetNeighbors = targetNeighbors,
                     )
 
-                    val remoteWeathers = remoteWeatherResults.mapNotNull {
+                    // Weather data from remote call may contains null values.
+                    // Fill missing values with best matched weather data.
+                    val preprocessedWeatherResults = weatherPreprocessor.preprocess(remoteWeatherDtoResults)
+
+                    val remoteWeathers = preprocessedWeatherResults.mapNotNull {
                         when (it) {
                             is Result.Success -> it.data
                             is Result.Error -> {
@@ -77,6 +83,7 @@ class WeatherRepositoryImpl(
                             }
                         }
                     }
+
 
                     val (currentList, hourlyList, dailyList) = remoteWeathers.map {
                         it.toWeatherEntity()
@@ -108,7 +115,8 @@ class WeatherRepositoryImpl(
                      */
                     if (weathers.isEmpty())
                         return@mapNotNull null
-                    if (Neighbor.ALL !in weathers.map { it.neighbor })
+                    val containsNeighborAll = Neighbor.ALL in weathers.map { it.neighbor }
+                    if (!containsNeighborAll)
                         return@mapNotNull null
 
                     val successNeighbors = weathers.map { it.neighbor }
@@ -128,31 +136,28 @@ class WeatherRepositoryImpl(
         longitude: Double,
         locationName: String,
         targetNeighbors: Set<Neighbor>,
-    ): List<Result<Weather, Error>> {
+    ): List<Pair<Neighbor, Result<WeatherDto, Error>>> {
         return withContext(Dispatchers.IO) {
-            val weatherResults = targetNeighbors.map { neighbor ->
+            val weatherDtoResults = targetNeighbors.map { neighbor ->
                 async {
-                    if (neighbor == Neighbor.Korea) {
+                    val result = if (neighbor == Neighbor.Korea) {
                         weatherClient.getKoreaWeather(
                             latitude = latitude,
                             longitude = longitude,
                             locationName = locationName
-                        ).map {
-                            it.toWeather()
-                        }
+                        )
                     } else {
                         weatherClient.getNeighborWeather(
                             latitude = latitude,
                             longitude = longitude,
                             neighbor = neighbor
-                        ).map {
-                            it.toWeather(neighbor)
-                        }
+                        )
                     }
+                    return@async neighbor to result
                 }
             }.awaitAll()
 
-            return@withContext weatherResults
+            return@withContext weatherDtoResults
         }
     }
 
