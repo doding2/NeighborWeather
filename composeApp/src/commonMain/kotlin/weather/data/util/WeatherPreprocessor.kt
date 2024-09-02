@@ -94,7 +94,6 @@ class WeatherPreprocessor {
             },
             hourly = target.hourly.run {
                 copy(
-                    time = listOf(),
                     temperature2m = temperature2m.mapIndexed { index, value ->
                         value ?: best.hourly.temperature2m[index]!!
                     },
