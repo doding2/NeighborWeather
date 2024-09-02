@@ -1,7 +1,6 @@
 package map.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -37,11 +36,10 @@ import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import map.presentation.components.GoogleMaps
 
-@Serializable
-data object MapScreen
+//@Serializable
+//data object MapScreen
 
 @Composable
 fun MapScreen(
@@ -50,43 +48,41 @@ fun MapScreen(
     effect: Flow<MapSideEffect>,
     navController: NavController
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        EdgeColors(
-            darkTheme = isSystemInDarkTheme()
-        )
-        val permissionsControllerFactory = rememberPermissionsControllerFactory()
-        val permissionsController = remember(permissionsControllerFactory) {
-            permissionsControllerFactory.createPermissionsController()
-        }
-        val scope = rememberCoroutineScope()
-        BindEffect(permissionsController)
-        LaunchedEffect(Unit) {
-            scope.launch {
-                try {
-                    permissionsController.providePermission(Permission.LOCATION)
-                } catch (e: Throwable) {
-                    when (e) {
-                        is DeniedAlwaysException,
-                        is DeniedException,
-                        is RequestCanceledException -> {
-                            onEvent(MapEvent.DeniedLocationPermission)
-                        }
+    EdgeColors()
+    val permissionsControllerFactory = rememberPermissionsControllerFactory()
+    val permissionsController = remember(permissionsControllerFactory) {
+        permissionsControllerFactory.createPermissionsController()
+    }
+    val scope = rememberCoroutineScope()
+    BindEffect(permissionsController)
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                permissionsController.providePermission(Permission.LOCATION)
+            } catch (e: Throwable) {
+                when (e) {
+                    is DeniedAlwaysException,
+                    is DeniedException,
+                    is RequestCanceledException -> {
+                        onEvent(MapEvent.DeniedLocationPermission)
                     }
                 }
             }
         }
-        ObserveEffectsOnLifecycle(
-            flow = effect
-        ) {
-            scope.launch {
-                when (it) {
-                    MapSideEffect.NavigateUp -> navController.navigateUp()
-                    MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
-                }
+    }
+    ObserveEffectsOnLifecycle(
+        flow = effect
+    ) {
+        scope.launch {
+            when (it) {
+                MapSideEffect.NavigateUp -> navController.navigateUp()
+                MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
             }
         }
+    }
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {

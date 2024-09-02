@@ -39,11 +39,9 @@ import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import map.presentation.MapScreen
 
-@Serializable
-data object HomeScreen
+//@Serializable
+//data object HomeScreen
 
 @Composable
 fun HomeScreen(
@@ -52,33 +50,33 @@ fun HomeScreen(
     effect: Flow<HomeSideEffect>,
     navController: NavController
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize()
+    EdgeColors(
+        darkTheme = false
+    )
+    val snackbarHostState = remember {
+        SnackbarHostState()
+    }
+    val snackbarInteractionSource = remember { MutableInteractionSource() }
+    val scope = rememberCoroutineScope()
+    ObserveEffectsOnLifecycle(
+        flow = effect,
+        snackbarHostState
     ) {
-        EdgeColors(
-            darkTheme = false
-        )
-        val snackbarHostState = remember {
-            SnackbarHostState()
-        }
-        val snackbarInteractionSource = remember { MutableInteractionSource() }
-        val scope = rememberCoroutineScope()
-        ObserveEffectsOnLifecycle(
-            flow = effect,
-            snackbarHostState
-        ) {
-            scope.launch {
-                when (it) {
-                    is HomeSideEffect.NavigateToMap -> navController.navigate(MapScreen)
-                    is HomeSideEffect.ShowSnackbar -> {
-                        if (it.isImmediate) {
-                            snackbarHostState.currentSnackbarData?.dismiss()
-                        }
-                        snackbarHostState.showSnackbar(it.message)
+        scope.launch {
+            when (it) {
+                is HomeSideEffect.NavigateToMap -> navController.navigate("map")
+                is HomeSideEffect.ShowSnackbar -> {
+                    if (it.isImmediate) {
+                        snackbarHostState.currentSnackbarData?.dismiss()
                     }
+                    snackbarHostState.showSnackbar(it.message)
                 }
             }
         }
+    }
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Scaffold(
             snackbarHost = {
                 SnackbarHost(
@@ -95,10 +93,13 @@ fun HomeScreen(
             },
             modifier = Modifier.fillMaxSize()
         ) { innerPadding ->
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
                 LazyColumn(
                     contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
-                    modifier = Modifier.padding(innerPadding),
                 ) {
                     state.weather?.current?.let { current ->
                         item {

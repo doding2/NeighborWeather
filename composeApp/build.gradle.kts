@@ -113,7 +113,7 @@ kotlin {
 
             // navigation
             implementation(libs.compose.navigation)
-            implementation(libs.kotlinx.serialization.json)
+//            implementation(libs.kotlinx.serialization.json)
 
             // datetime
             implementation(libs.datetime)

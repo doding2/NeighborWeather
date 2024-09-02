@@ -23,6 +23,7 @@ struct ContentView: View {
         ComposeView()
             .ignoresSafeArea(edges: .all)
             .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
+            .preferredColorScheme(.dark)
     }
 }
 
