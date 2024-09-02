@@ -18,9 +18,7 @@ class MapViewModel : ViewModel() {
     val effect = _effect.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
 
-        }
     }
 
     private suspend fun sendEffect(effect: MapSideEffect) {

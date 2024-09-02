@@ -22,7 +22,7 @@ fun App() {
             val navController = rememberNavController()
             NavHost(
                 navController = navController,
-                startDestination = HomeScreen
+                startDestination = MapScreen
             ) {
                 composable<HomeScreen> {
                     val viewModel = koinViewModel<HomeViewModel>()

@@ -1,6 +1,7 @@
 package map.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
@@ -51,6 +53,9 @@ fun MapScreen(
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
+        EdgeColors(
+            darkTheme = isSystemInDarkTheme()
+        )
         val permissionsControllerFactory = rememberPermissionsControllerFactory()
         val permissionsController = remember(permissionsControllerFactory) {
             permissionsControllerFactory.createPermissionsController()

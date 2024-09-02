@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -54,6 +55,9 @@ fun HomeScreen(
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
+        EdgeColors(
+            darkTheme = false
+        )
         val snackbarHostState = remember {
             SnackbarHostState()
         }

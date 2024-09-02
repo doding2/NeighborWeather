@@ -43,14 +43,16 @@ class WeatherPreprocessor {
                             fillMissingValues(weatherDto, bestWeatherDto)
                         }.getOrElse {
                             if (it is CancellationException) throw it
+                            it.printStackTrace()
                             return@outerMap Result.Error(
                                 WeatherPreprocessorError.FAIL_TO_FILL_MISSING_VALUES
                             )
                         }
                         val weather = runCatching {
-                            mapToWeather(neighbor, filled, bestWeatherDto)
+                            mapToWeather(neighbor, filled)
                         }.getOrElse {
                             if (it is CancellationException) throw it
+                            it.printStackTrace()
                             return@outerMap Result.Error(
                                 WeatherPreprocessorError.FAIL_TO_MAP_WEATHER
                             )
@@ -61,7 +63,7 @@ class WeatherPreprocessor {
                         WeatherPreprocessorError.UNKNOWN_WEATHER_DTO_TYPE
                     )
                 }
-        }
+            }
         }
     }
 
@@ -163,7 +165,7 @@ class WeatherPreprocessor {
         )
     }
 
-    private fun mapToWeather(neighbor: Neighbor, weatherDto: NeighborWeatherDto, bestWeatherDto: NeighborWeatherDto): Weather {
+    private fun mapToWeather(neighbor: Neighbor, weatherDto: NeighborWeatherDto): Weather {
         val UNIT_WIND_SPEED = 3.6
         return Weather(
             latitude = weatherDto.latitude,
