@@ -2,7 +2,7 @@ package weather.data.mapper
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import weather.data.model.neighbor_weather_dto.NeighborWeatherDto
+import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
@@ -23,7 +23,7 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
                 apparentTemperature = apparentTemperature ?: hourly.apparentTemperature.getOrNull(0) ?: 0.0,
                 precipitation = precipitation ?: hourly.precipitation.getOrNull(0) ?: 0.0,
                 precipitationProbability = hourly.precipitationProbability[0] ?: 0.0,
-                weatherCode = weatherCode,
+                weatherCode = weatherCode ?: 0,
                 windSpeed = (windSpeed10m ?: hourly.windSpeed10m.getOrNull(0) ?: 0.0) / UNIT_WIND_SPEED,
                 windDirection = windDirection10m ?: hourly.windDirection10m.getOrNull(0) ?: 0.0
             )
@@ -31,24 +31,23 @@ fun NeighborWeatherDto.toWeather(neighbor: Neighbor): Weather {
         hourly = List(hourly.time.size) { index ->
             HourlyWeather(
                 time = hourly.time[index].let { LocalDateTime.parse(it, LocalDateTime.Formats.ISO) },
-                temperature = hourly.temperature2m[index],
-                relativeHumidity = hourly.relativeHumidity2m[index],
-                precipitation = hourly.precipitation[index],
-                precipitationProbability = hourly.precipitationProbability[index] ?: -1.0,
+                temperature = hourly.temperature2m[index] ?: 0.0,
+                relativeHumidity = hourly.relativeHumidity2m[index] ?: 0.0,
+                precipitation = hourly.precipitation[index] ?: 0.0,
+                precipitationProbability = hourly.precipitationProbability[index] ?: 0.0,
                 weatherCode = hourly.weatherCode[index] ?: 0,
-                windSpeed = hourly.windSpeed10m[index] / UNIT_WIND_SPEED,
-                windDirection = hourly.windDirection10m[index]
+                windSpeed = (hourly.windSpeed10m[index] ?: 0.0) / UNIT_WIND_SPEED,
+                windDirection = hourly.windDirection10m[index] ?: 0.0
             )
         },
         daily = List(daily.time.size) { index ->
             DailyWeather(
                 time = daily.time[index].let { LocalDate.parse(it, LocalDate.Formats.ISO) },
-                temperatureMax = daily.temperature2mMax[index],
-                temperatureMin = daily.temperature2mMin[index],
-                precipitationProbability = daily.precipitationProbabilityMax[index] ?: -1.0,
+                temperatureMax = daily.temperature2mMax[index] ?: 0.0,
+                temperatureMin = daily.temperature2mMin[index] ?: 0.0,
+                precipitationProbability = daily.precipitationProbabilityMax[index] ?: 0.0,
                 weatherCode = daily.weatherCode[index] ?: 0
             )
         }
     )
 }
-

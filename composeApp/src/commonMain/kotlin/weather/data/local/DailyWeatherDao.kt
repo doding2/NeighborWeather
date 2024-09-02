@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
-import weather.data.model.weather_entity.DailyWeatherEntity
+import weather.data.model.entity.DailyWeatherEntity
 
 @Dao
 interface DailyWeatherDao {

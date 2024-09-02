@@ -5,9 +5,9 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import weather.data.model.weather_entity.CurrentWeatherEntity
-import weather.data.model.weather_entity.DailyWeatherEntity
-import weather.data.model.weather_entity.HourlyWeatherEntity
+import weather.data.model.entity.CurrentWeatherEntity
+import weather.data.model.entity.DailyWeatherEntity
+import weather.data.model.entity.HourlyWeatherEntity
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather

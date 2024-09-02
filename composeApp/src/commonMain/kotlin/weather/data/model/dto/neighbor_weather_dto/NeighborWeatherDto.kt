@@ -1,11 +1,9 @@
-package weather.data.model.neighbor_weather_dto
+package weather.data.model.dto.neighbor_weather_dto
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import weather.data.remote.model.neighbor_weather.NeighborCurrentDto
-import weather.data.remote.model.neighbor_weather.NeighborDailyDto
-import weather.data.remote.model.neighbor_weather.NeighborHourlyDto
+import weather.data.model.dto.WeatherDto
 
 @Serializable
 data class NeighborWeatherDto(
@@ -19,4 +17,4 @@ data class NeighborWeatherDto(
     val hourly: NeighborHourlyDto,
     @SerialName("daily")
     val daily: NeighborDailyDto
-)
+): WeatherDto
