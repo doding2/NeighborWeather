@@ -84,10 +84,13 @@ class WeatherRepositoryImpl(
                         }
                     }
 
-
                     val (currentList, hourlyList, dailyList) = remoteWeathers.map {
                         it.toWeatherEntity()
                     }.unzip()
+
+                    logger.d {
+                        "hourlyList: ${hourlyList.flatten().map { it.neighbor }.distinct()}"
+                    }
 
                     weatherDatabase.currentWeatherDao.upsertCurrentWeatherList(currentList)
                     weatherDatabase.hourlyWeatherDao.upsertHourlyWeatherList(hourlyList.flatten())
