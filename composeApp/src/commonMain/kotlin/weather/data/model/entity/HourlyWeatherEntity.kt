@@ -1,4 +1,4 @@
-package weather.data.model.weather_entity
+package weather.data.model.entity
 
 import androidx.room.Entity
 import weather.domain.model.Neighbor

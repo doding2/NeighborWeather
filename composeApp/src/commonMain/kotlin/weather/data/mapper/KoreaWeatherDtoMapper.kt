@@ -1,6 +1,6 @@
 package weather.data.mapper
 
-import weather.data.remote.model.korean_weather.KoreaWeatherDto
+import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather

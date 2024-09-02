@@ -4,9 +4,9 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import weather.data.local.converters.NeighborConverter
-import weather.data.model.weather_entity.CurrentWeatherEntity
-import weather.data.model.weather_entity.DailyWeatherEntity
-import weather.data.model.weather_entity.HourlyWeatherEntity
+import weather.data.model.entity.CurrentWeatherEntity
+import weather.data.model.entity.DailyWeatherEntity
+import weather.data.model.entity.HourlyWeatherEntity
 
 @Database(
     entities = [

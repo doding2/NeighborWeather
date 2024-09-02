@@ -1,4 +1,4 @@
-package weather.data.remote.model.korean_weather
+package weather.data.model.dto.korean_weather_dto
 
 import kotlinx.datetime.LocalDate
 
