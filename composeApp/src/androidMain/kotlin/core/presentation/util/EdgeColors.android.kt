@@ -1,6 +1,7 @@
 package core.presentation.util
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
@@ -23,6 +24,11 @@ actual fun EdgeColors(
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
+            }
+
+            if (Build.VERSION.SDK_INT >= 29) {
+                val isContrastEnforced = navBarColor != Color.Transparent
+                window.isNavigationBarContrastEnforced = isContrastEnforced
             }
         }
     }

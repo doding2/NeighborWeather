@@ -40,9 +40,6 @@ import core.presentation.util.ObserveEffectsOnLifecycle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-//@Serializable
-//data object HomeScreen
-
 @Composable
 fun HomeScreen(
     state: HomeState,

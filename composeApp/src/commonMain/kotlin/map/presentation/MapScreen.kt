@@ -38,9 +38,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import map.presentation.components.GoogleMaps
 
-//@Serializable
-//data object MapScreen
-
 @Composable
 fun MapScreen(
     state: MapState,
@@ -48,7 +45,9 @@ fun MapScreen(
     effect: Flow<MapSideEffect>,
     navController: NavController
 ) {
-    EdgeColors()
+    EdgeColors(
+        navBarColor = Color.Transparent,
+    )
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
         permissionsControllerFactory.createPermissionsController()
