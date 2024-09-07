@@ -80,13 +80,13 @@ class MapViewModel : ViewModel() {
 
     fun onEvent(event: MapEvent) {
         when (event) {
-            MapEvent.NavigateUp -> {
+            is MapEvent.NavigateUp -> {
                 viewModelScope.launch {
                     sendEffect(MapSideEffect.NavigateUp)
                 }
             }
-            MapEvent.AcceptedLocationPermission -> loadMyLocation()
-            MapEvent.DeniedLocationPermission -> {
+            is MapEvent.AcceptedLocationPermission -> loadMyLocation()
+            is MapEvent.DeniedLocationPermission -> {
                 // TODO: Show dialog or etc
                 viewModelScope.launch {
                     sendEffect(MapSideEffect.OpenPermissionSettingPage)

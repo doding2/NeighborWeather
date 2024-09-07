@@ -89,7 +89,7 @@ actual fun GoogleMaps(
                 myLocationButton = isControlsVisible
             }
             view.setDelegate(mapsViewDelegate)
-            view.setSelectedMarker(null)
+//            view.setSelectedMarker(null)
             view.clear()
 
             if (cameraPosition != null) {

@@ -16,22 +16,20 @@ interface CurrentWeatherDao {
     suspend fun upsertCurrentWeatherList(currentList: List<CurrentWeatherEntity>)
 
     @Query("SELECT * FROM CurrentWeatherEntity " +
-            "WHERE latitude = :latitude AND longitude = :longitude " +
+            "WHERE locationName = :locationName " +
             "AND neighbor = :neighbor AND epochTime " +
             "ORDER BY epochTime DESC LIMIT 1")
     suspend fun searchCurrentWeatherList(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         neighbor: String,
     ): List<CurrentWeatherEntity>
 
     @Query("SELECT * FROM CurrentWeatherEntity " +
-            "WHERE latitude = :latitude AND longitude = :longitude " +
+            "WHERE locationName = :locationName " +
             "AND neighbor = :neighbor AND epochTime " +
             "ORDER BY epochTime DESC LIMIT 1")
     fun searchCurrentWeatherListFlow(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         neighbor: String,
     ): Flow<List<CurrentWeatherEntity>>
 

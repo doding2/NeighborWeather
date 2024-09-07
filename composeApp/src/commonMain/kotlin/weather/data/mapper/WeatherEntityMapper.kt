@@ -13,10 +13,11 @@ import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Weather
 
-fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEntity>> {
+fun Weather.toWeatherEntity(locationName: String): Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEntity>> {
     val current = CurrentWeatherEntity(
         latitude = latitude,
         longitude = longitude,
+        locationName = locationName,
         neighbor = neighbor,
         epochTime = current.time.toInstant(TimeZone.currentSystemDefault()) .epochSeconds,
         temperature = current.temperature,
@@ -32,6 +33,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
         HourlyWeatherEntity(
             latitude = latitude,
             longitude = longitude,
+            locationName = locationName,
             neighbor = neighbor,
             epochTime = it.time.toInstant(TimeZone.currentSystemDefault()).epochSeconds,
             temperature = it.temperature,
@@ -49,6 +51,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
         DailyWeatherEntity(
             latitude = latitude,
             longitude = longitude,
+            locationName = locationName,
             neighbor = neighbor,
             epochTime = LocalDateTime(it.time.year, it.time.monthNumber, it.time.dayOfMonth, 0, 0, 0)
                 .toInstant(TimeZone.currentSystemDefault()).epochSeconds,

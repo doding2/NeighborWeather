@@ -25,6 +25,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -37,6 +38,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
+import dev.icerock.moko.permissions.DeniedAlwaysException
+import dev.icerock.moko.permissions.DeniedException
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.RequestCanceledException
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -50,9 +57,30 @@ fun HomeScreen(
     EdgeColors(
         darkTheme = false
     )
+    val permissionsControllerFactory = rememberPermissionsControllerFactory()
+    val permissionsController = remember(permissionsControllerFactory) {
+        permissionsControllerFactory.createPermissionsController()
+    }
+    val scope = rememberCoroutineScope()
+    BindEffect(permissionsController)
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                permissionsController.providePermission(Permission.LOCATION)
+                onEvent(HomeEvent.AcceptedLocationPermission)
+            } catch (e: Throwable) {
+                when (e) {
+                    is DeniedAlwaysException,
+                    is DeniedException,
+                    is RequestCanceledException -> {
+                        onEvent(HomeEvent.DeniedLocationPermission)
+                    }
+                }
+            }
+        }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
-    val scope = rememberCoroutineScope()
     ObserveEffectsOnLifecycle(
         flow = effect,
         snackbarHostState
@@ -60,6 +88,7 @@ fun HomeScreen(
         scope.launch {
             when (it) {
                 is HomeSideEffect.NavigateToMap -> navController.navigate("map")
+                is HomeSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
                 is HomeSideEffect.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(it.message)

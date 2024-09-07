@@ -40,8 +40,6 @@ class HomeViewModel(
     private var job: Job? = null
 
     init {
-        loadMyLocation()
-
         snapshotFlow { state.myLocation }
             .onEach { location ->
                 if (location != null) {
@@ -70,6 +68,13 @@ class HomeViewModel(
             is HomeEvent.NavigateToMap -> {
                 viewModelScope.launch {
                     sendEffect(HomeSideEffect.NavigateToMap)
+                }
+            }
+            is HomeEvent.AcceptedLocationPermission -> loadMyLocation()
+            is HomeEvent.DeniedLocationPermission -> {
+                // TODO: Show dialog or etc
+                viewModelScope.launch {
+                    sendEffect(HomeSideEffect.OpenPermissionSettingPage)
                 }
             }
         }
@@ -115,34 +120,11 @@ class HomeViewModel(
     }
 
     private fun updateWeather(place: Place) {
-//        latitude = 42.0,
-//        longitude = 4.0,
-//        locationName = "파리",
-
-//        latitude = 36.0,
-//        longitude = 127.0,
-//        locationName = "서울",
-
-        val locationName = if (place.isoCountryCode?.lowercase() == "kr") {
-            place.subLocality ?: place.locality
-            ?: place.subAdministrativeArea ?: place.administrativeArea
-            ?: place.country ?: place.street!!
-        } else {
-            place.subAdministrativeArea ?: place.administrativeArea
-            ?: place.country ?: place.street!!
-        }
-
-        logger.d {
-            "latitude: ${place.coordinates.latitude}, longitude: ${place.coordinates.longitude}" +
-                    ", locationName: $locationName, street: ${place.street}"
-        }
 
         job?.cancel()
         job = viewModelScope.launch {
             weatherRepository.getWeathers(
-                latitude = place.coordinates.latitude,
-                longitude = place.coordinates.longitude,
-                locationName = locationName,
+                location = place,
                 targetToWeight = mapOf(
                     Neighbor.Korea to 0.5,
                     Neighbor.Japan to 0.2,

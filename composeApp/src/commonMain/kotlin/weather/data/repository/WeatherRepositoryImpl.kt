@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import core.util.Error
 import core.util.Result
 import core.util.unzip
+import dev.jordond.compass.Place
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -35,23 +36,36 @@ class WeatherRepositoryImpl(
     private val weatherPreprocessor: WeatherPreprocessor,
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
+
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
     override suspend fun getWeathers(
-        latitude: Double,
-        longitude: Double,
-        locationName: String,
+        location: Place,
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {
         return withContext(Dispatchers.IO) {
+            val locationName = location.run {
+                if (isoCountryCode?.lowercase() == "kr") {
+                    subLocality ?: locality ?: subAdministrativeArea
+                    ?: administrativeArea ?: country ?: street!!
+                } else {
+                    subAdministrativeArea ?: administrativeArea
+                    ?: country ?: street!!
+                }
+            }
+            logger.d {
+                "latitude: ${location.coordinates.latitude}, longitude: ${location.coordinates.longitude}" +
+                        ", locationName: $locationName, street: ${location.street}"
+            }
+
             channelFlow {
                 val targetNeighbors = setOf(*targetToWeight.keys.toTypedArray(), Neighbor.ALL)
 
                 // load from Remote API
                 launch {
                     val remoteWeatherDtoResults = getRemoteWeathers(
-                        latitude = latitude,
-                        longitude = longitude,
+                        latitude = location.coordinates.latitude,
+                        longitude = location.coordinates.longitude,
                         locationName = locationName,
                         targetNeighbors = targetNeighbors,
                     )
@@ -86,7 +100,7 @@ class WeatherRepositoryImpl(
                     }
 
                     val (currentList, hourlyList, dailyList) = remoteWeathers.map {
-                        it.toWeatherEntity()
+                        it.toWeatherEntity(locationName)
                     }.unzip()
 
                     weatherDatabase.currentWeatherDao.upsertCurrentWeatherList(currentList)
@@ -97,8 +111,7 @@ class WeatherRepositoryImpl(
 
                 // load from Database
                 val localWeatherFlows = getLocalWeatherFlows(
-                    latitude = latitude,
-                    longitude = longitude,
+                    locationName = locationName,
                     targetNeighbors = targetNeighbors
                 )
 
@@ -162,29 +175,25 @@ class WeatherRepositoryImpl(
     }
 
     private fun getLocalWeatherFlows(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         targetNeighbors: Set<Neighbor>
     ): List<Flow<Weather?>> {
         val now = Clock.System.now().epochSeconds
 
         val localWeatherListFlows = targetNeighbors.map { neighbor ->
             val currentFlow = weatherDatabase.currentWeatherDao.searchCurrentWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
             )
 
             val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
                 now = now
             )
 
             val dailyFlow = weatherDatabase.dailyWeatherDao.searchDailyWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
                 now = now
             )

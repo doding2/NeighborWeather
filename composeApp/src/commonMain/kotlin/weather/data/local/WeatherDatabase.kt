@@ -14,7 +14,7 @@ import weather.data.model.entity.HourlyWeatherEntity
         HourlyWeatherEntity::class,
         DailyWeatherEntity::class
     ],
-    version = 1
+    version = 2
 )
 @TypeConverters(value = [NeighborConverter::class])
 //@ConstructedBy(WeatherDatabaseConstructor::class)
