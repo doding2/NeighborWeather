@@ -1,0 +1,41 @@
+package map.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import map.presentation.MapEvent
+
+@Composable
+fun MapSearchBar(onEvent: (MapEvent) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
+        IconButton(
+            onClick = {
+                onEvent(MapEvent.NavigateUp)
+            },
+            content = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = "Back button",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            modifier = Modifier
+                .shadow(5.dp, CircleShape)
+                .background(
+                    color = Color.White,
+                    shape = CircleShape
+                )
+                .size(48.dp),
+        )
+    }
+}

@@ -1,28 +1,28 @@
 package map.presentation
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Surface
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -37,6 +37,8 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import map.presentation.components.GoogleMaps
+import map.presentation.components.MapPlaceInfo
+import map.presentation.components.MapSearchBar
 
 @Composable
 fun MapScreen(
@@ -58,6 +60,7 @@ fun MapScreen(
         scope.launch {
             try {
                 permissionsController.providePermission(Permission.LOCATION)
+                onEvent(MapEvent.AcceptedLocationPermission)
             } catch (e: Throwable) {
                 when (e) {
                     is DeniedAlwaysException,
@@ -69,51 +72,84 @@ fun MapScreen(
             }
         }
     }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
         flow = effect
     ) {
         scope.launch {
             when (it) {
-                MapSideEffect.NavigateUp -> navController.navigateUp()
-                MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                is MapSideEffect.NavigateUp -> navController.navigateUp()
+                is MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                is MapSideEffect.ShowSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(it.message)
+                }
             }
         }
     }
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            GoogleMaps(
-                modifier = Modifier.fillMaxSize()
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .align(Alignment.TopStart)
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.clickable(
+                        interactionSource = snackbarInteractionSource,
+                        indication = null
+                    ) {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                    }
                     .windowInsetsPadding(WindowInsets.safeDrawing)
-            ) {
-                IconButton(
-                    onClick = {
-                        onEvent(MapEvent.NavigateUp)
-                    },
-                    content = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back button",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    },
-                    modifier = Modifier
-                        .shadow(5.dp, CircleShape)
-                        .background(
-                            color = Color.White,
-                            shape = CircleShape
-                        )
-                        .size(40.dp),
                 )
+            },
+            modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                val isPlaceInfoVisible = remember(state.selectedPlace) {
+                    state.selectedPlace != null
+                }
+                val markers = remember(state.markers, state.selectedMarker) {
+                    listOfNotNull(state.selectedMarker) + state.markers
+                }
+                GoogleMaps(
+                    isControlsVisible = !isPlaceInfoVisible,
+                    onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
+                    onMarkerClick = { onEvent(MapEvent.OnMarkerClick(it)) },
+                    onMyLocationClick = { onEvent(MapEvent.OnMyLocationClick(it)) },
+                    markers = markers,
+                    cameraPosition = state.cameraPosition,
+                    contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
+                    modifier = Modifier.fillMaxSize()
+                )
+                MapSearchBar(
+                    onEvent = onEvent,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                )
+                AnimatedVisibility(
+                    visible = isPlaceInfoVisible,
+                    enter = slideInVertically(initialOffsetY = { it / 2}),
+                    exit = slideOutVertically(targetOffsetY = { it / 2}),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    state.selectedPlace?.let { place ->
+                        MapPlaceInfo(
+                            place = place,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    }
+                }
             }
         }
     }

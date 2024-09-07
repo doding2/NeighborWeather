@@ -50,9 +50,7 @@ fun HomeScreen(
     EdgeColors(
         darkTheme = false
     )
-    val snackbarHostState = remember {
-        SnackbarHostState()
-    }
+    val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
     ObserveEffectsOnLifecycle(
@@ -63,9 +61,7 @@ fun HomeScreen(
             when (it) {
                 is HomeSideEffect.NavigateToMap -> navController.navigate("map")
                 is HomeSideEffect.ShowSnackbar -> {
-                    if (it.isImmediate) {
-                        snackbarHostState.currentSnackbarData?.dismiss()
-                    }
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(it.message)
                 }
             }
@@ -98,6 +94,17 @@ fun HomeScreen(
                 LazyColumn(
                     contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
                 ) {
+                    state.myPlace?.let {
+                        item {
+                            Text(
+                                text = "${it.street}, ${it.subLocality}",
+                                fontSize = 24.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                                    .padding(16.dp)
+                            )
+                        }
+                    }
                     state.weather?.current?.let { current ->
                         item {
                             Text(
@@ -105,7 +112,7 @@ fun HomeScreen(
                                 fontSize = 24.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
-                                    .padding(vertical = 16.dp)
+                                    .padding(16.dp)
                             )
                         }
                     }
@@ -126,7 +133,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Rounded.Map,
                             contentDescription = "Navigate to map button",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     },
                     modifier = Modifier
@@ -138,7 +145,7 @@ fun HomeScreen(
                             color = Color.White,
                             shape = CircleShape
                         )
-                        .size(40.dp),
+                        .size(48.dp),
                 )
             }
         }

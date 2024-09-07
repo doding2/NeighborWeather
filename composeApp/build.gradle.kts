@@ -130,6 +130,12 @@ kotlin {
 
             // permission request helper
             api(libs.moko.permissions.compose)
+
+            // compass - location utils
+            implementation(libs.compass.geolocation)
+            implementation(libs.compass.geolocation.mobile)
+            implementation(libs.compass.geocoder)
+            implementation(libs.compass.geocoder.mobile)
         }
         nativeMain.dependencies {
             // ktor client

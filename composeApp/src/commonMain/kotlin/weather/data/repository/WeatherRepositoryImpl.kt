@@ -38,7 +38,8 @@ class WeatherRepositoryImpl(
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
     override suspend fun getWeathers(
-        latitude: Double, longitude: Double,
+        latitude: Double,
+        longitude: Double,
         locationName: String,
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {

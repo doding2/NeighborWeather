@@ -3,15 +3,25 @@ package home.presentation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import core.util.onError
 import core.util.onSuccess
+import dev.jordond.compass.Place
+import dev.jordond.compass.geocoder.Geocoder
+import dev.jordond.compass.geocoder.GeocoderResult
+import dev.jordond.compass.geolocation.Geolocator
+import dev.jordond.compass.geolocation.GeolocatorResult
+import dev.jordond.compass.geolocation.mobile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import map.domain.model.Location
 import weather.domain.model.Neighbor
 import weather.domain.repository.WeatherRepository
 
@@ -30,7 +40,25 @@ class HomeViewModel(
     private var job: Job? = null
 
     init {
-        updateWeather()
+        loadMyLocation()
+
+        snapshotFlow { state.myLocation }
+            .onEach { location ->
+                if (location != null) {
+                    loadPlace(location)
+                } else {
+                    state = state.copy(myPlace = null)
+                }
+            }.launchIn(viewModelScope)
+
+        snapshotFlow { state.myPlace }
+            .onEach { place ->
+                if (place != null) {
+                    updateWeather(place)
+                } else {
+                    state = state.copy(weather = null)
+                }
+            }.launchIn(viewModelScope)
     }
 
     private suspend fun sendEffect(effect: HomeSideEffect) {
@@ -47,7 +75,46 @@ class HomeViewModel(
         }
     }
 
-    private fun updateWeather() {
+    private fun loadMyLocation() {
+        viewModelScope.launch {
+            val geolocator = Geolocator.mobile()
+            when (val result = geolocator.current()) {
+                is GeolocatorResult.Success -> {
+                    val location = result.data.coordinates.let {
+                        Location(it.latitude, it.longitude)
+                    }
+                    state = state.copy(myLocation = location,)
+                    logger.d("Success to load my location: ${result.data}")
+                }
+                is GeolocatorResult.Error -> {
+                    state = state.copy(myLocation = null)
+                    sendEffect(HomeSideEffect.ShowSnackbar(result.message))
+                    logger.d("Fail to load my location: ${result.message}")
+                }
+            }
+        }
+    }
+
+    private suspend fun loadPlace(location: Location) {
+        val geocoder = Geocoder()
+        val result = geocoder.places(
+            latitude = location.latitude,
+            longitude = location.longitude
+        )
+        when (result) {
+            is GeocoderResult.Success -> {
+                state = state.copy(myPlace = result.getFirstOrNull())
+                logger.d("Success to load place: ${result.data}")
+            }
+            is GeocoderResult.Error -> {
+                state = state.copy(myPlace = null)
+                sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info."))
+                logger.d("Fail to load place info.")
+            }
+        }
+    }
+
+    private fun updateWeather(place: Place) {
 //        latitude = 42.0,
 //        longitude = 4.0,
 //        locationName = "파리",
@@ -55,12 +122,27 @@ class HomeViewModel(
 //        latitude = 36.0,
 //        longitude = 127.0,
 //        locationName = "서울",
+
+        val locationName = if (place.isoCountryCode?.lowercase() == "kr") {
+            place.subLocality ?: place.locality
+            ?: place.subAdministrativeArea ?: place.administrativeArea
+            ?: place.country ?: place.street!!
+        } else {
+            place.subAdministrativeArea ?: place.administrativeArea
+            ?: place.country ?: place.street!!
+        }
+
+        logger.d {
+            "latitude: ${place.coordinates.latitude}, longitude: ${place.coordinates.longitude}" +
+                    ", locationName: $locationName, street: ${place.street}"
+        }
+
         job?.cancel()
         job = viewModelScope.launch {
             weatherRepository.getWeathers(
-                latitude = 36.0,
-                longitude = 127.0,
-                locationName = "서울",
+                latitude = place.coordinates.latitude,
+                longitude = place.coordinates.longitude,
+                locationName = locationName,
                 targetToWeight = mapOf(
                     Neighbor.Korea to 0.5,
                     Neighbor.Japan to 0.2,
