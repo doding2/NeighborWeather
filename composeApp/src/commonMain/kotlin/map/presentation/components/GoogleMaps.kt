@@ -10,6 +10,7 @@ import map.domain.model.MapMarker
 
 @Composable
 expect fun GoogleMaps(
+    modifier: Modifier,
     isControlsVisible: Boolean = true,
     onMarkerClick: ((MapMarker) -> Unit)? = {},
     onMapClick: ((Location) -> Unit)? = {},
@@ -20,5 +21,4 @@ expect fun GoogleMaps(
     cameraPositionLocationBounds: CameraPositionLocationBounds? = null,
     polyLine: List<Location>? = null,
     contentPadding: PaddingValues = PaddingValues(),
-    modifier: Modifier,
 )

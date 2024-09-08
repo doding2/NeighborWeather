@@ -31,6 +31,7 @@ import platform.darwin.NSObject
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun GoogleMaps(
+    modifier: Modifier,
     isControlsVisible: Boolean,
     onMarkerClick: ((MapMarker) -> Unit)?,
     onMapClick: ((Location) -> Unit)?,
@@ -41,7 +42,6 @@ actual fun GoogleMaps(
     cameraPositionLocationBounds: CameraPositionLocationBounds?,
     polyLine: List<Location>?,
     contentPadding: PaddingValues,
-    modifier: Modifier,
 ) {
     val mapsViewDelegate = remember {
         object : NSObject(), GMSMapViewDelegateProtocol {

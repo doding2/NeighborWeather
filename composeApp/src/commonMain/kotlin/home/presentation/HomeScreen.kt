@@ -46,6 +46,7 @@ import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import map.domain.model.toLocationName
 
 @Composable
 fun HomeScreen(
@@ -100,6 +101,7 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
+            modifier = Modifier.fillMaxSize(),
             snackbarHost = {
                 SnackbarHost(
                     hostState = snackbarHostState,
@@ -113,7 +115,6 @@ fun HomeScreen(
                         .windowInsetsPadding(WindowInsets.safeDrawing)
                 )
             },
-            modifier = Modifier.fillMaxSize()
         ) { innerPadding ->
             Box(
                 modifier = Modifier
@@ -126,45 +127,37 @@ fun HomeScreen(
                     state.myPlace?.let {
                         item {
                             Text(
-                                text = "${it.street}, ${it.subLocality}",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                text = it.toLocationName(),
                                 fontSize = 24.sp,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(16.dp)
                             )
                         }
                     }
                     state.weather?.current?.let { current ->
                         item {
                             Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                                 text = "[${current.time}]\n${current.temperature.toString().padEnd(4, '0')} °C",
                                 fontSize = 24.sp,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(16.dp)
                             )
                         }
                     }
                     state.weather?.hourly?.let { hourly ->
                         items(hourly.withIndex().toList(), key = { it.index }) {
                             Text(
+                                modifier = Modifier.fillMaxWidth(),
                                 text = "[${it.value.time.time}] ${it.value.temperature.toString().padEnd(4, '0')} °C",
-                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 }
                 IconButton(
-                    onClick = {
-                        onEvent(HomeEvent.NavigateToMap)
-                    },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Rounded.Map,
-                            contentDescription = "Navigate to map button",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
                     modifier = Modifier
                         .padding(8.dp)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -175,6 +168,14 @@ fun HomeScreen(
                             shape = CircleShape
                         )
                         .size(48.dp),
+                    onClick = { onEvent(HomeEvent.NavigateToMap) },
+                    content = {
+                        Icon(
+                            imageVector = Icons.Rounded.Map,
+                            contentDescription = "Navigate to map button",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
                 )
             }
         }

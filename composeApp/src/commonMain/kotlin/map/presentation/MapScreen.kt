@@ -1,6 +1,8 @@
 package map.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
@@ -15,8 +17,8 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Surface
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -72,7 +74,7 @@ fun MapScreen(
             }
         }
     }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val scaffoldState = rememberScaffoldState()
     val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
         flow = effect
@@ -82,8 +84,8 @@ fun MapScreen(
                 is MapSideEffect.NavigateUp -> navController.navigateUp()
                 is MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
                 is MapSideEffect.ShowSnackbar -> {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar(it.message)
+                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                    scaffoldState.snackbarHostState.showSnackbar(it.message)
                 }
             }
         }
@@ -92,19 +94,9 @@ fun MapScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
-            snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.clickable(
-                        interactionSource = snackbarInteractionSource,
-                        indication = null
-                    ) {
-                        snackbarHostState.currentSnackbarData?.dismiss()
-                    }
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                )
-            },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            scaffoldState = scaffoldState,
+            snackbarHost = { scaffoldState.snackbarHostState }
         ) { innerPadding ->
             Box(
                 modifier = Modifier
@@ -118,38 +110,50 @@ fun MapScreen(
                     listOfNotNull(state.selectedMarker) + state.markers
                 }
                 GoogleMaps(
+                    modifier = Modifier.fillMaxSize(),
                     isControlsVisible = !isPlaceInfoVisible,
-                    onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
                     onMarkerClick = { onEvent(MapEvent.OnMarkerClick(it)) },
+                    onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
                     onMyLocationClick = { onEvent(MapEvent.OnMyLocationClick(it)) },
                     markers = markers,
                     cameraPosition = state.cameraPosition,
-                    contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
-                    modifier = Modifier.fillMaxSize()
+                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
                 )
                 MapSearchBar(
-                    onEvent = onEvent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
                         .align(Alignment.TopCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                    onEvent = onEvent
                 )
                 AnimatedVisibility(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
                     visible = isPlaceInfoVisible,
-                    enter = slideInVertically(initialOffsetY = { it / 2}),
-                    exit = slideOutVertically(targetOffsetY = { it / 2}),
-                    modifier = Modifier.align(Alignment.BottomCenter)
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
-                    state.selectedPlace?.let { place ->
-                        MapPlaceInfo(
-                            place = place,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        )
-                    }
+                    MapPlaceInfo(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        place = state.selectedPlace,
+                    )
                 }
+                SnackbarHost(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .clickable(
+                            interactionSource = snackbarInteractionSource,
+                            indication = null
+                        ) {
+                            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                        },
+                    hostState = scaffoldState.snackbarHostState,
+                )
             }
         }
     }

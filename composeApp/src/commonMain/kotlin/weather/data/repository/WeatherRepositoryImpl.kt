@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import map.domain.model.toLocationName
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
@@ -40,23 +41,11 @@ class WeatherRepositoryImpl(
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
     override suspend fun getWeathers(
-        location: Place,
+        place: Place,
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {
         return withContext(Dispatchers.IO) {
-            val locationName = location.run {
-                if (isoCountryCode?.lowercase() == "kr") {
-                    subLocality ?: locality ?: subAdministrativeArea
-                    ?: administrativeArea ?: country ?: street!!
-                } else {
-                    subAdministrativeArea ?: administrativeArea
-                    ?: country ?: street!!
-                }
-            }
-            logger.d {
-                "latitude: ${location.coordinates.latitude}, longitude: ${location.coordinates.longitude}" +
-                        ", locationName: $locationName, street: ${location.street}"
-            }
+            val locationName = place.toLocationName()
 
             channelFlow {
                 val targetNeighbors = setOf(*targetToWeight.keys.toTypedArray(), Neighbor.ALL)
@@ -64,8 +53,8 @@ class WeatherRepositoryImpl(
                 // load from Remote API
                 launch {
                     val remoteWeatherDtoResults = getRemoteWeathers(
-                        latitude = location.coordinates.latitude,
-                        longitude = location.coordinates.longitude,
+                        latitude = place.coordinates.latitude,
+                        longitude = place.coordinates.longitude,
                         locationName = locationName,
                         targetNeighbors = targetNeighbors,
                     )

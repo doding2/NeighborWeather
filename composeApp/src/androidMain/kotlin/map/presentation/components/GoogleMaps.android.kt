@@ -26,6 +26,7 @@ import map.domain.model.MapMarker
 
 @Composable
 actual fun GoogleMaps(
+    modifier: Modifier,
     isControlsVisible: Boolean,
     onMarkerClick: ((MapMarker) -> Unit)?,
     onMapClick: ((Location) -> Unit)?,
@@ -36,7 +37,6 @@ actual fun GoogleMaps(
     cameraPositionLocationBounds: CameraPositionLocationBounds?,
     polyLine: List<Location>?,
     contentPadding: PaddingValues,
-    modifier: Modifier,
 ) {
     val cameraPositionState = rememberCameraPositionState() {
         position = com.google.android.gms.maps.model.CameraPosition(
@@ -75,13 +75,13 @@ actual fun GoogleMaps(
         isMyLocationEnabled = true
     )) }
     GoogleMap(
+        modifier = modifier,
         cameraPositionState = cameraPositionState,
         uiSettings = uiSettings,
         properties = properties,
         onMapClick = { onMapClick?.invoke(Location(it.latitude, it.longitude)) },
         onMyLocationClick = { onMyLocationClick?.invoke(Location(it.latitude, it.longitude)) },
         contentPadding = contentPadding,
-        modifier = modifier
     ) {
         markers?.forEach { marker ->
             key(marker.key) {
