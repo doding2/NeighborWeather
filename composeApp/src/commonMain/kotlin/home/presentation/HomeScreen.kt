@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -32,9 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
@@ -44,9 +43,9 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import home.presentation.components.HomeCurrentWeatherCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import map.domain.model.toLocationName
 
 @Composable
 fun HomeScreen(
@@ -122,29 +121,20 @@ fun HomeScreen(
                     .padding(innerPadding)
             ) {
                 LazyColumn(
-                    contentPadding = WindowInsets.safeDrawing.asPaddingValues(),
+                    contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
-                    state.myPlace?.let {
+                    state.weather?.let { weather ->
                         item {
-                            Text(
+                            HomeCurrentWeatherCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp),
-                                text = it.toLocationName(),
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                    state.weather?.current?.let { current ->
-                        item {
-                            Text(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                text = "[${current.time}]\n${current.temperature.toString().padEnd(4, '0')} °C",
-                                fontSize = 24.sp,
-                                textAlign = TextAlign.Center,
+                                    .padding(
+                                        top = 53.dp,
+                                        bottom = 35.dp
+                                    )
+                                    .padding(horizontal = 34.dp),
+                                place = state.myPlace,
+                                weather = weather
                             )
                         }
                     }

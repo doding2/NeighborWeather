@@ -103,8 +103,8 @@ fun MapScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                val isPlaceWeatherVisible = remember(state.selectedPlace) {
-                    state.selectedPlace != null
+                val isPlaceWeatherVisible = remember(state.selectedWeather) {
+                    state.selectedWeather != null
                 }
                 val markers = remember(state.markers, state.selectedMarker) {
                     listOfNotNull(state.selectedMarker) + state.markers

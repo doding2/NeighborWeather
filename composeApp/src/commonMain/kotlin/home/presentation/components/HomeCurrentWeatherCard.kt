@@ -1,4 +1,4 @@
-package map.presentation.components
+package home.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jordond.compass.Place
-import home.presentation.components.WeatherImage
 import map.domain.model.toLocationName
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.precipitation_probability_unit
@@ -33,7 +32,7 @@ import weather.domain.model.Weather
 import kotlin.math.round
 
 @Composable
-fun MapPlaceWeather(
+fun HomeCurrentWeatherCard(
     place: Place?,
     weather: Weather?,
     modifier: Modifier = Modifier,
@@ -57,8 +56,7 @@ fun MapPlaceWeather(
                 color = Color.White,
                 shape = RoundedCornerShape(25.dp)
             )
-            .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp)
     ) {
         weatherCache?.let {
             Column(
@@ -135,11 +133,5 @@ fun MapPlaceWeather(
                 }
             }
         }
-        Text(
-            modifier = Modifier.padding(top = 15.dp),
-            text = placeCache?.street ?: "",
-            color = Color.Black,
-            fontSize = 16.sp,
-        )
     }
 }
