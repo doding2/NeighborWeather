@@ -8,5 +8,6 @@ import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 
 interface WeatherRepository {
-    suspend fun getWeathers(place: Place, targetToWeight: Map<Neighbor, Double>): Flow<Result<Weather, Error>>
+    suspend fun fetchWeather(place: Place, neighbor: Neighbor = Neighbor.ALL): Result<Weather, Error>
+    suspend fun loadWeathers(place: Place, targetToWeight: Map<Neighbor, Double>): Flow<Result<Weather, Error>>
 }

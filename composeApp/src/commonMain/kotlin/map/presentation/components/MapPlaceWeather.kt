@@ -16,35 +16,53 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.jordond.compass.Place
 import map.domain.model.toLocationName
+import weather.domain.model.Weather
 
 @Composable
-fun MapPlaceInfo(
+fun MapPlaceWeather(
     modifier: Modifier = Modifier,
     place: Place?,
+    weather: Weather?
 ) {
-    var placeCache by remember {
-        mutableStateOf<Place?>(null)
-    }
+    /*
+    When state value become null,
+    Text in MapPlace will be shown "null" text.
+    To avoid this "null" text, cache state values.
+     */
+    var placeCache by remember { mutableStateOf<Place?>(null) }
+    var weatherCache by remember { mutableStateOf<Weather?>(null) }
     LaunchedEffect(place) {
-        if (place != null) {
-            placeCache = place
-        }
+        if (place != null) { placeCache = place }
+    }
+    LaunchedEffect(weather) {
+        if (weather != null) { weatherCache = weather }
     }
     Column(
         modifier = modifier
             .background(
-                color = Color.White.copy(alpha = 0.75f),
+                color = Color.White,
                 shape = RoundedCornerShape(25.dp)
             )
             .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp)
     ) {
         Text(
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
             text = "${placeCache?.toLocationName()}"
         )
         Text(
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
             text = "${placeCache?.street}"
+        )
+        Text(
+            modifier = Modifier.padding(vertical = 4.dp),
+            text = buildString {
+                if (weatherCache != null) {
+                    append(weatherCache?.current?.temperature)
+                    append('°')
+                } else {
+                    append(' ')
+                }
+            }
         )
     }
 }

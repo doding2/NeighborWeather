@@ -123,7 +123,7 @@ class HomeViewModel(
 
         job?.cancel()
         job = viewModelScope.launch {
-            weatherRepository.getWeathers(
+            weatherRepository.loadWeathers(
                 place = place,
                 targetToWeight = mapOf(
                     Neighbor.Korea to 0.5,

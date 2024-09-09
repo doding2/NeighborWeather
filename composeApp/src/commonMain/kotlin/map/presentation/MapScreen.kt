@@ -39,7 +39,7 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import map.presentation.components.GoogleMaps
-import map.presentation.components.MapPlaceInfo
+import map.presentation.components.MapPlaceWeather
 import map.presentation.components.MapSearchBar
 
 @Composable
@@ -103,7 +103,7 @@ fun MapScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                val isPlaceInfoVisible = remember(state.selectedPlace) {
+                val isPlaceWeatherVisible = remember(state.selectedPlace) {
                     state.selectedPlace != null
                 }
                 val markers = remember(state.markers, state.selectedMarker) {
@@ -111,7 +111,7 @@ fun MapScreen(
                 }
                 GoogleMaps(
                     modifier = Modifier.fillMaxSize(),
-                    isControlsVisible = !isPlaceInfoVisible,
+                    isControlsVisible = !isPlaceWeatherVisible,
                     onMarkerClick = { onEvent(MapEvent.OnMarkerClick(it)) },
                     onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
                     onMyLocationClick = { onEvent(MapEvent.OnMyLocationClick(it)) },
@@ -131,15 +131,16 @@ fun MapScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .windowInsetsPadding(WindowInsets.safeDrawing),
-                    visible = isPlaceInfoVisible,
+                    visible = isPlaceWeatherVisible,
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
-                    MapPlaceInfo(
+                    MapPlaceWeather(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
                         place = state.selectedPlace,
+                        weather = state.selectedWeather
                     )
                 }
                 SnackbarHost(

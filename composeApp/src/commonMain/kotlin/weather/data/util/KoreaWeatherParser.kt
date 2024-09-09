@@ -37,13 +37,11 @@ class KoreaWeatherParser {
             try {
                 val doc = Ksoup.parse(html)
 
-                val overseasContent = doc.select("section.sc_new.cs_weather_overseas._cs_weather_abroad")
-                val isOverseas = overseasContent.size > 0
-                if (isOverseas) {
+                val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
+                if (content.size == 0) {
                     return@withContext Result.Error(KoreaWeatherParserException.NO_OVERSEAS_SUPPORT)
                 }
 
-                val content = doc.select("section.sc_new.cs_weather_new._cs_weather")
                 val current = getCurrentWeather(content, now)
                 val hourly = getHourlyWeather(content, now)
                 val daily = getDailyWeather(content, now)

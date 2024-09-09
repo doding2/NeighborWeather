@@ -2,6 +2,7 @@ package weather.data.repository
 
 import co.touchlab.kermit.Logger
 import core.util.Error
+import core.util.NetworkError
 import core.util.Result
 import core.util.unzip
 import dev.jordond.compass.Place
@@ -40,7 +41,24 @@ class WeatherRepositoryImpl(
 
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
-    override suspend fun getWeathers(
+    override suspend fun fetchWeather(
+        place: Place,
+        neighbor: Neighbor,
+    ): Result<Weather, Error> {
+        return withContext(Dispatchers.IO) {
+            getRemoteWeathers(
+                latitude = place.coordinates.latitude,
+                longitude = place.coordinates.longitude,
+                locationName = place.toLocationName(),
+                targetNeighbors = setOf(neighbor, Neighbor.ALL)
+            ).let {
+                weatherPreprocessor.preprocess(it).firstOrNull()
+                    ?: Result.Error(NetworkError.UNKNOWN)
+            }
+        }
+    }
+
+    override suspend fun loadWeathers(
         place: Place,
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {

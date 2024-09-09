@@ -7,6 +7,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import core.util.Result
+import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
@@ -21,8 +23,12 @@ import map.domain.model.CameraPosition
 import map.domain.model.Location
 import map.domain.model.MapMarker
 import map.domain.model.isWithinDistance
+import weather.domain.model.Weather
+import weather.domain.repository.WeatherRepository
 
-class MapViewModel : ViewModel() {
+class MapViewModel(
+    private val weatherRepository: WeatherRepository
+) : ViewModel() {
 
     private val logger by lazy { Logger.withTag("MapViewModel") }
 
@@ -35,6 +41,28 @@ class MapViewModel : ViewModel() {
     init {
         snapshotFlow { state.selectedLocation }
             .onEach { location ->
+                // update selected marker
+                val isWithinMe = location?.let {
+                    state.myLocation?.isWithinDistance(it, 0.005)
+                } ?: false
+
+                state = state.copy(
+                    selectedMarker = location
+                        ?.takeIf { !isWithinMe }
+                        ?.let {
+                            val key = "(${location.latitude}, ${location.longitude})"
+                            MapMarker(
+                                key = key,
+                                position = Location(
+                                    location.latitude,
+                                    location.longitude
+                                ),
+                                title = key,
+                                alpha = 1f,
+                            )
+                        }
+                )
+
                 // update selected place and camera position
                 if (location == null) {
                     state = state.copy(
@@ -48,28 +76,13 @@ class MapViewModel : ViewModel() {
                     )
                     loadPlace(location)
                 }
+            }.launchIn(viewModelScope)
 
-                // update selected marker
-                val place = state.selectedPlace
-                val isWithinMe = location?.let {
-                    state.myLocation?.isWithinDistance(it, 0.005)
-                } ?: false
-
+        snapshotFlow { state.selectedPlace }
+            .onEach { place ->
+                // update weather of selected place
                 state = state.copy(
-                    selectedMarker = location
-                        ?.takeIf { !isWithinMe && place != null }
-                        ?.let {
-                            val key = "(${location.latitude}, ${location.longitude})"
-                            MapMarker(
-                                key = key,
-                                position = Location(
-                                    location.latitude,
-                                    location.longitude
-                                ),
-                                title = place?.street ?: key,
-                                alpha = 1f,
-                            )
-                        }
+                    selectedWeather = place?.let { fetchWeather(it) }
                 )
             }.launchIn(viewModelScope)
     }
@@ -95,9 +108,10 @@ class MapViewModel : ViewModel() {
             is MapEvent.OnMapClick -> {
                 updateSelectedLocation(location = event.location)
             }
-            // When marker is double-clicked with term, state is not updated.
-            // Because location of marker is same value.
-            // So update camera position directly
+            /* When marker is double-clicked with term, state is not updated.
+            Because location of marker is same value.
+            So update camera position directly
+             */
             is MapEvent.OnMarkerClick -> {
                 updateSelectedLocation(
                     location = event.marker.position,
@@ -144,12 +158,18 @@ class MapViewModel : ViewModel() {
         )
         when (result) {
             is GeocoderResult.Success -> {
-                state = state.copy(selectedPlace = result.getFirstOrNull())
+                state = state.copy(
+                    selectedPlace = result.getFirstOrNull()
+                )
                 logger.d("Success to load place: ${result.data}")
             }
             is GeocoderResult.Error -> {
-                state = state.copy(selectedPlace = null)
-                sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info."))
+                state = state.copy(
+                    selectedPlace = null
+                )
+                if (result.errorOrNull() != GeocoderResult.NotFound) {
+                    sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info: ${result.errorOrNull()?.toString()}"))
+                }
                 logger.d("Fail to load place info.")
             }
         }
@@ -174,5 +194,20 @@ class MapViewModel : ViewModel() {
                 )
             }
         )
+    }
+
+    private suspend fun fetchWeather(place: Place): Weather? {
+        return when (val result = weatherRepository.fetchWeather(place)) {
+            is Result.Success -> {
+                val weather = result.data
+                logger.d("Success to load weather: $weather")
+                weather
+            }
+            is Result.Error -> {
+                sendEffect(MapSideEffect.ShowSnackbar(result.error.toString()))
+                logger.d("Fail to load weather: ${result.error}")
+                null
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import core.util.Error
 import core.util.Result
 import core.util.getDataOrNull
@@ -30,7 +31,7 @@ class WeatherPreprocessor {
         if (bestWeatherDto == null) {
             return listOf(
                 Result.Error(
-                    WeatherPreprocessorError.NO_BEST_WEATHER
+                    WeatherPreprocessorError.FAIL_TO_LOAD_BEST_WEATHER
                 )
             )
         }
@@ -315,7 +316,7 @@ class WeatherPreprocessor {
     }
 
     enum class WeatherPreprocessorError: Error {
-        NO_BEST_WEATHER,
+        FAIL_TO_LOAD_BEST_WEATHER,
         UNKNOWN_WEATHER_DTO_TYPE,
         FAIL_TO_FILL_MISSING_VALUES,
         FAIL_TO_MAP_WEATHER

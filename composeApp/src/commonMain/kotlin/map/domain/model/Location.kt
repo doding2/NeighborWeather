@@ -14,10 +14,19 @@ fun Location.isWithinDistance(other: Location, distance: Double): Boolean {
 
 fun Place.toLocationName(): String {
     return if (isoCountryCode?.lowercase() == "kr") {
-        subLocality?.let { "$it $thoroughfare" }
-            ?: locality?.let { "$it $thoroughfare" }
-            ?: subAdministrativeArea ?: administrativeArea
-            ?: country ?: street!!
+        subLocality?.let {
+            buildString {
+                append(it)
+                thoroughfare?.let { append(" $thoroughfare") }
+            }
+        } ?: locality?.let {
+            buildString {
+                append(it)
+                thoroughfare?.let { append(" $thoroughfare") }
+            }
+        }
+        ?: subAdministrativeArea ?: administrativeArea
+        ?: country ?: street!!
     } else {
         subLocality ?: locality
             ?: subAdministrativeArea ?: administrativeArea
