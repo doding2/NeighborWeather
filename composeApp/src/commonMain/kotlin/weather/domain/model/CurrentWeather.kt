@@ -12,6 +12,7 @@ data class CurrentWeather(
     val precipitation: Double,
     val precipitationProbability: Double,
     val weatherCode: Int,
+    val weatherType: WeatherType,
     val windSpeed: Double,
     val windDirection: Double
 )

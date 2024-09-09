@@ -160,6 +160,7 @@ class WeatherRepositoryImpl(
         return withContext(Dispatchers.IO) {
             val weatherDtoResults = targetNeighbors.map { neighbor ->
                 async {
+                    logger.d("[Async start] $neighbor")
                     val result = if (neighbor == Neighbor.Korea) {
                         weatherClient.getKoreaWeather(
                             latitude = latitude,
@@ -173,6 +174,7 @@ class WeatherRepositoryImpl(
                             neighbor = neighbor
                         )
                     }
+                    logger.d("[Async end] $neighbor")
                     return@async neighbor to result
                 }
             }.awaitAll()

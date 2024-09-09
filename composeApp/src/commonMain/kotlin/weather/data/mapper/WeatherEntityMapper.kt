@@ -12,6 +12,7 @@ import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Weather
+import weather.domain.model.toWeatherType
 
 fun Weather.toWeatherEntity(locationName: String): Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEntity>> {
     val current = CurrentWeatherEntity(
@@ -80,6 +81,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
             precipitation = first.precipitation,
             precipitationProbability = first.precipitationProbability,
             weatherCode = first.weatherCode,
+            weatherType = first.weatherCode.toWeatherType(),
             windSpeed = first.windSpeed,
             windDirection = first.windDirection
         ),
@@ -92,6 +94,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
                 precipitation = it.precipitation,
                 precipitationProbability = it.precipitationProbability ?: -1.0,
                 weatherCode = it.weatherCode,
+                weatherType = it.weatherCode.toWeatherType(),
                 windSpeed = it.windSpeed,
                 windDirection = it.windDirection
             )
@@ -103,7 +106,8 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
                 temperatureMax = it.temperatureMax,
                 temperatureMin = it.temperatureMin,
                 precipitationProbability = it.precipitationProbability ?: -1.0,
-                weatherCode = it.weatherCode
+                weatherCode = it.weatherCode,
+                weatherType = it.weatherCode.toWeatherType()
             )
         }
 

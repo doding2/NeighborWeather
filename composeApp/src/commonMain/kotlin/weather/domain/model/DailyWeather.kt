@@ -10,4 +10,5 @@ data class DailyWeather(
     val temperatureMin: Double,
     val precipitationProbability: Double,
     val weatherCode: Int,
+    val weatherType: WeatherType,
 )

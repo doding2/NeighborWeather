@@ -1,5 +1,6 @@
 package map.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import dev.jordond.compass.Place
 import map.domain.model.toLocationName
+import neighborweather.composeapp.generated.resources.Res
+import neighborweather.composeapp.generated.resources.icon_sunny
+import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.Weather
 
 @Composable
@@ -45,6 +49,13 @@ fun MapPlaceWeather(
             )
             .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp)
     ) {
+        weatherCache?.current?.weatherType?.let {
+            Image(
+                painter = painterResource(Res.drawable.icon_sunny),
+                contentDescription = "Weather icon"
+            )
+        }
+
         Text(
             modifier = Modifier.padding(vertical = 4.dp),
             text = "${placeCache?.toLocationName()}"
