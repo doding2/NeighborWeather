@@ -10,8 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import core.presentation.ui.theme.sunnyOnPrimary
+import core.presentation.ui.theme.sunnyPrimary
 import map.presentation.MapEvent
 
 @Composable
@@ -23,7 +24,7 @@ fun MapSearchBar(
         IconButton(
             modifier = Modifier
                 .background(
-                    color = Color.White.copy(alpha = 0.75f),
+                    color = sunnyPrimary,
                     shape = CircleShape
                 )
                 .size(48.dp),
@@ -33,6 +34,7 @@ fun MapSearchBar(
                     modifier = Modifier.size(24.dp),
                     imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = "Back button",
+                    tint = sunnyOnPrimary
                 )
             },
         )

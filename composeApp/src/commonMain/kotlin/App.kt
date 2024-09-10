@@ -1,9 +1,9 @@
 
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import core.presentation.ui.theme.NeighborWeatherTheme
 import home.presentation.HomeScreen
 import home.presentation.HomeViewModel
 import map.presentation.MapScreen
@@ -17,7 +17,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    NeighborWeatherTheme {
         KoinContext {
             val navController = rememberNavController()
             NavHost(

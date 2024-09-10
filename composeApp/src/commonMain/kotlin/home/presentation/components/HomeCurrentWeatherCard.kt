@@ -18,10 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import core.presentation.ui.theme.sunnyOnPrimary
+import core.presentation.ui.theme.sunnyPrimary
 import dev.jordond.compass.Place
 import map.domain.model.toLocationName
 import neighborweather.composeapp.generated.resources.Res
@@ -53,7 +55,7 @@ fun HomeCurrentWeatherCard(
     Column(
         modifier = modifier
             .background(
-                color = Color.White,
+                color = sunnyPrimary,
                 shape = RoundedCornerShape(25.dp)
             )
             .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp)
@@ -70,39 +72,44 @@ fun HomeCurrentWeatherCard(
                         modifier = Modifier
                             .size(72.dp),
                         weatherType = it.current.weatherType,
-                        colorFilter = ColorFilter.tint(Color.Black)
+                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Text(
                         modifier = Modifier.padding(start = 20.dp),
                         text = "${round(it.current.temperature).toInt()}",
-                        color = Color.Black,
+                        color = sunnyOnPrimary,
                         fontSize = 100.sp,
+                        fontWeight = FontWeight.Medium
                     )
                     Text(
                         modifier = Modifier.align(Alignment.Top),
                         text = stringResource(Res.string.temperature_unit),
-                        color = Color.Black,
+                        color = sunnyOnPrimary,
                         fontSize = 60.sp,
+                        fontWeight = FontWeight.Light
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
                     modifier = Modifier.padding(top = 30.dp),
                     text = it.current.weatherType.toString(),
-                    color = Color.Black,
-                    fontSize = 20.sp
+                    color = sunnyOnPrimary,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     modifier = Modifier.padding(top = 15.dp),
                     text = placeCache?.toLocationName() ?: "Unknown place",
-                    color = Color.Black,
-                    fontSize = 15.sp
+                    color = sunnyOnPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     modifier = Modifier.padding(top = 15.dp),
                     text = it.current.time.toString(),
-                    color = Color.Black,
-                    fontSize = 15.sp
+                    color = sunnyOnPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Row(
                     modifier = Modifier.padding(top = 15.dp),
@@ -111,8 +118,9 @@ fun HomeCurrentWeatherCard(
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "Feels like ${round(it.current.apparentTemperature).toInt()}",
-                        color = Color.Black,
-                        fontSize = 15.sp
+                        color = sunnyOnPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
                     )
                     Spacer(
                         modifier = Modifier
@@ -120,14 +128,15 @@ fun HomeCurrentWeatherCard(
                             .width(1.dp)
                             .height(10.dp)
                             .background(
-                                color = Color.Black,
+                                color = sunnyOnPrimary,
                                 shape = RoundedCornerShape(10.dp)
                             )
                     )
                     Text(
                         text = "Rain by ${it.current.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
-                        color = Color.Black,
-                        fontSize = 15.sp
+                        color = sunnyOnPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }

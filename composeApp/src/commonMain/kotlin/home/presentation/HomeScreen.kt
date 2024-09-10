@@ -1,5 +1,6 @@
 package home.presentation
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,8 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import core.presentation.ui.theme.sunnyOnPrimary
+import core.presentation.ui.theme.sunnyPrimary
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import dev.icerock.moko.permissions.DeniedAlwaysException
@@ -46,6 +50,9 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import home.presentation.components.HomeCurrentWeatherCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import neighborweather.composeapp.generated.resources.Res
+import neighborweather.composeapp.generated.resources.background_sunny
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun HomeScreen(
@@ -55,7 +62,8 @@ fun HomeScreen(
     navController: NavController
 ) {
     EdgeColors(
-        darkTheme = false
+        darkTheme = true,
+        navBarColor = Color.Transparent
     )
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
@@ -120,6 +128,12 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    painter = painterResource(Res.drawable.background_sunny),
+                    contentDescription = "Home background image",
+                    contentScale = ContentScale.Crop
+                )
                 LazyColumn(
                     contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
@@ -143,6 +157,7 @@ fun HomeScreen(
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = "[${it.value.time.time}] ${it.value.temperature.toString().padEnd(4, '0')} °C",
+                                color = Color.White
                             )
                         }
                     }
@@ -154,7 +169,7 @@ fun HomeScreen(
                         .align(Alignment.TopEnd)
                         .shadow(5.dp, CircleShape)
                         .background(
-                            color = Color.White,
+                            color = sunnyPrimary,
                             shape = CircleShape
                         )
                         .size(48.dp),
@@ -163,7 +178,8 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Rounded.Map,
                             contentDescription = "Navigate to map button",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = sunnyOnPrimary
                         )
                     },
                 )
