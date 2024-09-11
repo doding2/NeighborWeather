@@ -1,10 +1,14 @@
 package home.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,8 +31,10 @@ import core.presentation.ui.theme.sunnyPrimary
 import dev.jordond.compass.Place
 import map.domain.model.toLocationName
 import neighborweather.composeapp.generated.resources.Res
+import neighborweather.composeapp.generated.resources.home_current_weather_title
+import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import neighborweather.composeapp.generated.resources.precipitation_probability_unit
-import neighborweather.composeapp.generated.resources.temperature_unit
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import weather.domain.model.Weather
 import kotlin.math.round
@@ -54,65 +60,78 @@ fun HomeCurrentWeatherCard(
     }
     Column(
         modifier = modifier
+            .aspectRatio(360f / 380f)
             .background(
                 color = sunnyPrimary,
                 shape = RoundedCornerShape(25.dp)
             )
-            .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp)
+            .padding(horizontal = 15.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         weatherCache?.let {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // padding of each items: 25, 5, -10, 15, 15, 15, 28 -> 103 - 10
+                // -> round to to 100
+                Spacer(modifier = Modifier.weight(0.25f))
+                Text(
+                    text = stringResource(Res.string.home_current_weather_title),
+                    color = sunnyOnPrimary,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.weight(0.05f))
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     WeatherImage(
-                        modifier = Modifier
-                            .size(72.dp),
+                        modifier = Modifier.size(72.dp),
                         weatherType = it.current.weatherType,
                         colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Text(
-                        modifier = Modifier.padding(start = 20.dp),
+                        modifier = Modifier.padding(start = 20.dp, end = 2.dp),
                         text = "${round(it.current.temperature).toInt()}",
                         color = sunnyOnPrimary,
                         fontSize = 100.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Text(
-                        modifier = Modifier.align(Alignment.Top),
-                        text = stringResource(Res.string.temperature_unit),
-                        color = sunnyOnPrimary,
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Light
+                    Image(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(top = 23.dp),
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
+                        alignment = Alignment.TopCenter,
+                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    modifier = Modifier.padding(top = 30.dp),
+                    modifier = Modifier.offset(y = (-10).dp),
                     text = it.current.weatherType.toString(),
                     color = sunnyOnPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+                Spacer(modifier = Modifier.weight(0.15f))
                 Text(
-                    modifier = Modifier.padding(top = 15.dp),
                     text = placeCache?.toLocationName() ?: "Unknown place",
                     color = sunnyOnPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )
+                Spacer(modifier = Modifier.weight(0.15f))
                 Text(
-                    modifier = Modifier.padding(top = 15.dp),
                     text = it.current.time.toString(),
                     color = sunnyOnPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )
+                Spacer(modifier = Modifier.weight(0.15f))
                 Row(
-                    modifier = Modifier.padding(top = 15.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -121,6 +140,16 @@ fun HomeCurrentWeatherCard(
                         color = sunnyOnPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
+                    )
+                    Image(
+                        modifier = Modifier
+                            .align(Alignment.Top)
+                            .padding(top = 4.dp)
+                            .size(5.dp),
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
+                        alignment = Alignment.TopCenter,
+                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Spacer(
                         modifier = Modifier
@@ -140,6 +169,7 @@ fun HomeCurrentWeatherCard(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
+                Spacer(modifier = Modifier.weight(0.28f))
             }
         }
     }

@@ -1,10 +1,18 @@
 package home.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,9 +21,9 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -23,13 +31,15 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -134,33 +144,50 @@ fun HomeScreen(
                     contentDescription = "Home background image",
                     contentScale = ContentScale.Crop
                 )
+                val weather by rememberUpdatedState(state.weather)
+                val isWeatherLoaded by remember {
+                    derivedStateOf {
+                        weather != null
+                    }
+                }
                 LazyColumn(
                     contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
-                    state.weather?.let { weather ->
-                        item {
-                            HomeCurrentWeatherCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        top = 53.dp,
-                                        bottom = 35.dp
-                                    )
-                                    .padding(horizontal = 34.dp),
-                                place = state.myPlace,
-                                weather = weather
-                            )
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Spacer(modifier = Modifier.weight(1f))
+                            AnimatedVisibility(
+                                modifier = Modifier.sizeIn(maxWidth = 360.dp),
+                                visible = isWeatherLoaded,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2}),
+                                exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
+                            ) {
+                                HomeCurrentWeatherCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            top = 53.dp,
+                                            bottom = 35.dp
+                                        )
+                                        .padding(horizontal = 20.dp),
+                                    place = state.myPlace,
+                                    weather = weather
+                                )
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
-                    state.weather?.hourly?.let { hourly ->
-                        items(hourly.withIndex().toList(), key = { it.index }) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "[${it.value.time.time}] ${it.value.temperature.toString().padEnd(4, '0')} °C",
-                                color = Color.White
-                            )
-                        }
-                    }
+//                    state.weather?.hourly?.let { hourly ->
+//                        items(hourly.withIndex().toList(), key = { it.value.time.toString() }) {
+//                            Text(
+//                                modifier = Modifier.fillMaxWidth(),
+//                                text = "[${it.value.time.time}] ${it.value.temperature.toString().padEnd(4, '0')} °C",
+//                                color = Color.White
+//                            )
+//                        }
+//                    }
                 }
                 IconButton(
                     modifier = Modifier

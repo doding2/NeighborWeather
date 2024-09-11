@@ -69,8 +69,8 @@ actual fun GoogleMaps(
             myLocationEnabled = true
             setCamera(
                 GMSCameraPosition.cameraWithLatitude(
-                    latitude = 0.0,
-                    longitude = 0.0,
+                    latitude = 51.5,
+                    longitude = -0.12,
                     zoom = 10f
                 )
             )
@@ -89,7 +89,6 @@ actual fun GoogleMaps(
                 myLocationButton = isControlsVisible
             }
             view.setDelegate(mapsViewDelegate)
-//            view.setSelectedMarker(null)
             view.clear()
 
             if (cameraPosition != null) {

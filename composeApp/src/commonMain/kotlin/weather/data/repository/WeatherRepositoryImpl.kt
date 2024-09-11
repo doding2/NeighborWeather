@@ -122,31 +122,29 @@ class WeatherRepositoryImpl(
                     targetNeighbors = targetNeighbors
                 )
 
-                combine(*localWeatherFlows.toTypedArray()) {
-                    it.toList()
-                }
-                .distinctUntilChanged()
-                .mapNotNull { nullableWeathers ->
-                    val weathers = nullableWeathers.filterNotNull()
+                combine(*localWeatherFlows.toTypedArray()) { it }
+                    .distinctUntilChanged()
+                    .mapNotNull { nullableWeathers ->
+                        val weathers = nullableWeathers.filterNotNull()
 
-                    /*
-                    When best matched weathers (all neighbor) is not exist,
-                    pass this flow iteration and wait for remote weather data.
-                     */
-                    if (weathers.isEmpty())
-                        return@mapNotNull null
-                    val containsNeighborAll = Neighbor.ALL in weathers.map { it.neighbor }
-                    if (!containsNeighborAll)
-                        return@mapNotNull null
+                        /*
+                        When best matched weathers (all neighbor) is not exist,
+                        pass this flow iteration and wait for remote weather data.
+                         */
+                        if (weathers.isEmpty())
+                            return@mapNotNull null
+                        val containsNeighborAll = Neighbor.ALL in weathers.map { it.neighbor }
+                        if (!containsNeighborAll)
+                            return@mapNotNull null
 
-                    val successNeighbors = weathers.map { it.neighbor }
-                    val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
+                        val successNeighbors = weathers.map { it.neighbor }
+                        val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
-                    weightCalculator.calculateWeightedSum(
-                        weathers = weathers,
-                        targetToWeight = successTargetToWeight
-                    )
-                }.collect(::send)
+                        weightCalculator.calculateWeightedSum(
+                            weathers = weathers,
+                            targetToWeight = successTargetToWeight
+                        )
+                    }.collect(::send)
             }
         }
     }
@@ -160,7 +158,6 @@ class WeatherRepositoryImpl(
         return withContext(Dispatchers.IO) {
             val weatherDtoResults = targetNeighbors.map { neighbor ->
                 async {
-                    logger.d("[Async start] $neighbor")
                     val result = if (neighbor == Neighbor.Korea) {
                         weatherClient.getKoreaWeather(
                             latitude = latitude,
@@ -174,7 +171,6 @@ class WeatherRepositoryImpl(
                             neighbor = neighbor
                         )
                     }
-                    logger.d("[Async end] $neighbor")
                     return@async neighbor to result
                 }
             }.awaitAll()

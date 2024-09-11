@@ -25,7 +25,7 @@ fun Weather.toWeatherEntity(locationName: String): Triple<CurrentWeatherEntity, 
         relativeHumidity = current.relativeHumidity,
         apparentTemperature = current.apparentTemperature,
         precipitation = current.precipitation,
-        precipitationProbability = current.precipitation,
+        precipitationProbability = current.precipitationProbability,
         weatherCode = current.weatherCode,
         windSpeed = current.windSpeed,
         windDirection = current.windDirection

@@ -21,8 +21,11 @@ import androidx.compose.material.Surface
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -103,8 +106,11 @@ fun MapScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                val isPlaceWeatherVisible = remember(state.selectedWeather) {
-                    state.selectedWeather != null
+                val selectedWeather by rememberUpdatedState(state.selectedWeather)
+                val isPlaceWeatherVisible by remember {
+                    derivedStateOf {
+                        selectedWeather != null
+                    }
                 }
                 val markers = remember(state.markers, state.selectedMarker) {
                     listOfNotNull(state.selectedMarker) + state.markers

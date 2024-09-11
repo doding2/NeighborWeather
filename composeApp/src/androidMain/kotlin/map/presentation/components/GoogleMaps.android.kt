@@ -40,7 +40,7 @@ actual fun GoogleMaps(
 ) {
     val cameraPositionState = rememberCameraPositionState() {
         position = com.google.android.gms.maps.model.CameraPosition(
-            LatLng(0.0, 0.0), 10f, 0f, 0f
+            LatLng(51.5, -0.12), 10f, 0f, 0f
         )
     }
     LaunchedEffect(cameraPosition) {

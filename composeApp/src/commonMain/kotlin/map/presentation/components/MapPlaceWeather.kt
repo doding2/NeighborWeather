@@ -1,13 +1,13 @@
 package map.presentation.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import core.presentation.ui.theme.sunnyOnPrimary
@@ -28,9 +29,8 @@ import dev.jordond.compass.Place
 import home.presentation.components.WeatherImage
 import map.domain.model.toLocationName
 import neighborweather.composeapp.generated.resources.Res
-import neighborweather.composeapp.generated.resources.precipitation_probability_unit
-import neighborweather.composeapp.generated.resources.temperature_unit
-import org.jetbrains.compose.resources.stringResource
+import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
+import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.Weather
 import kotlin.math.round
 
@@ -53,102 +53,66 @@ fun MapPlaceWeather(
     LaunchedEffect(weather) {
         if (weather != null) { weatherCache = weather }
     }
-    Column(
-        modifier = modifier
-            .background(
-                color = sunnyPrimary,
-                shape = RoundedCornerShape(25.dp)
-            )
-            .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        weatherCache?.let {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+
+    weatherCache?.let {
+        Column(
+            modifier = modifier
+                .background(
+                    color = sunnyPrimary,
+                    shape = RoundedCornerShape(25.dp)
+                )
+                .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.Top
             ) {
+                WeatherImage(
+                    modifier = Modifier.size(36.dp),
+                    weatherType = it.current.weatherType,
+                    colorFilter = ColorFilter.tint(sunnyOnPrimary)
+                )
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.offset(y = (-4).dp),
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    WeatherImage(
-                        modifier = Modifier.size(72.dp),
-                        weatherType = it.current.weatherType,
-                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
-                    )
                     Text(
-                        modifier = Modifier.padding(start = 20.dp),
+                        modifier = Modifier.padding(start = 10.dp, end = 1.dp),
                         text = "${round(it.current.temperature).toInt()}",
                         color = sunnyOnPrimary,
-                        fontSize = 100.sp,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Text(
-                        modifier = Modifier.align(Alignment.Top),
-                        text = stringResource(Res.string.temperature_unit),
-                        color = sunnyOnPrimary,
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Light
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-                Text(
-                    modifier = Modifier.padding(top = 30.dp),
-                    text = it.current.weatherType.toString(),
-                    color = sunnyOnPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    modifier = Modifier.padding(top = 15.dp),
-                    text = placeCache?.toLocationName() ?: "Unknown place",
-                    color = sunnyOnPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    modifier = Modifier.padding(top = 15.dp),
-                    text = it.current.time.toString(),
-                    color = sunnyOnPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Row(
-                    modifier = Modifier.padding(top = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "Feels like ${round(it.current.apparentTemperature).toInt()}",
-                        color = sunnyOnPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(
+                    Image(
                         modifier = Modifier
-                            .padding(horizontal = 10.dp)
-                            .width(1.dp)
-                            .height(10.dp)
-                            .background(
-                                color = sunnyOnPrimary,
-                                shape = RoundedCornerShape(10.dp)
-                            )
+                            .align(Alignment.Top)
+                            .padding(top = 8.dp)
+                            .size(7.5.dp),
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
+                        alignment = Alignment.TopCenter,
+                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = placeCache?.toLocationName() ?: "Unknown place",
+                        color = sunnyOnPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.End
                     )
                     Text(
-                        text = "Rain by ${it.current.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
+                        text = placeCache?.street ?: "",
                         color = sunnyOnPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.End,
+                        lineHeight = 14.sp,
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
-        Text(
-            modifier = Modifier.padding(top = 15.dp),
-            text = placeCache?.street ?: "",
-            color = sunnyOnPrimary,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }

@@ -42,11 +42,9 @@ class HomeViewModel(
     init {
         snapshotFlow { state.myLocation }
             .onEach { location ->
-                if (location != null) {
-                    loadPlace(location)
-                } else {
-                    state = state.copy(myPlace = null)
-                }
+                state = state.copy(
+                    myPlace = location?.let { fetchPlace(it) }
+                )
             }.launchIn(viewModelScope)
 
         snapshotFlow { state.myPlace }
@@ -100,27 +98,26 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun loadPlace(location: Location) {
+    private suspend fun fetchPlace(location: Location): Place? {
         val geocoder = Geocoder()
         val result = geocoder.places(
             latitude = location.latitude,
             longitude = location.longitude
         )
-        when (result) {
+        return when (result) {
             is GeocoderResult.Success -> {
-                state = state.copy(myPlace = result.getFirstOrNull())
                 logger.d("Success to load place: ${result.data}")
+                result.getFirstOrNull()
             }
             is GeocoderResult.Error -> {
-                state = state.copy(myPlace = null)
                 sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info."))
                 logger.d("Fail to load place info.")
+                null
             }
         }
     }
 
     private fun updateWeather(place: Place) {
-
         job?.cancel()
         job = viewModelScope.launch {
             weatherRepository.loadWeathers(

@@ -74,7 +74,9 @@ class MapViewModel(
                             target = location
                         )
                     )
-                    loadPlace(location)
+                    state = state.copy(
+                        selectedPlace = fetchPlace(location)
+                    )
                 }
             }.launchIn(viewModelScope)
 
@@ -150,27 +152,38 @@ class MapViewModel(
         }
     }
 
-    private suspend fun loadPlace(location: Location) {
+    private suspend fun fetchPlace(location: Location): Place? {
         val geocoder = Geocoder()
         val result = geocoder.places(
             latitude = location.latitude,
             longitude = location.longitude
         )
-        when (result) {
+        return when (result) {
             is GeocoderResult.Success -> {
-                state = state.copy(
-                    selectedPlace = result.getFirstOrNull()
-                )
                 logger.d("Success to load place: ${result.data}")
+                result.getFirstOrNull()
             }
             is GeocoderResult.Error -> {
-                state = state.copy(
-                    selectedPlace = null
-                )
                 if (result.errorOrNull() != GeocoderResult.NotFound) {
                     sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info: ${result.errorOrNull()?.toString()}"))
                 }
                 logger.d("Fail to load place info.")
+                null
+            }
+        }
+    }
+
+    private suspend fun fetchWeather(place: Place): Weather? {
+        return when (val result = weatherRepository.fetchWeather(place)) {
+            is Result.Success -> {
+                val weather = result.data
+                logger.d("Success to load weather: $weather")
+                weather
+            }
+            is Result.Error -> {
+                sendEffect(MapSideEffect.ShowSnackbar(result.error.toString()))
+                logger.d("Fail to load weather: ${result.error}")
+                null
             }
         }
     }
@@ -194,20 +207,5 @@ class MapViewModel(
                 )
             }
         )
-    }
-
-    private suspend fun fetchWeather(place: Place): Weather? {
-        return when (val result = weatherRepository.fetchWeather(place)) {
-            is Result.Success -> {
-                val weather = result.data
-                logger.d("Success to load weather: $weather")
-                weather
-            }
-            is Result.Error -> {
-                sendEffect(MapSideEffect.ShowSnackbar(result.error.toString()))
-                logger.d("Fail to load weather: ${result.error}")
-                null
-            }
-        }
     }
 }

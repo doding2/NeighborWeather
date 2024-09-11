@@ -1,5 +1,6 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import core.util.CommonError
 import core.util.Error
 import core.util.Result
