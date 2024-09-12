@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
@@ -137,7 +138,8 @@ fun MapScreen(
                     visible = isPlaceWeatherVisible,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .sizeIn(maxWidth = 360.dp),
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
@@ -146,7 +148,7 @@ fun MapScreen(
                         weather = state.selectedWeather,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
+                            .padding(horizontal = 20.dp, vertical = 5.dp)
                     )
                 }
                 SnackbarHost(

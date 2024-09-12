@@ -57,7 +57,7 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-import home.presentation.components.HomeCurrentWeatherCard
+import home.presentation.components.CurrentWeatherCard
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import neighborweather.composeapp.generated.resources.Res
@@ -142,6 +142,7 @@ fun HomeScreen(
                     painter = painterResource(Res.drawable.background_sunny),
                     contentDescription = "Home background image",
                     modifier = Modifier.fillMaxSize(),
+                    alignment = Alignment.BottomCenter,
                     contentScale = ContentScale.Crop
                 )
                 val weather by rememberUpdatedState(state.weather)
@@ -164,7 +165,7 @@ fun HomeScreen(
                                 enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2}),
                                 exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
                             ) {
-                                HomeCurrentWeatherCard(
+                                CurrentWeatherCard(
                                     place = state.myPlace,
                                     weather = weather,
                                     modifier = Modifier

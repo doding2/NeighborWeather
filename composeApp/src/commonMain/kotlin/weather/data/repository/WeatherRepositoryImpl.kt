@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import map.domain.model.toLocationName
+import map.util.toPlaceIdentifier
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
@@ -49,7 +49,7 @@ class WeatherRepositoryImpl(
             getRemoteWeathers(
                 latitude = place.coordinates.latitude,
                 longitude = place.coordinates.longitude,
-                locationName = place.toLocationName(),
+                locationName = place.toPlaceIdentifier(),
                 targetNeighbors = setOf(neighbor, Neighbor.ALL)
             ).let {
                 weatherPreprocessor.preprocess(it).firstOrNull()
@@ -63,7 +63,7 @@ class WeatherRepositoryImpl(
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {
         return withContext(Dispatchers.IO) {
-            val locationName = place.toLocationName()
+            val locationName = place.toPlaceIdentifier()
 
             channelFlow {
                 val targetNeighbors = setOf(*targetToWeight.keys.toTypedArray(), Neighbor.ALL)

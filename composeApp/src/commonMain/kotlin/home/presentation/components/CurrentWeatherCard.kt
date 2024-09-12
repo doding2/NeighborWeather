@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.sp
 import core.presentation.ui.theme.sunnyOnPrimary
 import core.presentation.ui.theme.sunnyPrimary
 import dev.jordond.compass.Place
-import map.domain.model.toLocationName
+import map.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.home_current_weather_title
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
@@ -40,7 +40,7 @@ import weather.domain.model.Weather
 import kotlin.math.round
 
 @Composable
-fun HomeCurrentWeatherCard(
+fun CurrentWeatherCard(
     place: Place?,
     weather: Weather?,
     modifier: Modifier = Modifier,
@@ -118,7 +118,7 @@ fun HomeCurrentWeatherCard(
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 Text(
-                    text = placeCache?.toLocationName() ?: "Unknown place",
+                    text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
                     color = sunnyOnPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium

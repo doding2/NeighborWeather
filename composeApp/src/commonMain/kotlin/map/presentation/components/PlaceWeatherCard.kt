@@ -27,7 +27,8 @@ import core.presentation.ui.theme.sunnyOnPrimary
 import core.presentation.ui.theme.sunnyPrimary
 import dev.jordond.compass.Place
 import home.presentation.components.WeatherImage
-import map.domain.model.toLocationName
+import map.util.toPlaceAddress
+import map.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import org.jetbrains.compose.resources.painterResource
@@ -97,14 +98,14 @@ fun MapPlaceWeather(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = placeCache?.toLocationName() ?: "Unknown place",
+                        text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
                         color = sunnyOnPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.End
                     )
                     Text(
-                        text = placeCache?.street ?: "",
+                        text = placeCache?.toPlaceAddress() ?: "Unknown place",
                         color = sunnyOnPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
