@@ -17,26 +17,25 @@ import map.presentation.MapEvent
 
 @Composable
 fun MapSearchBar(
-    modifier: Modifier = Modifier,
     onEvent: (MapEvent) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier) {
         IconButton(
+            onClick = { onEvent(MapEvent.NavigateUp) },
             modifier = Modifier
                 .background(
                     color = sunnyPrimary,
                     shape = CircleShape
                 )
                 .size(48.dp),
-            onClick = { onEvent(MapEvent.NavigateUp) },
-            content = {
-                Icon(
-                    modifier = Modifier.size(24.dp),
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = "Back button",
-                    tint = sunnyOnPrimary
-                )
-            },
-        )
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = "Back button",
+                modifier = Modifier.size(24.dp),
+                tint = sunnyOnPrimary
+            )
+        }
     }
 }

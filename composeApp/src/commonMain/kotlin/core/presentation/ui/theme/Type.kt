@@ -18,8 +18,8 @@ import neighborweather.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.Font
 
 @Composable
-fun NeighborWeatherTypography() = Typography().run {
-    val fontFamily = PoppinsKr()
+fun neighborWeatherTypography() = Typography().run {
+    val fontFamily = poppinsKr()
     copy(
         h1 = h1.copy(fontFamily = fontFamily),
         h2 = h2.copy(fontFamily = fontFamily),
@@ -38,7 +38,7 @@ fun NeighborWeatherTypography() = Typography().run {
 }
 
 @Composable
-fun PoppinsKr() = FontFamily(
+fun poppinsKr() = FontFamily(
     Font(Res.font.PoppinsThinKr, FontWeight.Thin, FontStyle.Normal),
     Font(Res.font.PoppinsExtraLightKr, FontWeight.ExtraLight, FontStyle.Normal),
     Font(Res.font.PoppinsLightKr, FontWeight.Light, FontStyle.Normal),

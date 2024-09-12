@@ -12,8 +12,8 @@ import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
-import dev.jordond.compass.geolocation.GeolocatorResult
-import dev.jordond.compass.geolocation.mobile
+import dev.jordond.compass.geolocation.LocationRequest
+import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -27,7 +27,8 @@ import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
 class MapViewModel(
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
+    private val geolocator: Geolocator
 ) : ViewModel() {
 
     private val logger by lazy { Logger.withTag("MapViewModel") }
@@ -46,21 +47,22 @@ class MapViewModel(
                     state.myLocation?.isWithinDistance(it, 0.005)
                 } ?: false
 
+                val newMarker = location
+                    ?.takeIf { !isWithinMe }
+                    ?.let {
+                        val key = "(${location.latitude}, ${location.longitude})"
+                        MapMarker(
+                            key = key,
+                            position = Location(
+                                location.latitude,
+                                location.longitude
+                            ),
+                            title = key,
+                            alpha = 1f,
+                        )
+                    }
                 state = state.copy(
-                    selectedMarker = location
-                        ?.takeIf { !isWithinMe }
-                        ?.let {
-                            val key = "(${location.latitude}, ${location.longitude})"
-                            MapMarker(
-                                key = key,
-                                position = Location(
-                                    location.latitude,
-                                    location.longitude
-                                ),
-                                title = key,
-                                alpha = 1f,
-                            )
-                        }
+                    selectedMarker = newMarker
                 )
 
                 // update selected place and camera position
@@ -69,6 +71,8 @@ class MapViewModel(
                         selectedPlace = null
                     )
                 } else {
+                    // Update state individually to trigger
+                    // recomposition by camera position earlier.
                     state = state.copy(
                         cameraPosition = CameraPosition(
                             target = location
@@ -95,13 +99,13 @@ class MapViewModel(
 
     fun onEvent(event: MapEvent) {
         when (event) {
-            is MapEvent.NavigateUp -> {
+            MapEvent.NavigateUp -> {
                 viewModelScope.launch {
                     sendEffect(MapSideEffect.NavigateUp)
                 }
             }
-            is MapEvent.AcceptedLocationPermission -> loadMyLocation()
-            is MapEvent.DeniedLocationPermission -> {
+            MapEvent.AcceptedLocationPermission -> loadMyLocation()
+            MapEvent.DeniedLocationPermission -> {
                 // TODO: Show dialog or etc
                 viewModelScope.launch {
                     sendEffect(MapSideEffect.OpenPermissionSettingPage)
@@ -131,22 +135,38 @@ class MapViewModel(
 
     private fun loadMyLocation() {
         viewModelScope.launch {
-            val geolocator = Geolocator.mobile()
-            when (val result = geolocator.current()) {
-                is GeolocatorResult.Success -> {
-                    val location = result.data.coordinates.let {
-                        Location(it.latitude, it.longitude)
+            geolocator.trackingStatus.collect { status ->
+                when (status) {
+                    TrackingStatus.Idle -> {
+                        geolocator.startTracking(
+                            request = LocationRequest(
+                                interval = 60000L,  // 1 minute
+                            )
+                        )
+                        logger.d("Start tracking")
                     }
-                    state = state.copy(
-                        myLocation = location,
-                        selectedLocation = location,
-                    )
-                    logger.d("Success to load my location: ${result.data}")
-                }
-                is GeolocatorResult.Error -> {
-                    state = state.copy(myLocation = null)
-                    sendEffect(MapSideEffect.ShowSnackbar(result.message))
-                    logger.d("Fail to load my location: ${result.message}")
+                    TrackingStatus.Tracking -> {
+                        logger.d("Tracking")
+                    }
+                    is TrackingStatus.Update -> {
+                        val location = status.location.coordinates.let {
+                            Location(it.latitude, it.longitude)
+                        }
+                        if (state.myLocation == null) {
+                            state = state.run {
+                                copy(
+                                    myLocation = location,
+                                    selectedLocation = selectedLocation ?: location
+                                )
+                            }
+                            logger.d("Update ${status.location}")
+                        }
+                    }
+                    is TrackingStatus.Error -> {
+                        logger.d("Error ${status.cause}")
+                        state = state.copy(myLocation = null)
+                        sendEffect(MapSideEffect.ShowSnackbar(status.cause.message))
+                    }
                 }
             }
         }

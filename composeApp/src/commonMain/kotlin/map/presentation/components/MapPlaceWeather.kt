@@ -67,27 +67,27 @@ fun MapPlaceWeather(
                 verticalAlignment = Alignment.Top
             ) {
                 WeatherImage(
-                    modifier = Modifier.size(36.dp),
                     weatherType = it.current.weatherType,
+                    modifier = Modifier.size(36.dp),
                     colorFilter = ColorFilter.tint(sunnyOnPrimary)
                 )
                 Row(
                     modifier = Modifier.offset(y = (-4).dp),
                 ) {
                     Text(
-                        modifier = Modifier.padding(start = 10.dp, end = 1.dp),
                         text = "${round(it.current.temperature).toInt()}",
+                        modifier = Modifier.padding(start = 10.dp, end = 1.dp),
                         color = sunnyOnPrimary,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Image(
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
                         modifier = Modifier
                             .align(Alignment.Top)
                             .padding(top = 8.dp)
                             .size(7.5.dp),
-                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
-                        contentDescription = "Temperature unit sign",
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )

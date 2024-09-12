@@ -14,7 +14,7 @@ fun NeighborWeatherTheme(
 
     MaterialTheme(
         colors = if (darkTheme) DarkColors else LightColors,
-        typography = NeighborWeatherTypography(),
+        typography = neighborWeatherTypography(),
         content = content
     )
 }

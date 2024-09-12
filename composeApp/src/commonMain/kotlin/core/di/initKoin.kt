@@ -10,6 +10,6 @@ import weather.di.weatherModule
 fun initKoin(config: KoinAppDeclaration? = null) {
     startKoin {
         config?.invoke(this)
-        modules(networkModule, weatherModule, weatherDatabaseModule, homeModule, mapModule)
+        modules(coreModule, networkModule, weatherModule, weatherDatabaseModule, homeModule, mapModule)
     }
 }

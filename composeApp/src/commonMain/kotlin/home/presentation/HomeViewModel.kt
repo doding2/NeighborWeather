@@ -13,8 +13,8 @@ import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
-import dev.jordond.compass.geolocation.GeolocatorResult
-import dev.jordond.compass.geolocation.mobile
+import dev.jordond.compass.geolocation.LocationRequest
+import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
@@ -26,7 +26,8 @@ import weather.domain.model.Neighbor
 import weather.domain.repository.WeatherRepository
 
 class HomeViewModel(
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
+    private val geolocator: Geolocator
 ): ViewModel() {
 
     private val logger by lazy { Logger.withTag("HomeViewModel") }
@@ -37,7 +38,7 @@ class HomeViewModel(
     private val _effect = Channel<HomeSideEffect>()
     val effect = _effect.receiveAsFlow()
 
-    private var job: Job? = null
+    private var weatherJob: Job? = null
 
     init {
         snapshotFlow { state.myLocation }
@@ -63,13 +64,13 @@ class HomeViewModel(
 
     fun onEvent(event: HomeEvent) {
         when (event) {
-            is HomeEvent.NavigateToMap -> {
+            HomeEvent.NavigateToMap -> {
                 viewModelScope.launch {
                     sendEffect(HomeSideEffect.NavigateToMap)
                 }
             }
-            is HomeEvent.AcceptedLocationPermission -> loadMyLocation()
-            is HomeEvent.DeniedLocationPermission -> {
+            HomeEvent.AcceptedLocationPermission -> loadMyLocation()
+            HomeEvent.DeniedLocationPermission -> {
                 // TODO: Show dialog or etc
                 viewModelScope.launch {
                     sendEffect(HomeSideEffect.OpenPermissionSettingPage)
@@ -80,19 +81,35 @@ class HomeViewModel(
 
     private fun loadMyLocation() {
         viewModelScope.launch {
-            val geolocator = Geolocator.mobile()
-            when (val result = geolocator.current()) {
-                is GeolocatorResult.Success -> {
-                    val location = result.data.coordinates.let {
-                        Location(it.latitude, it.longitude)
+            geolocator.trackingStatus.collect { status ->
+                when (status) {
+                    TrackingStatus.Idle -> {
+                        geolocator.startTracking(
+                            request = LocationRequest(
+                                interval = 60000L,  // 1 minute
+                            )
+                        )
+                        logger.d("Start tracking")
                     }
-                    state = state.copy(myLocation = location,)
-                    logger.d("Success to load my location: ${result.data}")
-                }
-                is GeolocatorResult.Error -> {
-                    state = state.copy(myLocation = null)
-                    sendEffect(HomeSideEffect.ShowSnackbar(result.message))
-                    logger.d("Fail to load my location: ${result.message}")
+                    TrackingStatus.Tracking -> {
+                        logger.d("Tracking")
+                    }
+                    is TrackingStatus.Update -> {
+                        val location = status.location.coordinates.let {
+                            Location(it.latitude, it.longitude)
+                        }
+                        if (state.myLocation == null) {
+                            state = state.copy(
+                                myLocation = location
+                            )
+                            logger.d("Update ${status.location}")
+                        }
+                    }
+                    is TrackingStatus.Error -> {
+                        logger.d("Error ${status.cause}")
+                        state = state.copy(myLocation = null)
+                        sendEffect(HomeSideEffect.ShowSnackbar(status.cause.message))
+                    }
                 }
             }
         }
@@ -118,8 +135,8 @@ class HomeViewModel(
     }
 
     private fun updateWeather(place: Place) {
-        job?.cancel()
-        job = viewModelScope.launch {
+        weatherJob?.cancel()
+        weatherJob = viewModelScope.launch {
             weatherRepository.loadWeathers(
                 place = place,
                 targetToWeight = mapOf(

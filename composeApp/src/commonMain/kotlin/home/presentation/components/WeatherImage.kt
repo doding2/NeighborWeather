@@ -45,9 +45,9 @@ fun WeatherImage(
         }
     }
     Image(
-        modifier = modifier,
         painter = painterResource(drawable),
         contentDescription = "Weather icon of $weatherType",
+        modifier = modifier,
         colorFilter = colorFilter
     )
 }

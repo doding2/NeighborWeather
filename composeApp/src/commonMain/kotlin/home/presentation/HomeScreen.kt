@@ -105,8 +105,8 @@ fun HomeScreen(
     ) {
         scope.launch {
             when (it) {
-                is HomeSideEffect.NavigateToMap -> navController.navigate("map")
-                is HomeSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                HomeSideEffect.NavigateToMap -> navController.navigate("map")
+                HomeSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
                 is HomeSideEffect.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     snackbarHostState.showSnackbar(it.message)
@@ -139,9 +139,9 @@ fun HomeScreen(
                     .padding(innerPadding)
             ) {
                 Image(
-                    modifier = Modifier.fillMaxSize(),
                     painter = painterResource(Res.drawable.background_sunny),
                     contentDescription = "Home background image",
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
                 val weather by rememberUpdatedState(state.weather)
@@ -159,21 +159,21 @@ fun HomeScreen(
                         ) {
                             Spacer(modifier = Modifier.weight(1f))
                             AnimatedVisibility(
-                                modifier = Modifier.sizeIn(maxWidth = 360.dp),
                                 visible = isWeatherLoaded,
+                                modifier = Modifier.sizeIn(maxWidth = 360.dp),
                                 enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2}),
                                 exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
                             ) {
                                 HomeCurrentWeatherCard(
+                                    place = state.myPlace,
+                                    weather = weather,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(
                                             top = 53.dp,
                                             bottom = 35.dp
                                         )
-                                        .padding(horizontal = 20.dp),
-                                    place = state.myPlace,
-                                    weather = weather
+                                        .padding(horizontal = 20.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.weight(1f))
@@ -190,6 +190,7 @@ fun HomeScreen(
 //                    }
                 }
                 IconButton(
+                    onClick = { onEvent(HomeEvent.NavigateToMap) },
                     modifier = Modifier
                         .padding(8.dp)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -200,7 +201,6 @@ fun HomeScreen(
                             shape = CircleShape
                         )
                         .size(48.dp),
-                    onClick = { onEvent(HomeEvent.NavigateToMap) },
                     content = {
                         Icon(
                             imageVector = Icons.Rounded.Map,

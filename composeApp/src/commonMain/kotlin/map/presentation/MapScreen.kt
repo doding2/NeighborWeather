@@ -84,8 +84,8 @@ fun MapScreen(
     ) {
         scope.launch {
             when (it) {
-                is MapSideEffect.NavigateUp -> navController.navigateUp()
-                is MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                MapSideEffect.NavigateUp -> navController.navigateUp()
+                MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
                 is MapSideEffect.ShowSnackbar -> {
                     scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                     scaffoldState.snackbarHostState.showSnackbar(it.message)
@@ -126,30 +126,31 @@ fun MapScreen(
                     contentPadding = WindowInsets.safeDrawing.asPaddingValues()
                 )
                 MapSearchBar(
+                    onEvent = onEvent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
                         .align(Alignment.TopCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
-                    onEvent = onEvent
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
                 )
                 AnimatedVisibility(
+                    visible = isPlaceWeatherVisible,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .windowInsetsPadding(WindowInsets.safeDrawing),
-                    visible = isPlaceWeatherVisible,
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
                     MapPlaceWeather(
+                        place = state.selectedPlace,
+                        weather = state.selectedWeather,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        place = state.selectedPlace,
-                        weather = state.selectedWeather
+                            .padding(horizontal = 20.dp)
                     )
                 }
                 SnackbarHost(
+                    hostState = scaffoldState.snackbarHostState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
@@ -159,7 +160,6 @@ fun MapScreen(
                         ) {
                             scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                         },
-                    hostState = scaffoldState.snackbarHostState,
                 )
             }
         }

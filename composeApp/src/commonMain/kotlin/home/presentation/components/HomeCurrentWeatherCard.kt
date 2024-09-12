@@ -73,7 +73,7 @@ fun HomeCurrentWeatherCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // padding of each items: 25, 5, -10, 15, 15, 15, 28 -> 103 - 10
-                // -> round to to 100
+                // -> approximately round to to 100
                 Spacer(modifier = Modifier.weight(0.25f))
                 Text(
                     text = stringResource(Res.string.home_current_weather_title),
@@ -87,31 +87,31 @@ fun HomeCurrentWeatherCard(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     WeatherImage(
-                        modifier = Modifier.size(72.dp),
                         weatherType = it.current.weatherType,
+                        modifier = Modifier.size(72.dp),
                         colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Text(
-                        modifier = Modifier.padding(start = 20.dp, end = 2.dp),
                         text = "${round(it.current.temperature).toInt()}",
+                        modifier = Modifier.padding(start = 20.dp, end = 2.dp),
                         color = sunnyOnPrimary,
                         fontSize = 100.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Image(
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
                         modifier = Modifier
                             .align(Alignment.Top)
                             .padding(top = 23.dp),
-                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
-                        contentDescription = "Temperature unit sign",
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    modifier = Modifier.offset(y = (-10).dp),
                     text = it.current.weatherType.toString(),
+                    modifier = Modifier.offset(y = (-10).dp),
                     color = sunnyOnPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold
@@ -142,12 +142,12 @@ fun HomeCurrentWeatherCard(
                         fontWeight = FontWeight.Medium
                     )
                     Image(
+                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
+                        contentDescription = "Temperature unit sign",
                         modifier = Modifier
                             .align(Alignment.Top)
                             .padding(top = 4.dp)
                             .size(5.dp),
-                        painter = painterResource(Res.drawable.icon_temperature_unit_sign),
-                        contentDescription = "Temperature unit sign",
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(sunnyOnPrimary)
                     )
