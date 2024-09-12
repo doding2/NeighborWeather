@@ -43,8 +43,9 @@ class HomeViewModel(
     init {
         snapshotFlow { state.myLocation }
             .onEach { location ->
+                val place = location?.let { fetchPlace(it) }
                 state = state.copy(
-                    myPlace = location?.let { fetchPlace(it) }
+                    myPlace = place
                 )
             }.launchIn(viewModelScope)
 

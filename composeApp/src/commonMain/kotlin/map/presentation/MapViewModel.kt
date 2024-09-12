@@ -15,7 +15,6 @@ import dev.jordond.compass.geolocation.Geolocator
 import dev.jordond.compass.geolocation.LocationRequest
 import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -24,6 +23,7 @@ import map.domain.model.CameraPosition
 import map.domain.model.Location
 import map.domain.model.MapMarker
 import map.domain.model.isWithinDistance
+import map.util.getFirstDetailedPlace
 import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
@@ -41,57 +41,57 @@ class MapViewModel(
     val effect = _effect.receiveAsFlow()
 
     init {
-        viewModelScope.launch {
-            snapshotFlow { state.selectedLocation }
-                .collectLatest { location ->
-                    // update selected marker
-                    val isWithinMe = location?.let {
-                        state.myLocation?.isWithinDistance(it, 0.005)
-                    } ?: false
+        snapshotFlow { state.selectedLocation }
+            .onEach { location ->
+                // update selected marker
+                val isWithinMe = location?.let {
+                    state.myLocation?.isWithinDistance(it, 0.005)
+                } ?: false
 
-                    val newMarker = location
-                        ?.takeIf { !isWithinMe }
-                        ?.let {
-                            val key = "(${location.latitude}, ${location.longitude})"
-                            MapMarker(
-                                key = key,
-                                position = Location(
-                                    location.latitude,
-                                    location.longitude
-                                ),
-                                title = key,
-                                alpha = 1f,
-                            )
-                        }
-                    state = state.copy(
-                        selectedMarker = newMarker
-                    )
-
-                    // update selected place and camera position
-                    if (location == null) {
-                        state = state.copy(
-                            selectedPlace = null
-                        )
-                    } else {
-                        // Update state individually to trigger
-                        // recomposition by camera position earlier.
-                        state = state.copy(
-                            cameraPosition = CameraPosition(
-                                target = location
-                            )
-                        )
-                        state = state.copy(
-                            selectedPlace = fetchPlace(location)
+                val newMarker = location
+                    ?.takeIf { !isWithinMe }
+                    ?.let {
+                        val key = "(${location.latitude}, ${location.longitude})"
+                        MapMarker(
+                            key = key,
+                            position = Location(
+                                location.latitude,
+                                location.longitude
+                            ),
+                            title = key,
+                            alpha = 1f,
                         )
                     }
+                state = state.copy(
+                    selectedMarker = newMarker
+                )
+
+                // update selected place and camera position
+                if (location == null) {
+                    state = state.copy(
+                        selectedPlace = null
+                    )
+                } else {
+                    // Update state individually to trigger
+                    // recomposition by camera position earlier.
+                    state = state.copy(
+                        cameraPosition = CameraPosition(
+                            target = location
+                        )
+                    )
+                    val place = fetchPlace(location)
+                    state = state.copy(
+                        selectedPlace = place
+                    )
                 }
-        }
+            }.launchIn(viewModelScope)
 
         snapshotFlow { state.selectedPlace }
             .onEach { place ->
                 // update weather of selected place
+                val weather = place?.let { fetchWeather(it) }
                 state = state.copy(
-                    selectedWeather = place?.let { fetchWeather(it) }
+                    selectedWeather = weather
                 )
             }.launchIn(viewModelScope)
     }
@@ -184,7 +184,7 @@ class MapViewModel(
         return when (result) {
             is GeocoderResult.Success -> {
                 logger.d("Success to load place: ${result.data}")
-                result.getFirstOrNull()
+                result.data.getFirstDetailedPlace()
             }
             is GeocoderResult.Error -> {
                 if (result.errorOrNull() != GeocoderResult.NotFound) {

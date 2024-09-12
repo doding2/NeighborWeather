@@ -2,6 +2,11 @@ package map.util
 
 import dev.jordond.compass.Place
 
+
+actual fun List<Place>.getFirstDetailedPlace(): Place? {
+    return firstOrNull()
+}
+
 actual fun Place.toPlaceIdentifier(): String {
     return (if (isoCountryCode?.lowercase() == "kr") {
         locality?.let {
