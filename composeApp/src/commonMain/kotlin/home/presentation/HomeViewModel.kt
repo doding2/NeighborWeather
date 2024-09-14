@@ -21,8 +21,35 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import map.domain.model.Location
+import map.util.getFirstDetailedPlace
+import neighborweather.composeapp.generated.resources.Res
+import neighborweather.composeapp.generated.resources.background_fall_1
+import neighborweather.composeapp.generated.resources.background_fall_2
+import neighborweather.composeapp.generated.resources.background_fall_3
+import neighborweather.composeapp.generated.resources.background_fall_4
+import neighborweather.composeapp.generated.resources.background_spring_1
+import neighborweather.composeapp.generated.resources.background_spring_2
+import neighborweather.composeapp.generated.resources.background_spring_3
+import neighborweather.composeapp.generated.resources.background_spring_4
+import neighborweather.composeapp.generated.resources.background_summer_1
+import neighborweather.composeapp.generated.resources.background_summer_2
+import neighborweather.composeapp.generated.resources.background_summer_3
+import neighborweather.composeapp.generated.resources.background_summer_4
+import neighborweather.composeapp.generated.resources.background_weather_cloudy
+import neighborweather.composeapp.generated.resources.background_weather_rainy
+import neighborweather.composeapp.generated.resources.background_weather_snowy
+import neighborweather.composeapp.generated.resources.background_weather_sunny
+import neighborweather.composeapp.generated.resources.background_winter_1
+import neighborweather.composeapp.generated.resources.background_winter_2
+import neighborweather.composeapp.generated.resources.background_winter_3
+import neighborweather.composeapp.generated.resources.background_winter_4
+import org.jetbrains.compose.resources.DrawableResource
 import weather.domain.model.Neighbor
+import weather.domain.model.WeatherType
 import weather.domain.repository.WeatherRepository
 
 class HomeViewModel(
@@ -41,6 +68,8 @@ class HomeViewModel(
     private var weatherJob: Job? = null
 
     init {
+        initBackgroundImage()
+
         snapshotFlow { state.myLocation }
             .onEach { location ->
                 val place = location?.let { fetchPlace(it) }
@@ -57,7 +86,69 @@ class HomeViewModel(
                     state = state.copy(weather = null)
                 }
             }.launchIn(viewModelScope)
+
+        snapshotFlow { state.weather?.current?.weatherType }
+            .onEach { weatherType ->
+                if (weatherType != null) {
+                    val drawable = getBackgroundImage(weatherType)
+                    drawable?.let {
+                        state = state.copy(
+                            backgroundImage = it
+                        )
+                    }
+                }
+            }.launchIn(viewModelScope)
     }
+
+    private fun initBackgroundImage() {
+        val current = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val drawable = current.date.run {
+            val randomNum = (1..4).random()
+            val monthNum = month.ordinal + 1
+
+            val isSpring = (monthNum == 3 && dayOfMonth >= 21) || (monthNum in 4..5) || (monthNum == 6 && dayOfMonth < 21)
+            val isSummer = (monthNum == 6 && dayOfMonth >= 21) || (monthNum in 7..8) || (monthNum == 9 && dayOfMonth < 21)
+            val isFall = (monthNum == 9 && dayOfMonth >= 21) || (monthNum in 10..11) || (monthNum == 12 && dayOfMonth < 21)
+            val isWinter = (monthNum == 12 && dayOfMonth >= 21) || (monthNum in 1..2) || (monthNum == 3 && dayOfMonth < 21)
+
+            when {
+                isSpring -> when (randomNum) {
+                    1 -> Res.drawable.background_spring_1
+                    2 -> Res.drawable.background_spring_2
+                    3 -> Res.drawable.background_spring_3
+                    else -> Res.drawable.background_spring_4
+                }
+                isSummer -> when (randomNum) {
+                    1 -> Res.drawable.background_summer_1
+                    2 -> Res.drawable.background_summer_2
+                    3 -> Res.drawable.background_summer_3
+                    else -> Res.drawable.background_summer_4
+                }
+                isFall -> when (randomNum) {
+                    1 -> Res.drawable.background_fall_1
+                    2 -> Res.drawable.background_fall_2
+                    3 -> Res.drawable.background_fall_3
+                    else -> Res.drawable.background_fall_4
+                }
+                isWinter -> when (randomNum) {
+                    1 -> Res.drawable.background_winter_1
+                    2 -> Res.drawable.background_winter_2
+                    3 -> Res.drawable.background_winter_3
+                    else -> Res.drawable.background_winter_4
+                }
+                else -> when (randomNum) {
+                    1 -> Res.drawable.background_winter_1
+                    2 -> Res.drawable.background_winter_2
+                    3 -> Res.drawable.background_winter_3
+                    else -> Res.drawable.background_winter_4
+                }
+            }
+        }
+        state = state.copy(
+            backgroundImage = drawable
+        )
+    }
+
 
     private suspend fun sendEffect(effect: HomeSideEffect) {
         _effect.send(effect)
@@ -65,9 +156,9 @@ class HomeViewModel(
 
     fun onEvent(event: HomeEvent) {
         when (event) {
-            HomeEvent.NavigateToMap -> {
+            is HomeEvent.NavigateToMap -> {
                 viewModelScope.launch {
-                    sendEffect(HomeSideEffect.NavigateToMap)
+                    sendEffect(HomeSideEffect.NavigateToMap(event.weatherType))
                 }
             }
             HomeEvent.AcceptedLocationPermission -> loadMyLocation()
@@ -125,7 +216,7 @@ class HomeViewModel(
         return when (result) {
             is GeocoderResult.Success -> {
                 logger.d("Success to load place: ${result.data}")
-                result.getFirstOrNull()
+                result.data.getFirstDetailedPlace()
             }
             is GeocoderResult.Error -> {
                 sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info."))
@@ -157,7 +248,6 @@ class HomeViewModel(
                                     daily: ${it.daily.map { it.time }}
                             """.trimIndent()
                         }
-
                         state = state.copy(weather = it)
                     }
                     .onError {
@@ -167,6 +257,24 @@ class HomeViewModel(
                         )
                     }
             }
+        }
+    }
+
+    private fun getBackgroundImage(weatherType: WeatherType): DrawableResource? {
+        return when (weatherType) {
+            WeatherType.Fog,
+            WeatherType.Cloudy -> Res.drawable.background_weather_cloudy
+            WeatherType.Drizzle,
+            WeatherType.Rainy,
+            WeatherType.RainShower,
+            WeatherType.Thunderstorm -> Res.drawable.background_weather_rainy
+            WeatherType.Snowy,
+            WeatherType.SnowShower,
+            WeatherType.FreezingDrizzle,
+            WeatherType.FreezingRain -> Res.drawable.background_weather_snowy
+            WeatherType.CloudySunny,
+            WeatherType.Sunny -> Res.drawable.background_weather_sunny
+            WeatherType.Other -> null
         }
     }
 }

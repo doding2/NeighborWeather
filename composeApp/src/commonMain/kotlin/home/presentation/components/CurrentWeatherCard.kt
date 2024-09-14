@@ -22,13 +22,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import core.presentation.ui.theme.sunnyDayOnPrimary
-import core.presentation.ui.theme.sunnyDayPrimary
 import dev.jordond.compass.Place
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.format
+import kotlinx.datetime.format.AmPmMarker
+import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.char
 import map.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.home_current_weather_title
@@ -44,6 +48,8 @@ fun CurrentWeatherCard(
     place: Place?,
     weather: Weather?,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = Color.Transparent,
+    tint: Color = Color.Transparent
 ) {
     /*
     When state value become null,
@@ -62,7 +68,7 @@ fun CurrentWeatherCard(
         modifier = modifier
             .aspectRatio(360f / 380f)
             .background(
-                color = sunnyDayPrimary,
+                color = backgroundColor,
                 shape = RoundedCornerShape(25.dp)
             )
             .padding(horizontal = 15.dp),
@@ -77,7 +83,7 @@ fun CurrentWeatherCard(
                 Spacer(modifier = Modifier.weight(0.25f))
                 Text(
                     text = stringResource(Res.string.home_current_weather_title),
-                    color = sunnyDayOnPrimary,
+                    color = tint,
                     fontSize = 25.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -89,12 +95,12 @@ fun CurrentWeatherCard(
                     WeatherImage(
                         weatherType = it.current.weatherType,
                         modifier = Modifier.size(72.dp),
-                        colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
+                        colorFilter = ColorFilter.tint(tint)
                     )
                     Text(
                         text = "${round(it.current.temperature).toInt()}",
                         modifier = Modifier.padding(start = 20.dp, end = 2.dp),
-                        color = sunnyDayOnPrimary,
+                        color = tint,
                         fontSize = 100.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -105,28 +111,43 @@ fun CurrentWeatherCard(
                             .align(Alignment.Top)
                             .padding(top = 23.dp),
                         alignment = Alignment.TopCenter,
-                        colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
+                        colorFilter = ColorFilter.tint(tint)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
                     text = it.current.weatherType.toString(),
                     modifier = Modifier.offset(y = (-10).dp),
-                    color = sunnyDayOnPrimary,
+                    color = tint,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 Text(
                     text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
-                    color = sunnyDayOnPrimary,
+                    color = tint,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
+                val datetimeFormatter = remember {
+                    LocalDateTime.Format {
+                        dayOfMonth()
+                        char(' ')
+                        monthName(MonthNames.ENGLISH_ABBREVIATED)
+                        char(' ')
+                        year()
+                        char(' ')
+                        amPmHour()
+                        char(':')
+                        minute()
+                        char(' ')
+                        amPmMarker(AmPmMarker.AM.name, AmPmMarker.PM.name)
+                    }
+                }
                 Text(
-                    text = it.current.time.toString(),
-                    color = sunnyDayOnPrimary,
+                    text = it.current.time.format(datetimeFormatter),
+                    color = tint,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -137,7 +158,8 @@ fun CurrentWeatherCard(
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "Feels like ${round(it.current.apparentTemperature).toInt()}",
-                        color = sunnyDayOnPrimary,
+                        modifier = Modifier.padding(end = 0.5.dp),
+                        color = tint,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -149,7 +171,7 @@ fun CurrentWeatherCard(
                             .padding(top = 4.dp)
                             .size(5.dp),
                         alignment = Alignment.TopCenter,
-                        colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
+                        colorFilter = ColorFilter.tint(tint)
                     )
                     Spacer(
                         modifier = Modifier
@@ -157,13 +179,13 @@ fun CurrentWeatherCard(
                             .width(1.dp)
                             .height(10.dp)
                             .background(
-                                color = sunnyDayOnPrimary,
+                                color = tint,
                                 shape = RoundedCornerShape(10.dp)
                             )
                     )
                     Text(
                         text = "Rain by ${it.current.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
-                        color = sunnyDayOnPrimary,
+                        color = tint,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
