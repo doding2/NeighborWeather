@@ -17,8 +17,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
-import okio.IOException
 import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
 import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.data.util.KoreaWeatherParser

@@ -12,18 +12,20 @@ import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Weather
+import weather.domain.model.toWeatherType
 
-fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEntity>> {
+fun Weather.toWeatherEntity(locationName: String): Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEntity>> {
     val current = CurrentWeatherEntity(
         latitude = latitude,
         longitude = longitude,
+        locationName = locationName,
         neighbor = neighbor,
         epochTime = current.time.toInstant(TimeZone.currentSystemDefault()) .epochSeconds,
         temperature = current.temperature,
         relativeHumidity = current.relativeHumidity,
         apparentTemperature = current.apparentTemperature,
         precipitation = current.precipitation,
-        precipitationProbability = current.precipitation,
+        precipitationProbability = current.precipitationProbability,
         weatherCode = current.weatherCode,
         windSpeed = current.windSpeed,
         windDirection = current.windDirection
@@ -32,6 +34,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
         HourlyWeatherEntity(
             latitude = latitude,
             longitude = longitude,
+            locationName = locationName,
             neighbor = neighbor,
             epochTime = it.time.toInstant(TimeZone.currentSystemDefault()).epochSeconds,
             temperature = it.temperature,
@@ -49,6 +52,7 @@ fun Weather.toWeatherEntity(): Triple<CurrentWeatherEntity, List<HourlyWeatherEn
         DailyWeatherEntity(
             latitude = latitude,
             longitude = longitude,
+            locationName = locationName,
             neighbor = neighbor,
             epochTime = LocalDateTime(it.time.year, it.time.monthNumber, it.time.dayOfMonth, 0, 0, 0)
                 .toInstant(TimeZone.currentSystemDefault()).epochSeconds,
@@ -77,6 +81,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
             precipitation = first.precipitation,
             precipitationProbability = first.precipitationProbability,
             weatherCode = first.weatherCode,
+            weatherType = first.weatherCode.toWeatherType(),
             windSpeed = first.windSpeed,
             windDirection = first.windDirection
         ),
@@ -89,6 +94,7 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
                 precipitation = it.precipitation,
                 precipitationProbability = it.precipitationProbability ?: -1.0,
                 weatherCode = it.weatherCode,
+                weatherType = it.weatherCode.toWeatherType(),
                 windSpeed = it.windSpeed,
                 windDirection = it.windDirection
             )
@@ -100,7 +106,8 @@ fun Triple<CurrentWeatherEntity, List<HourlyWeatherEntity>, List<DailyWeatherEnt
                 temperatureMax = it.temperatureMax,
                 temperatureMin = it.temperatureMin,
                 precipitationProbability = it.precipitationProbability ?: -1.0,
-                weatherCode = it.weatherCode
+                weatherCode = it.weatherCode,
+                weatherType = it.weatherCode.toWeatherType()
             )
         }
 

@@ -1,5 +1,6 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import core.util.CommonError
 import core.util.Error
 import core.util.Result
@@ -13,6 +14,7 @@ import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
+import weather.domain.model.toWeatherType
 import kotlin.math.max
 
 class WeatherWeightCalculator {
@@ -109,6 +111,7 @@ class WeatherWeightCalculator {
     }
 
     private fun accumulateCurrentWeather(acc: CurrentWeather, add: CurrentWeather): CurrentWeather {
+        val weatherCode = max(acc.weatherCode, add.weatherCode)
         return CurrentWeather(
             time = minOf(acc.time, add.time),
             temperature = acc.temperature + add.temperature,
@@ -116,32 +119,37 @@ class WeatherWeightCalculator {
             apparentTemperature = acc.apparentTemperature + add.apparentTemperature,
             precipitation = acc.precipitation + add.precipitation,
             precipitationProbability = acc.precipitationProbability + add.precipitationProbability,
-            weatherCode = max(acc.weatherCode, add.weatherCode),
+            weatherCode = weatherCode,
+            weatherType = weatherCode.toWeatherType(),
             windSpeed = acc.windSpeed + add.windSpeed,
             windDirection = acc.windDirection + add.windDirection
         )
     }
 
     private fun accumulateHourlyWeather(acc: HourlyWeather, add: HourlyWeather): HourlyWeather {
+        val weatherCode = max(acc.weatherCode, add.weatherCode)
         return HourlyWeather(
             time = minOf(acc.time, add.time),
             temperature = acc.temperature + add.temperature,
             relativeHumidity = acc.relativeHumidity + add.relativeHumidity,
             precipitation = acc.precipitation + add.precipitation,
             precipitationProbability = acc.precipitationProbability + add.precipitationProbability,
-            weatherCode = max(acc.weatherCode, add.weatherCode) ,
+            weatherCode = weatherCode,
+            weatherType = weatherCode.toWeatherType(),
             windSpeed = acc.windSpeed + add.windSpeed,
             windDirection = acc.windDirection + add.windDirection
         )
     }
 
     private fun accumulateDailyWeather(acc: DailyWeather, add: DailyWeather): DailyWeather {
+        val weatherCode = max(acc.weatherCode, add.weatherCode)
         return DailyWeather(
             time = minOf(acc.time, add.time),
             temperatureMax = acc.temperatureMax + add.temperatureMax,
             temperatureMin = acc.temperatureMin + add.temperatureMin,
             precipitationProbability = acc.precipitationProbability + add.precipitationProbability,
-            weatherCode = max(acc.weatherCode, add.weatherCode)
+            weatherCode = weatherCode,
+            weatherType = weatherCode.toWeatherType()
         )
     }
 

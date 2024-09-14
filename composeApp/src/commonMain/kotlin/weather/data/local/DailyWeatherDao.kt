@@ -16,23 +16,21 @@ interface DailyWeatherDao {
     suspend fun upsertDailyWeatherList(dailyList: List<DailyWeatherEntity>)
 
     @Query("SELECT * FROM DailyWeatherEntity " +
-            "WHERE latitude = :latitude AND longitude = :longitude " +
+            "WHERE locationName = :locationName " +
             "AND neighbor = :neighbor AND epochTime >= :now - 86400 " +
             "ORDER BY epochTime ASC")
     suspend fun searchDailyWeatherList(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         neighbor: String,
         now: Long  // 86400 seconds = 1 day
     ): List<DailyWeatherEntity>
 
     @Query("SELECT * FROM DailyWeatherEntity " +
-            "WHERE latitude = :latitude AND longitude = :longitude " +
+            "WHERE locationName = :locationName " +
             "AND neighbor = :neighbor AND epochTime >= :now - 86400 " +
             "ORDER BY epochTime ASC")
     fun searchDailyWeatherListFlow(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         neighbor: String,
         now: Long   // 86400 seconds = 1 day
     ): Flow<List<DailyWeatherEntity>>

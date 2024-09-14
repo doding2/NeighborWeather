@@ -16,9 +16,9 @@ fun <T> ObserveEffectsOnLifecycle(
     key2: Any? = null,
     onEffect: (T) -> Unit
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     // flow가 compose state에 들어있는 것을 사용할 수도 있기 때문에
     // (recomposition으로 값이 변할 수도 있기 때문에) LaunchedEffect key로 넣음
+    val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner.lifecycle, key1, key2, flow) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             withContext(Dispatchers.Main.immediate) {

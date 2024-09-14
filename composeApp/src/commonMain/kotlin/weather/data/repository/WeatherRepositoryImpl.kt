@@ -2,8 +2,10 @@ package weather.data.repository
 
 import co.touchlab.kermit.Logger
 import core.util.Error
+import core.util.NetworkError
 import core.util.Result
 import core.util.unzip
+import dev.jordond.compass.Place
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import map.util.toPlaceIdentifier
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
@@ -35,22 +38,41 @@ class WeatherRepositoryImpl(
     private val weatherPreprocessor: WeatherPreprocessor,
     private val weightCalculator: WeatherWeightCalculator
 ): WeatherRepository {
+
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
 
-    override suspend fun getWeathers(
-        latitude: Double, longitude: Double,
-        locationName: String,
+    override suspend fun fetchWeather(
+        place: Place,
+        neighbor: Neighbor,
+    ): Result<Weather, Error> {
+        return withContext(Dispatchers.IO) {
+            getRemoteWeathers(
+                latitude = place.coordinates.latitude,
+                longitude = place.coordinates.longitude,
+                locationName = place.toPlaceIdentifier(),
+                targetNeighbors = setOf(neighbor, Neighbor.ALL)
+            ).let {
+                weatherPreprocessor.preprocess(it).firstOrNull()
+                    ?: Result.Error(NetworkError.UNKNOWN)
+            }
+        }
+    }
+
+    override suspend fun loadWeathers(
+        place: Place,
         targetToWeight: Map<Neighbor, Double>
     ): Flow<Result<Weather, Error>> {
         return withContext(Dispatchers.IO) {
+            val locationName = place.toPlaceIdentifier()
+
             channelFlow {
                 val targetNeighbors = setOf(*targetToWeight.keys.toTypedArray(), Neighbor.ALL)
 
                 // load from Remote API
                 launch {
                     val remoteWeatherDtoResults = getRemoteWeathers(
-                        latitude = latitude,
-                        longitude = longitude,
+                        latitude = place.coordinates.latitude,
+                        longitude = place.coordinates.longitude,
                         locationName = locationName,
                         targetNeighbors = targetNeighbors,
                     )
@@ -85,12 +107,8 @@ class WeatherRepositoryImpl(
                     }
 
                     val (currentList, hourlyList, dailyList) = remoteWeathers.map {
-                        it.toWeatherEntity()
+                        it.toWeatherEntity(locationName)
                     }.unzip()
-
-                    logger.d {
-                        "hourlyList: ${hourlyList.flatten().map { it.neighbor }.distinct()}"
-                    }
 
                     weatherDatabase.currentWeatherDao.upsertCurrentWeatherList(currentList)
                     weatherDatabase.hourlyWeatherDao.upsertHourlyWeatherList(hourlyList.flatten())
@@ -100,36 +118,33 @@ class WeatherRepositoryImpl(
 
                 // load from Database
                 val localWeatherFlows = getLocalWeatherFlows(
-                    latitude = latitude,
-                    longitude = longitude,
+                    locationName = locationName,
                     targetNeighbors = targetNeighbors
                 )
 
-                combine(*localWeatherFlows.toTypedArray()) {
-                    it.toList()
-                }
-                .distinctUntilChanged()
-                .mapNotNull { nullableWeathers ->
-                    val weathers = nullableWeathers.filterNotNull()
+                combine(*localWeatherFlows.toTypedArray()) { it }
+                    .distinctUntilChanged()
+                    .mapNotNull { nullableWeathers ->
+                        val weathers = nullableWeathers.filterNotNull()
 
-                    /*
-                    When best matched weathers (all neighbor) is not exist,
-                    pass this flow iteration and wait for remote weather data.
-                     */
-                    if (weathers.isEmpty())
-                        return@mapNotNull null
-                    val containsNeighborAll = Neighbor.ALL in weathers.map { it.neighbor }
-                    if (!containsNeighborAll)
-                        return@mapNotNull null
+                        /*
+                        When best matched weathers (all neighbor) is not exist,
+                        pass this flow iteration and wait for remote weather data.
+                         */
+                        if (weathers.isEmpty())
+                            return@mapNotNull null
+                        val containsNeighborAll = Neighbor.ALL in weathers.map { it.neighbor }
+                        if (!containsNeighborAll)
+                            return@mapNotNull null
 
-                    val successNeighbors = weathers.map { it.neighbor }
-                    val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
+                        val successNeighbors = weathers.map { it.neighbor }
+                        val successTargetToWeight = targetToWeight.filterKeys { it in successNeighbors }
 
-                    weightCalculator.calculateWeightedSum(
-                        weathers = weathers,
-                        targetToWeight = successTargetToWeight
-                    )
-                }.collect(::send)
+                        weightCalculator.calculateWeightedSum(
+                            weathers = weathers,
+                            targetToWeight = successTargetToWeight
+                        )
+                    }.collect(::send)
             }
         }
     }
@@ -165,29 +180,25 @@ class WeatherRepositoryImpl(
     }
 
     private fun getLocalWeatherFlows(
-        latitude: Double,
-        longitude: Double,
+        locationName: String,
         targetNeighbors: Set<Neighbor>
     ): List<Flow<Weather?>> {
         val now = Clock.System.now().epochSeconds
 
         val localWeatherListFlows = targetNeighbors.map { neighbor ->
             val currentFlow = weatherDatabase.currentWeatherDao.searchCurrentWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
             )
 
             val hourlyFlow = weatherDatabase.hourlyWeatherDao.searchHourlyWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
                 now = now
             )
 
             val dailyFlow = weatherDatabase.dailyWeatherDao.searchDailyWeatherListFlow(
-                latitude = latitude,
-                longitude = longitude,
+                locationName = locationName,
                 neighbor = neighbor.toString(),
                 now = now
             )

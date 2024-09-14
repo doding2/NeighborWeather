@@ -1,7 +1,9 @@
 package weather.domain.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.datetime.LocalDateTime
 
+@Immutable
 data class CurrentWeather(
     val time: LocalDateTime,
     val temperature: Double,
@@ -10,6 +12,7 @@ data class CurrentWeather(
     val precipitation: Double,
     val precipitationProbability: Double,
     val weatherCode: Int,
+    val weatherType: WeatherType,
     val windSpeed: Double,
     val windDirection: Double
 )
