@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import core.presentation.ui.theme.sunnyOnPrimary
-import core.presentation.ui.theme.sunnyPrimary
+import core.presentation.ui.theme.sunnyDayOnPrimary
+import core.presentation.ui.theme.sunnyDayPrimary
 import dev.jordond.compass.Place
 import home.presentation.components.WeatherImage
 import map.util.toPlaceAddress
@@ -59,7 +59,7 @@ fun MapPlaceWeather(
         Column(
             modifier = modifier
                 .background(
-                    color = sunnyPrimary,
+                    color = sunnyDayPrimary,
                     shape = RoundedCornerShape(25.dp)
                 )
                 .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
@@ -70,7 +70,7 @@ fun MapPlaceWeather(
                 WeatherImage(
                     weatherType = it.current.weatherType,
                     modifier = Modifier.size(36.dp),
-                    colorFilter = ColorFilter.tint(sunnyOnPrimary)
+                    colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
                 )
                 Row(
                     modifier = Modifier.offset(y = (-4).dp),
@@ -78,7 +78,7 @@ fun MapPlaceWeather(
                     Text(
                         text = "${round(it.current.temperature).toInt()}",
                         modifier = Modifier.padding(start = 10.dp, end = 1.dp),
-                        color = sunnyOnPrimary,
+                        color = sunnyDayOnPrimary,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -90,7 +90,7 @@ fun MapPlaceWeather(
                             .padding(top = 8.dp)
                             .size(7.5.dp),
                         alignment = Alignment.TopCenter,
-                        colorFilter = ColorFilter.tint(sunnyOnPrimary)
+                        colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -99,14 +99,14 @@ fun MapPlaceWeather(
                 ) {
                     Text(
                         text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
-                        color = sunnyOnPrimary,
+                        color = sunnyDayOnPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.End
                     )
                     Text(
                         text = placeCache?.toPlaceAddress() ?: "Unknown place",
-                        color = sunnyOnPrimary,
+                        color = sunnyDayOnPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.End,

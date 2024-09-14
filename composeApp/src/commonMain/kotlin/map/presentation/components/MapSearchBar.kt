@@ -11,8 +11,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import core.presentation.ui.theme.sunnyOnPrimary
-import core.presentation.ui.theme.sunnyPrimary
+import core.presentation.ui.theme.sunnyDayOnPrimary
+import core.presentation.ui.theme.sunnyDayPrimary
 import map.presentation.MapEvent
 
 @Composable
@@ -25,7 +25,7 @@ fun MapSearchBar(
             onClick = { onEvent(MapEvent.NavigateUp) },
             modifier = Modifier
                 .background(
-                    color = sunnyPrimary,
+                    color = sunnyDayPrimary,
                     shape = CircleShape
                 )
                 .size(48.dp),
@@ -34,7 +34,7 @@ fun MapSearchBar(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = "Back button",
                 modifier = Modifier.size(24.dp),
-                tint = sunnyOnPrimary
+                tint = sunnyDayOnPrimary
             )
         }
     }

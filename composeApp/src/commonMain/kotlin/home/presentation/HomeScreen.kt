@@ -47,8 +47,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import core.presentation.ui.theme.sunnyOnPrimary
-import core.presentation.ui.theme.sunnyPrimary
+import core.presentation.ui.theme.sunnyDayOnPrimary
+import core.presentation.ui.theme.sunnyDayPrimary
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import dev.icerock.moko.permissions.DeniedAlwaysException
@@ -198,7 +198,7 @@ fun HomeScreen(
                         .align(Alignment.TopEnd)
                         .shadow(5.dp, CircleShape)
                         .background(
-                            color = sunnyPrimary,
+                            color = sunnyDayPrimary,
                             shape = CircleShape
                         )
                         .size(48.dp),
@@ -207,7 +207,7 @@ fun HomeScreen(
                             imageVector = Icons.Rounded.Map,
                             contentDescription = "Navigate to map button",
                             modifier = Modifier.size(24.dp),
-                            tint = sunnyOnPrimary
+                            tint = sunnyDayOnPrimary
                         )
                     },
                 )
