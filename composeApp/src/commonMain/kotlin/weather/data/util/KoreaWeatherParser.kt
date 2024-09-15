@@ -3,8 +3,8 @@ package weather.data.util
 import co.touchlab.kermit.Logger
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.select.Elements
-import core.util.Error
-import core.util.Result
+import core.domain.util.Error
+import core.domain.util.Result
 import io.ktor.utils.io.charsets.MalformedInputException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers

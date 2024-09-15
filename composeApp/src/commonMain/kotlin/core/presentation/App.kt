@@ -1,8 +1,9 @@
-
+package core.presentation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import core.presentation.navigation.Routes
 import core.presentation.ui.theme.NeighborWeatherTheme
 import home.presentation.HomeScreen
 import home.presentation.HomeViewModel
@@ -22,9 +23,9 @@ fun App() {
             val navController = rememberNavController()
             NavHost(
                 navController = navController,
-                startDestination = "home"
+                startDestination = Routes.Home
             ) {
-                composable("home") {
+                composable<Routes.Home> {
                     val viewModel = koinViewModel<HomeViewModel>()
                     HomeScreen(
                         state = viewModel.state,
@@ -33,7 +34,7 @@ fun App() {
                         navController = navController
                     )
                 }
-                composable("map") {
+                composable<Routes.Map> {
                     val viewModel = koinViewModel<MapViewModel>()
                     MapScreen(
                         state = viewModel.state,

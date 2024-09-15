@@ -1,4 +1,4 @@
-package home.presentation.util
+package core.presentation.util
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable

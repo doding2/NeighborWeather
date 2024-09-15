@@ -22,7 +22,7 @@ import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.WeatherType
 
 @Composable
-fun WeatherImage(
+fun WeatherIcon(
     weatherType: WeatherType,
     modifier: Modifier = Modifier,
     colorFilter: ColorFilter? = null,

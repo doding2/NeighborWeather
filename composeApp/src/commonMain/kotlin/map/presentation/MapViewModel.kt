@@ -7,7 +7,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import core.util.Result
+import core.domain.util.Result
 import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
@@ -23,7 +23,7 @@ import map.domain.model.CameraPosition
 import map.domain.model.Location
 import map.domain.model.MapMarker
 import map.domain.model.isWithinDistance
-import map.util.getFirstDetailedPlace
+import map.domain.util.getFirstDetailedPlace
 import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
@@ -62,15 +62,11 @@ class MapViewModel(
                             alpha = 1f,
                         )
                     }
-                state = state.copy(
-                    selectedMarker = newMarker
-                )
+                state = state.copy(selectedMarker = newMarker)
 
                 // update selected place and camera position
                 if (location == null) {
-                    state = state.copy(
-                        selectedPlace = null
-                    )
+                    state = state.copy(selectedPlace = null)
                 } else {
                     // Update state individually to trigger
                     // recomposition by camera position earlier.
@@ -80,9 +76,7 @@ class MapViewModel(
                         )
                     )
                     val place = fetchPlace(location)
-                    state = state.copy(
-                        selectedPlace = place
-                    )
+                    state = state.copy(selectedPlace = place)
                 }
             }.launchIn(viewModelScope)
 
@@ -115,23 +109,17 @@ class MapViewModel(
                 }
             }
             is MapEvent.OnMapClick -> {
-                updateSelectedLocation(location = event.location)
+                state = state.copy(selectedLocation = event.location)
             }
             /* When marker is double-clicked with term, state is not updated.
             Because location of marker is same value.
             So update camera position directly
              */
             is MapEvent.OnMarkerClick -> {
-                updateSelectedLocation(
-                    location = event.marker.position,
-                    updateCameraPosition = true
-                )
+                updateSelectedLocation(event.marker.position)
             }
             is MapEvent.OnMyLocationClick -> {
-                updateSelectedLocation(
-                    location = event.location,
-                    updateCameraPosition = true
-                )
+                updateSelectedLocation(event.location)
             }
         }
     }
@@ -146,11 +134,8 @@ class MapViewModel(
                                 interval = 60000L,  // 1 minute
                             )
                         )
-                        logger.d("Start tracking")
                     }
-                    TrackingStatus.Tracking -> {
-                        logger.d("Tracking")
-                    }
+                    TrackingStatus.Tracking -> {}
                     is TrackingStatus.Update -> {
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
@@ -162,11 +147,11 @@ class MapViewModel(
                                     selectedLocation = selectedLocation ?: location
                                 )
                             }
-                            logger.d("Update ${status.location}")
+                            logger.d("[Success] Update ${status.location}")
                         }
                     }
                     is TrackingStatus.Error -> {
-                        logger.d("Error ${status.cause}")
+                        logger.d("[Error] Error ${status.cause}")
                         state = state.copy(myLocation = null)
                         sendEffect(MapSideEffect.ShowSnackbar(status.cause.message))
                     }
@@ -182,53 +167,42 @@ class MapViewModel(
             longitude = location.longitude
         )
         return when (result) {
-            is GeocoderResult.Success -> {
-                logger.d("Success to load place: ${result.data}")
-                result.data.getFirstDetailedPlace()
-            }
+            is GeocoderResult.Success -> result.data.getFirstDetailedPlace()
             is GeocoderResult.Error -> {
                 if (result.errorOrNull() != GeocoderResult.NotFound) {
-                    sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info: ${result.errorOrNull()?.toString()}"))
+                    sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info"))
                 }
-                logger.d("Fail to load place info.")
+                logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
                 null
             }
         }
     }
 
     private suspend fun fetchWeather(place: Place): Weather? {
-        return when (val result = weatherRepository.fetchWeather(place)) {
-            is Result.Success -> {
-                val weather = result.data
-                logger.d("Success to load weather: $weather")
-                weather
-            }
+        return when (val result = weatherRepository.fetchRemoteWeather(place)) {
+            is Result.Success -> result.data
             is Result.Error -> {
                 sendEffect(MapSideEffect.ShowSnackbar(result.error.toString()))
-                logger.d("Fail to load weather: ${result.error}")
+                logger.d("[Error] Fail to load weather: ${result.error}")
                 null
             }
         }
     }
 
     private fun updateSelectedLocation(
-        location: Location,
-        updateCameraPosition: Boolean = false
+        location: Location
     ) {
         val cameraOffset = (-5..5).random() / 10000000.0
         state = state.copy(
             selectedLocation = location,
-            cameraPosition = if (!updateCameraPosition) state.cameraPosition
-            else {
-                CameraPosition(
-                    target = location.let {
-                        Location(
-                            latitude = it.latitude + cameraOffset,
-                            longitude = it.longitude + cameraOffset
-                        )
-                    }
-                )
-            }
+            cameraPosition = CameraPosition(
+                target = location.let {
+                    Location(
+                        latitude = it.latitude + cameraOffset,
+                        longitude = it.longitude + cameraOffset
+                    )
+                }
+            )
         )
     }
 }

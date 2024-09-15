@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,12 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import core.presentation.ui.theme.sunnyDayOnPrimary
-import core.presentation.ui.theme.sunnyDayPrimary
 import dev.jordond.compass.Place
-import home.presentation.components.WeatherImage
-import map.util.toPlaceAddress
-import map.util.toPlaceIdentifier
+import home.presentation.components.WeatherIcon
+import map.domain.util.toPlaceAddress
+import map.domain.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import org.jetbrains.compose.resources.painterResource
@@ -59,7 +58,7 @@ fun MapPlaceWeather(
         Column(
             modifier = modifier
                 .background(
-                    color = sunnyDayPrimary,
+                    color = MaterialTheme.colors.primary,
                     shape = RoundedCornerShape(25.dp)
                 )
                 .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
@@ -67,10 +66,10 @@ fun MapPlaceWeather(
             Row(
                 verticalAlignment = Alignment.Top
             ) {
-                WeatherImage(
+                WeatherIcon(
                     weatherType = it.current.weatherType,
                     modifier = Modifier.size(36.dp),
-                    colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
+                    colorFilter = ColorFilter.tint(MaterialTheme.colors.onPrimary)
                 )
                 Row(
                     modifier = Modifier.offset(y = (-4).dp),
@@ -78,7 +77,7 @@ fun MapPlaceWeather(
                     Text(
                         text = "${round(it.current.temperature).toInt()}",
                         modifier = Modifier.padding(start = 10.dp, end = 1.dp),
-                        color = sunnyDayOnPrimary,
+                        color = MaterialTheme.colors.onPrimary,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -90,7 +89,7 @@ fun MapPlaceWeather(
                             .padding(top = 8.dp)
                             .size(7.5.dp),
                         alignment = Alignment.TopCenter,
-                        colorFilter = ColorFilter.tint(sunnyDayOnPrimary)
+                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onPrimary)
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -99,14 +98,14 @@ fun MapPlaceWeather(
                 ) {
                     Text(
                         text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
-                        color = sunnyDayOnPrimary,
+                        color = MaterialTheme.colors.onPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.End
                     )
                     Text(
                         text = placeCache?.toPlaceAddress() ?: "Unknown place",
-                        color = sunnyDayOnPrimary,
+                        color = MaterialTheme.colors.onPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.End,

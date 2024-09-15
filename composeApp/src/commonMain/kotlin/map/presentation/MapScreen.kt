@@ -53,9 +53,7 @@ fun MapScreen(
     effect: Flow<MapSideEffect>,
     navController: NavController
 ) {
-    EdgeColors(
-        navBarColor = Color.Transparent,
-    )
+    EdgeColors(navBarColor = Color.Transparent)
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
         permissionsControllerFactory.createPermissionsController()
@@ -94,9 +92,7 @@ fun MapScreen(
             }
         }
     }
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             scaffoldState = scaffoldState,

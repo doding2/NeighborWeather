@@ -1,4 +1,4 @@
-package core.util
+package core.domain.util
 
 fun <T, R, V> Collection<Triple<T, R, V>>.unzip(): Triple<List<T>, List<R>, List<V>> {
     val expectedSize = size

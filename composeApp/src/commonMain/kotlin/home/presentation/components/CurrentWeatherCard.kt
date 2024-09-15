@@ -33,20 +33,20 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.AmPmMarker
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
-import map.util.toPlaceIdentifier
+import map.domain.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.home_current_weather_title
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import neighborweather.composeapp.generated.resources.precipitation_probability_unit
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import weather.domain.model.Weather
+import weather.domain.model.CurrentWeather
 import kotlin.math.round
 
 @Composable
 fun CurrentWeatherCard(
     place: Place?,
-    weather: Weather?,
+    currentWeather: CurrentWeather?,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Transparent,
     tint: Color = Color.Transparent
@@ -57,12 +57,12 @@ fun CurrentWeatherCard(
     To avoid this "null" text, cache state values.
      */
     var placeCache by remember { mutableStateOf<Place?>(null) }
-    var weatherCache by remember { mutableStateOf<Weather?>(null) }
+    var currentWeatherCache by remember { mutableStateOf<CurrentWeather?>(null) }
     LaunchedEffect(place) {
         if (place != null) { placeCache = place }
     }
-    LaunchedEffect(weather) {
-        if (weather != null) { weatherCache = weather }
+    LaunchedEffect(currentWeather) {
+        if (currentWeather != null) { currentWeatherCache = currentWeather }
     }
     Column(
         modifier = modifier
@@ -74,7 +74,7 @@ fun CurrentWeatherCard(
             .padding(horizontal = 15.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        weatherCache?.let {
+        currentWeatherCache?.let {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -92,13 +92,13 @@ fun CurrentWeatherCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
-                    WeatherImage(
-                        weatherType = it.current.weatherType,
+                    WeatherIcon(
+                        weatherType = it.weatherType,
                         modifier = Modifier.size(72.dp),
                         colorFilter = ColorFilter.tint(tint)
                     )
                     Text(
-                        text = "${round(it.current.temperature).toInt()}",
+                        text = "${round(it.temperature).toInt()}",
                         modifier = Modifier.padding(start = 20.dp, end = 2.dp),
                         color = tint,
                         fontSize = 100.sp,
@@ -116,7 +116,7 @@ fun CurrentWeatherCard(
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    text = it.current.weatherType.toString(),
+                    text = it.weatherType.toString(),
                     modifier = Modifier.offset(y = (-10).dp),
                     color = tint,
                     fontSize = 20.sp,
@@ -146,7 +146,7 @@ fun CurrentWeatherCard(
                     }
                 }
                 Text(
-                    text = it.current.time.format(datetimeFormatter),
+                    text = it.time.format(datetimeFormatter),
                     color = tint,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
@@ -157,7 +157,7 @@ fun CurrentWeatherCard(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "Feels like ${round(it.current.apparentTemperature).toInt()}",
+                        text = "Feels like ${round(it.apparentTemperature).toInt()}",
                         modifier = Modifier.padding(end = 0.5.dp),
                         color = tint,
                         fontSize = 15.sp,
@@ -184,7 +184,7 @@ fun CurrentWeatherCard(
                             )
                     )
                     Text(
-                        text = "Rain by ${it.current.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
+                        text = "Rain by ${it.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
                         color = tint,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium

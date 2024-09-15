@@ -1,9 +1,9 @@
 package weather.data.util
 
-import core.util.Error
-import core.util.Result
-import core.util.getDataOrNull
-import core.util.map
+import core.domain.util.Error
+import core.domain.util.Result
+import core.domain.util.getDataOrNull
+import core.domain.util.map
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import weather.data.model.dto.WeatherDto

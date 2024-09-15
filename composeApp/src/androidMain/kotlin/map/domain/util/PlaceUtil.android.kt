@@ -1,4 +1,4 @@
-package map.util
+package map.domain.util
 
 import dev.jordond.compass.Place
 

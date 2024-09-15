@@ -1,12 +1,12 @@
-package core.util
+package core.domain.util
 
-import core.util.NetworkError.CONFLICT
-import core.util.NetworkError.PAYLOAD_TOO_LARGE
-import core.util.NetworkError.REQUEST_TIMEOUT
-import core.util.NetworkError.SERVER_ERROR
-import core.util.NetworkError.TOO_MANY_REQUESTS
-import core.util.NetworkError.UNAUTHORIZED
-import core.util.NetworkError.UNKNOWN
+import core.domain.util.NetworkError.CONFLICT
+import core.domain.util.NetworkError.PAYLOAD_TOO_LARGE
+import core.domain.util.NetworkError.REQUEST_TIMEOUT
+import core.domain.util.NetworkError.SERVER_ERROR
+import core.domain.util.NetworkError.TOO_MANY_REQUESTS
+import core.domain.util.NetworkError.UNAUTHORIZED
+import core.domain.util.NetworkError.UNKNOWN
 
 enum class NetworkError : Error {
     REQUEST_TIMEOUT,

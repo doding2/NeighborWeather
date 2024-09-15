@@ -7,8 +7,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import core.util.onError
-import core.util.onSuccess
+import core.domain.util.onError
+import core.domain.util.onSuccess
 import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
@@ -25,7 +25,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import map.domain.model.Location
-import map.util.getFirstDetailedPlace
+import map.domain.util.getFirstDetailedPlace
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.background_fall_1
 import neighborweather.composeapp.generated.resources.background_fall_2
@@ -73,9 +73,7 @@ class HomeViewModel(
         snapshotFlow { state.myLocation }
             .onEach { location ->
                 val place = location?.let { fetchPlace(it) }
-                state = state.copy(
-                    myPlace = place
-                )
+                state = state.copy(myPlace = place)
             }.launchIn(viewModelScope)
 
         snapshotFlow { state.myPlace }
@@ -92,13 +90,102 @@ class HomeViewModel(
                 if (weatherType != null) {
                     val drawable = getBackgroundImage(weatherType)
                     drawable?.let {
-                        state = state.copy(
-                            backgroundImage = it
-                        )
+                        state = state.copy(backgroundImage = it)
                     }
                 }
             }.launchIn(viewModelScope)
     }
+
+    private suspend fun sendEffect(effect: HomeSideEffect) {
+        _effect.send(effect)
+    }
+
+    fun onEvent(event: HomeEvent) {
+        when (event) {
+            is HomeEvent.NavigateToMap -> {
+                viewModelScope.launch { sendEffect(HomeSideEffect.NavigateToMap) }
+            }
+            HomeEvent.AcceptedLocationPermission -> loadMyLocation()
+            HomeEvent.DeniedLocationPermission -> {
+                // TODO: Show dialog or etc
+                viewModelScope.launch { sendEffect(HomeSideEffect.OpenPermissionSettingPage) }
+            }
+        }
+    }
+
+    private fun loadMyLocation() {
+        viewModelScope.launch {
+            geolocator.trackingStatus.collect { status ->
+                when (status) {
+                    TrackingStatus.Idle -> {
+                        geolocator.startTracking(
+                            request = LocationRequest(
+                                interval = 60000L,  // 1 minute
+                            )
+                        )
+                    }
+                    TrackingStatus.Tracking -> {}
+                    is TrackingStatus.Update -> {
+                        val location = status.location.coordinates.let {
+                            Location(it.latitude, it.longitude)
+                        }
+                        if (state.myLocation == null) {
+                            state = state.copy(myLocation = location)
+                            logger.d("[Success] Update ${status.location}")
+                        }
+                    }
+                    is TrackingStatus.Error -> {
+                        logger.d("[Error] Fail to track location: ${status.cause}")
+                        state = state.copy(myLocation = null)
+                        sendEffect(HomeSideEffect.ShowSnackbar(status.cause.message))
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchPlace(location: Location): Place? {
+        val geocoder = Geocoder()
+        val result = geocoder.places(
+            latitude = location.latitude,
+            longitude = location.longitude
+        )
+        return when (result) {
+            is GeocoderResult.Success -> result.data.getFirstDetailedPlace()
+            is GeocoderResult.Error -> {
+                sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info"))
+                logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
+                null
+            }
+        }
+    }
+
+    private fun updateWeather(place: Place) {
+        weatherJob?.cancel()
+        weatherJob = viewModelScope.launch {
+            weatherRepository.loadWeathers(
+                place = place,
+                neighborWeights = mapOf(
+                    Neighbor.Korea to 0.5,
+                    Neighbor.Japan to 0.2,
+                    Neighbor.China to 0.2,
+                    Neighbor.USA to 0.1
+                )
+            ).collect { result ->
+                result
+                    .onSuccess {
+                        state = state.copy(weather = it)
+                    }
+                    .onError {
+                        logger.e("[Error] $it")
+                        sendEffect(
+                            HomeSideEffect.ShowSnackbar(it.toString())
+                        )
+                    }
+            }
+        }
+    }
+
 
     private fun initBackgroundImage() {
         val current = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -147,117 +234,6 @@ class HomeViewModel(
         state = state.copy(
             backgroundImage = drawable
         )
-    }
-
-
-    private suspend fun sendEffect(effect: HomeSideEffect) {
-        _effect.send(effect)
-    }
-
-    fun onEvent(event: HomeEvent) {
-        when (event) {
-            is HomeEvent.NavigateToMap -> {
-                viewModelScope.launch {
-                    sendEffect(HomeSideEffect.NavigateToMap(event.weatherType))
-                }
-            }
-            HomeEvent.AcceptedLocationPermission -> loadMyLocation()
-            HomeEvent.DeniedLocationPermission -> {
-                // TODO: Show dialog or etc
-                viewModelScope.launch {
-                    sendEffect(HomeSideEffect.OpenPermissionSettingPage)
-                }
-            }
-        }
-    }
-
-    private fun loadMyLocation() {
-        viewModelScope.launch {
-            geolocator.trackingStatus.collect { status ->
-                when (status) {
-                    TrackingStatus.Idle -> {
-                        geolocator.startTracking(
-                            request = LocationRequest(
-                                interval = 60000L,  // 1 minute
-                            )
-                        )
-                        logger.d("Start tracking")
-                    }
-                    TrackingStatus.Tracking -> {
-                        logger.d("Tracking")
-                    }
-                    is TrackingStatus.Update -> {
-                        val location = status.location.coordinates.let {
-                            Location(it.latitude, it.longitude)
-                        }
-                        if (state.myLocation == null) {
-                            state = state.copy(
-                                myLocation = location
-                            )
-                            logger.d("Update ${status.location}")
-                        }
-                    }
-                    is TrackingStatus.Error -> {
-                        logger.d("Error ${status.cause}")
-                        state = state.copy(myLocation = null)
-                        sendEffect(HomeSideEffect.ShowSnackbar(status.cause.message))
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun fetchPlace(location: Location): Place? {
-        val geocoder = Geocoder()
-        val result = geocoder.places(
-            latitude = location.latitude,
-            longitude = location.longitude
-        )
-        return when (result) {
-            is GeocoderResult.Success -> {
-                logger.d("Success to load place: ${result.data}")
-                result.data.getFirstDetailedPlace()
-            }
-            is GeocoderResult.Error -> {
-                sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info."))
-                logger.d("Fail to load place info.")
-                null
-            }
-        }
-    }
-
-    private fun updateWeather(place: Place) {
-        weatherJob?.cancel()
-        weatherJob = viewModelScope.launch {
-            weatherRepository.loadWeathers(
-                place = place,
-                targetToWeight = mapOf(
-                    Neighbor.Korea to 0.5,
-                    Neighbor.Japan to 0.2,
-                    Neighbor.China to 0.2,
-                    Neighbor.USA to 0.1
-                )
-            ).collect { result ->
-                result
-                    .onSuccess {
-                        logger.d {
-                            """
-                                [UI] ${it.neighbor}
-                                    current: ${it.current.time}
-                                    hourly: ${it.hourly.map { it.time }}
-                                    daily: ${it.daily.map { it.time }}
-                            """.trimIndent()
-                        }
-                        state = state.copy(weather = it)
-                    }
-                    .onError {
-                        logger.e("[error] $it")
-                        sendEffect(
-                            HomeSideEffect.ShowSnackbar(it.toString())
-                        )
-                    }
-            }
-        }
     }
 
     private fun getBackgroundImage(weatherType: WeatherType): DrawableResource? {

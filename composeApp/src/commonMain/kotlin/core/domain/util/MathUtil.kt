@@ -1,4 +1,4 @@
-package core.util
+package core.domain.util
 
 import kotlin.math.pow
 import kotlin.math.round

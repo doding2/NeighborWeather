@@ -1,10 +1,10 @@
 package weather.data.remote
 
 import co.touchlab.kermit.Logger
-import core.util.Error
-import core.util.NetworkError
-import core.util.Result
-import core.util.toNetworkError
+import core.domain.util.Error
+import core.domain.util.NetworkError
+import core.domain.util.Result
+import core.domain.util.toNetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get

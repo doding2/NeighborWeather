@@ -1,10 +1,10 @@
 package weather.data.util
 
 import co.touchlab.kermit.Logger
-import core.util.CommonError
-import core.util.Error
-import core.util.Result
-import core.util.roundToFirst
+import core.domain.util.CommonError
+import core.domain.util.Error
+import core.domain.util.Result
+import core.domain.util.roundToFirst
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
