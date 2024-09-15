@@ -8,12 +8,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import core.domain.util.Result
+import core.domain.util.onError
+import core.domain.util.onSuccess
 import dev.jordond.compass.Place
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
 import dev.jordond.compass.geolocation.LocationRequest
 import dev.jordond.compass.geolocation.TrackingStatus
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -24,6 +27,7 @@ import map.domain.model.Location
 import map.domain.model.MapMarker
 import map.domain.model.isWithinDistance
 import map.domain.util.getFirstDetailedPlace
+import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
@@ -40,7 +44,32 @@ class MapViewModel(
     private val _effect: Channel<MapSideEffect> = Channel()
     val effect = _effect.receiveAsFlow()
 
+    private var weatherJob: Job? = null
+
     init {
+        snapshotFlow { state.myLocation }
+            .onEach { location ->
+                val place = location?.let { fetchPlace(it) }
+                state = state.copy(myPlace = place)
+            }.launchIn(viewModelScope)
+
+        snapshotFlow { state.myPlace }
+            .onEach { place ->
+                if (place != null) {
+                    updateWeather(place)
+                } else {
+                    state = state.copy(myWeather = null)
+                }
+            }.launchIn(viewModelScope)
+
+        snapshotFlow { state.myWeather }
+            .onEach { weather ->
+                val updateWithMyWeather = state.run { selectedPlace != null && selectedPlace == myPlace }
+                if (updateWithMyWeather) {
+                    state = state.copy(selectedWeather = weather)
+                }
+            }.launchIn(viewModelScope)
+
         snapshotFlow { state.selectedLocation }
             .onEach { location ->
                 // update selected marker
@@ -81,9 +110,11 @@ class MapViewModel(
             }.launchIn(viewModelScope)
 
         snapshotFlow { state.selectedPlace }
-            .onEach { place ->
-                // update weather of selected place
-                val weather = place?.let { fetchWeather(it) }
+            .onEach { selectedPlace ->
+                // if myPlace is not loaded, set selectedWeather to null (=myWeather is null now).
+                // selectedWeather will be updated at other snapshotFlow after myPlace is loaded.
+                val updateWithMyWeather = state.run { myPlace == null || selectedPlace == myPlace }
+                val weather = if (updateWithMyWeather) state.myWeather else selectedPlace?.let { fetchWeather(it) }
                 state = state.copy(
                     selectedWeather = weather
                 )
@@ -111,15 +142,11 @@ class MapViewModel(
             is MapEvent.OnMapClick -> {
                 state = state.copy(selectedLocation = event.location)
             }
-            /* When marker is double-clicked with term, state is not updated.
-            Because location of marker is same value.
-            So update camera position directly
-             */
             is MapEvent.OnMarkerClick -> {
                 updateSelectedLocation(event.marker.position)
             }
             is MapEvent.OnMyLocationClick -> {
-                updateSelectedLocation(event.location)
+                updateSelectedLocation(state.myLocation ?: event.location)
             }
         }
     }
@@ -189,9 +216,40 @@ class MapViewModel(
         }
     }
 
+    private fun updateWeather(place: Place) {
+        weatherJob?.cancel()
+        weatherJob = viewModelScope.launch {
+            weatherRepository.loadWeathers(
+                place = place,
+                neighborWeights = mapOf(
+                    Neighbor.Korea to 0.5,
+                    Neighbor.Japan to 0.2,
+                    Neighbor.China to 0.2,
+                    Neighbor.USA to 0.1
+                ),
+                fetchFromRemote = false
+            ).collect { result ->
+                result
+                    .onSuccess {
+                        state = state.copy(myWeather = it)
+                    }
+                    .onError {
+                        logger.e("[Error] $it")
+                        sendEffect(
+                            MapSideEffect.ShowSnackbar(it.toString())
+                        )
+                    }
+            }
+        }
+    }
+
     private fun updateSelectedLocation(
         location: Location
     ) {
+        /* When marker is double-clicked with term, state is not updated.
+        Because location of marker is same value.
+        So update camera position directly
+         */
         val cameraOffset = (-5..5).random() / 10000000.0
         state = state.copy(
             selectedLocation = location,
