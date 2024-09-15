@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
@@ -31,7 +30,6 @@ import weather.domain.repository.WeatherRepository
 class MapViewModel(
     private val weatherRepository: WeatherRepository,
     private val geolocator: Geolocator,
-    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val logger by lazy { Logger.withTag("MapViewModel") }

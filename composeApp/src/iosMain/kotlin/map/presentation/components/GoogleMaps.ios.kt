@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.interop.UIKitView
-import co.touchlab.kermit.Logger
+import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
+import androidx.compose.ui.viewinterop.UIKitInteropProperties
+import androidx.compose.ui.viewinterop.UIKitView
 import cocoapods.GoogleMaps.GMSCameraPosition
 import cocoapods.GoogleMaps.GMSCameraUpdate
 import cocoapods.GoogleMaps.GMSCameraUpdate.Companion.fitBounds
@@ -28,7 +30,7 @@ import platform.CoreLocation.CLLocationCoordinate2D
 import platform.CoreLocation.CLLocationCoordinate2DMake
 import platform.darwin.NSObject
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, ExperimentalComposeUiApi::class)
 @Composable
 actual fun GoogleMaps(
     modifier: Modifier,
@@ -50,10 +52,6 @@ actual fun GoogleMaps(
                 didTapAtCoordinate: CValue<CLLocationCoordinate2D>,
             ) {
                 didTapAtCoordinate.useContents {
-                    Logger.d(
-                        messageString = "didTapAtCoordinate: $latitude, $longitude",
-                        tag = "GoogleMaps.ios"
-                    )
                     onMapClick?.invoke(
                         Location(
                             latitude = this.latitude,
@@ -78,11 +76,10 @@ actual fun GoogleMaps(
     }
 
     UIKitView(
-        modifier = modifier.fillMaxSize(),
-        interactive = true,
         factory = {
             mapsView
         },
+        modifier = modifier.fillMaxSize(),
         update = { view ->
             view.settings.apply {
                 compassButton = isControlsVisible
@@ -145,6 +142,10 @@ actual fun GoogleMaps(
                     this.map = view
                 }
             }
-        }
+        },
+        properties = UIKitInteropProperties(
+            isNativeAccessibilityEnabled = true,
+            interactionMode = UIKitInteropInteractionMode.NonCooperative
+        )
     )
 }

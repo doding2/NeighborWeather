@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -216,7 +217,7 @@ fun HomeScreen(
                                           },
                                         modifier = Modifier
                                             .padding(8.dp)
-                                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                                            .windowInsetsPadding(WindowInsets.statusBars)
                                             .align(Alignment.TopEnd)
                                             .background(
                                                 color = primary,
