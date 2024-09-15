@@ -1,8 +1,24 @@
 package weather.domain.model
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import weather.domain.model.WeatherType.Clear
+import weather.domain.model.WeatherType.Cloudy
+import weather.domain.model.WeatherType.Drizzle
+import weather.domain.model.WeatherType.Fog
+import weather.domain.model.WeatherType.FreezingDrizzle
+import weather.domain.model.WeatherType.FreezingRain
+import weather.domain.model.WeatherType.MainlyClear
+import weather.domain.model.WeatherType.Other
+import weather.domain.model.WeatherType.RainShower
+import weather.domain.model.WeatherType.Rainy
+import weather.domain.model.WeatherType.SnowShower
+import weather.domain.model.WeatherType.Snowy
+import weather.domain.model.WeatherType.Thunderstorm
+
 sealed interface WeatherType {
-    data object Sunny: WeatherType
-    data object CloudySunny: WeatherType
+    data object Clear: WeatherType
+    data object MainlyClear: WeatherType
     data object Fog: WeatherType
     data object Cloudy: WeatherType
     data object Drizzle: WeatherType
@@ -16,21 +32,40 @@ sealed interface WeatherType {
     data object Other: WeatherType
 }
 
+@Composable
+fun WeatherType.toFormattedName(darkTheme: Boolean = isSystemInDarkTheme()): String {
+    return when (this) {
+        Clear -> if (darkTheme) "Clear" else "Sunny"
+        MainlyClear -> if (darkTheme) "Mainly Clear" else "Mainly Sunny"
+        Fog -> "Fog"
+        Cloudy -> "Cloudy"
+        Drizzle -> "Drizzle"
+        FreezingDrizzle -> "Freezing Drizzle"
+        Rainy -> "Rainy"
+        RainShower -> "Rain Shower"
+        FreezingRain -> "Freezing Rain"
+        Snowy -> "Snowy"
+        SnowShower -> "Snow Shower"
+        Thunderstorm -> "Thunderstorm"
+        Other -> "Other"
+    }
+}
+
 fun Int.toWeatherType(): WeatherType {
     return when (this) {
-        0, 1 -> WeatherType.Sunny
-        2 -> WeatherType.CloudySunny
-        3 -> WeatherType.Cloudy
-        45, 48 -> WeatherType.Fog
-        51, 53, 55 -> WeatherType.Drizzle
-        56, 57 -> WeatherType.FreezingDrizzle
-        61, 63, 65 -> WeatherType.Rainy
-        66, 67 -> WeatherType.FreezingRain
-        71, 73, 75, 77 -> WeatherType.Snowy
-        80, 81, 82 -> WeatherType.RainShower
-        85, 86 -> WeatherType.SnowShower
-        95, 96, 99 -> WeatherType.Thunderstorm
-        else -> WeatherType.Other
+        0, 1 -> Clear
+        2 -> MainlyClear
+        3 -> Cloudy
+        45, 48 -> Fog
+        51, 53, 55 -> Drizzle
+        56, 57 -> FreezingDrizzle
+        61, 63, 65 -> Rainy
+        66, 67 -> FreezingRain
+        71, 73, 75, 77 -> Snowy
+        80, 81, 82 -> RainShower
+        85, 86 -> SnowShower
+        95, 96, 99 -> Thunderstorm
+        else -> Other
     }
 }
 

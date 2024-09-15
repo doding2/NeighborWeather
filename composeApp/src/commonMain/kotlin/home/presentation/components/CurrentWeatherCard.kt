@@ -42,6 +42,7 @@ import neighborweather.composeapp.generated.resources.precipitation_probability_
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import weather.domain.model.CurrentWeather
+import weather.domain.model.toFormattedName
 import kotlin.math.round
 
 @Composable
@@ -117,7 +118,7 @@ fun CurrentWeatherCard(
                     Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
-                    text = it.weatherType.toString(),
+                    text = it.weatherType.toFormattedName(),
                     modifier = Modifier.offset(y = (-10).dp),
                     color = tint,
                     fontSize = 20.sp,

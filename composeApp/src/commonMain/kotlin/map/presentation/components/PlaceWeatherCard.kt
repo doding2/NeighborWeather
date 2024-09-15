@@ -88,7 +88,7 @@ fun MapPlaceWeatherCard(
                         contentDescription = "Temperature unit sign",
                         modifier = Modifier
                             .align(Alignment.Top)
-                            .padding(top = 8.dp)
+                            .padding(top = 7.dp)
                             .size(7.5.dp),
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(tint)

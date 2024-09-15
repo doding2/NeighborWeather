@@ -39,10 +39,10 @@ import neighborweather.composeapp.generated.resources.background_summer_1
 import neighborweather.composeapp.generated.resources.background_summer_2
 import neighborweather.composeapp.generated.resources.background_summer_3
 import neighborweather.composeapp.generated.resources.background_summer_4
+import neighborweather.composeapp.generated.resources.background_weather_clear
 import neighborweather.composeapp.generated.resources.background_weather_cloudy
 import neighborweather.composeapp.generated.resources.background_weather_rainy
 import neighborweather.composeapp.generated.resources.background_weather_snowy
-import neighborweather.composeapp.generated.resources.background_weather_sunny
 import neighborweather.composeapp.generated.resources.background_winter_1
 import neighborweather.composeapp.generated.resources.background_winter_2
 import neighborweather.composeapp.generated.resources.background_winter_3
@@ -249,8 +249,8 @@ class HomeViewModel(
             WeatherType.SnowShower,
             WeatherType.FreezingDrizzle,
             WeatherType.FreezingRain -> Res.drawable.background_weather_snowy
-            WeatherType.CloudySunny,
-            WeatherType.Sunny -> Res.drawable.background_weather_sunny
+            WeatherType.MainlyClear,
+            WeatherType.Clear -> Res.drawable.background_weather_clear
             WeatherType.Other -> null
         }
     }

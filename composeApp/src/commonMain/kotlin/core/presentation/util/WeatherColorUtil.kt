@@ -65,7 +65,8 @@ fun animateWeatherColors(weatherType: WeatherType?): Colors {
     return MaterialTheme.colors.copy(
         primary = primary,
         onPrimary = onPrimary,
-        secondary = secondary
+        secondary = secondary,
+        onSecondary = Color.White
     )
 }
 
@@ -91,8 +92,8 @@ fun weatherPrimary(
         WeatherType.FreezingRain -> {
             if (darkTheme) snowyNightPrimary else snowyDayPrimary
         }
-        WeatherType.CloudySunny,
-        WeatherType.Sunny -> {
+        WeatherType.MainlyClear,
+        WeatherType.Clear -> {
             if (darkTheme) sunnyNightPrimary else sunnyDayPrimary
         }
         WeatherType.Other, null -> Color.Transparent
@@ -121,8 +122,8 @@ fun weatherOnPrimary(
         WeatherType.FreezingRain -> {
             if (darkTheme) snowyNightOnPrimary else snowyDayOnPrimary
         }
-        WeatherType.CloudySunny,
-        WeatherType.Sunny -> {
+        WeatherType.MainlyClear,
+        WeatherType.Clear -> {
             if (darkTheme) sunnyNightOnPrimary else sunnyDayOnPrimary
         }
         WeatherType.Other, null -> Color.Transparent
@@ -151,8 +152,8 @@ fun weatherSecondary(
         WeatherType.FreezingRain -> {
             if (darkTheme) snowyNightSecondary else snowyDaySecondary
         }
-        WeatherType.CloudySunny,
-        WeatherType.Sunny -> {
+        WeatherType.MainlyClear,
+        WeatherType.Clear -> {
             if (darkTheme) sunnyNightSecondary else sunnyDaySecondary
         }
         WeatherType.Other, null -> Color.Transparent
