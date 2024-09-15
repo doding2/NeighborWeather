@@ -60,8 +60,10 @@ fun WeatherCardList(
                 Spacer(modifier = Modifier.weight(1f))
                 AnimatedVisibility(
                     visible = isWeatherLoaded,
-                    modifier = Modifier.sizeIn(maxWidth = 360.dp),
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2}),
+                    modifier = Modifier
+                        .sizeIn(maxWidth = 360.dp)
+                        .windowInsetsPadding(WindowInsets.statusBars),
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
                 ) {
                     Box {
@@ -70,11 +72,7 @@ fun WeatherCardList(
                             currentWeather = weather?.current,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(
-                                    top = 53.dp,
-                                    bottom = 35.dp
-                                )
-                                .padding(horizontal = 20.dp),
+                                .padding(top = 28.dp, bottom = 36.dp, start = 28.dp, end = 28.dp),
                             backgroundColor = colors.primary,
                             tint = colors.onPrimary
                         )
@@ -82,7 +80,6 @@ fun WeatherCardList(
                             onClick = { onEvent(HomeEvent.NavigateToMap) },
                             modifier = Modifier
                                 .padding(8.dp)
-                                .windowInsetsPadding(WindowInsets.statusBars)
                                 .align(Alignment.TopEnd)
                                 .background(
                                     color = colors.primary,

@@ -109,9 +109,7 @@ fun MapScreen(
             ) {
                 val selectedWeather by rememberUpdatedState(state.selectedWeather)
                 val isPlaceWeatherVisible by remember {
-                    derivedStateOf {
-                        selectedWeather != null
-                    }
+                    derivedStateOf { selectedWeather != null }
                 }
                 val markers = remember(state.markers, state.selectedMarker) {
                     listOfNotNull(state.selectedMarker) + state.markers
@@ -140,17 +138,16 @@ fun MapScreen(
                     visible = isPlaceWeatherVisible,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
+                        .sizeIn(maxWidth = 360.dp)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .sizeIn(maxWidth = 360.dp),
+                        .padding(horizontal = 20.dp, vertical = 5.dp),
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
                     MapPlaceWeatherCard(
                         place = state.selectedPlace,
                         weather = state.selectedWeather,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 5.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         backgroundColor = weatherColors.primary,
                         tint = weatherColors.onPrimary
                     )

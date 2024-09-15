@@ -56,16 +56,15 @@ fun MapPlaceWeatherCard(
     LaunchedEffect(weather) {
         if (weather != null) { weatherCache = weather }
     }
-
-    weatherCache?.let {
-        Column(
-            modifier = modifier
-                .background(
-                    color = backgroundColor,
-                    shape = RoundedCornerShape(25.dp)
-                )
-                .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
-        ) {
+    Column(
+        modifier = modifier
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(25.dp)
+            )
+            .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
+    ) {
+        weatherCache?.let {
             Row(
                 verticalAlignment = Alignment.Top
             ) {
