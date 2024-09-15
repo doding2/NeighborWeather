@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
+import core.presentation.util.animateWeatherColors
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
@@ -43,7 +44,7 @@ import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import map.presentation.components.GoogleMaps
-import map.presentation.components.MapPlaceWeather
+import map.presentation.components.MapPlaceWeatherCard
 import map.presentation.components.MapSearchBar
 
 @Composable
@@ -76,6 +77,7 @@ fun MapScreen(
             }
         }
     }
+
     val scaffoldState = rememberScaffoldState()
     val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
@@ -92,6 +94,8 @@ fun MapScreen(
             }
         }
     }
+
+    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -128,7 +132,9 @@ fun MapScreen(
                         .fillMaxWidth()
                         .padding(8.dp)
                         .align(Alignment.TopCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                    backgroundColor = weatherColors.primary,
+                    tint = weatherColors.onPrimary
                 )
                 AnimatedVisibility(
                     visible = isPlaceWeatherVisible,
@@ -139,12 +145,14 @@ fun MapScreen(
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
                     exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 ) {
-                    MapPlaceWeather(
+                    MapPlaceWeatherCard(
                         place = state.selectedPlace,
                         weather = state.selectedWeather,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 5.dp)
+                            .padding(horizontal = 20.dp, vertical = 5.dp),
+                        backgroundColor = weatherColors.primary,
+                        tint = weatherColors.onPrimary
                     )
                 }
                 SnackbarHost(

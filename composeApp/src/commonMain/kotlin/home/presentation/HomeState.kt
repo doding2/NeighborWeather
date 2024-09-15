@@ -8,7 +8,7 @@ import weather.domain.model.Weather
 
 @Stable
 data class HomeState(
-    val weather: Weather? = null,
+    val myWeather: Weather? = null,
     val myLocation: Location? = null,
     val myPlace: Place? = null,
     val backgroundImage: DrawableResource? = null,

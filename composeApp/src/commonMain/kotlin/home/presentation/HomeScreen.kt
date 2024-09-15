@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import core.presentation.navigation.Routes
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
+import core.presentation.util.animateWeatherColors
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
@@ -69,31 +70,6 @@ fun HomeScreen(
         }
     }
 
-//    val transition: Transition<WeatherType?> = updateTransition(
-//        targetState = weather?.current?.weatherType
-//    )
-//    val primary by transition.animateColor(
-//        transitionSpec = {
-//            if (transition.currentState == null) tween(0)
-//            else tween(1000)
-//         },
-//        label = "primary"
-//    ) { weatherPrimary(it) }
-//    val onPrimary by transition.animateColor(
-//        transitionSpec = {
-//            if (transition.currentState == null) tween(0)
-//            else tween(1000)
-//        },
-//        label = "onPrimary"
-//    ) { weatherOnPrimary(it) }
-//    val secondary by transition.animateColor(
-//        transitionSpec = {
-//            if (transition.currentState == null) tween(0)
-//            else tween(1000)
-//        },
-//        label = "secondary"
-//    ) { weatherSecondary(it) }
-
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
@@ -113,6 +89,8 @@ fun HomeScreen(
             }
         }
     }
+
+    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -142,9 +120,10 @@ fun HomeScreen(
                     )
                 }
                 WeatherCardList(
-                    weather = state.weather,
+                    weather = state.myWeather,
                     place = state.myPlace,
                     onEvent = onEvent,
+                    colors = weatherColors,
                     contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 )
 

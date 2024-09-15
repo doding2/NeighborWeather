@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Colors
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -42,6 +43,7 @@ fun WeatherCardList(
     weather: Weather?,
     place: Place?,
     onEvent: (HomeEvent) -> Unit,
+    colors: Colors = MaterialTheme.colors,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val updatedWeather by rememberUpdatedState(weather)
@@ -73,8 +75,8 @@ fun WeatherCardList(
                                     bottom = 35.dp
                                 )
                                 .padding(horizontal = 20.dp),
-                            backgroundColor = MaterialTheme.colors.primary,
-                            tint = MaterialTheme.colors.onPrimary
+                            backgroundColor = colors.primary,
+                            tint = colors.onPrimary
                         )
                         IconButton(
                             onClick = { onEvent(HomeEvent.NavigateToMap) },
@@ -83,7 +85,7 @@ fun WeatherCardList(
                                 .windowInsetsPadding(WindowInsets.statusBars)
                                 .align(Alignment.TopEnd)
                                 .background(
-                                    color = MaterialTheme.colors.primary,
+                                    color = colors.primary,
                                     shape = CircleShape
                                 )
                                 .size(48.dp),
@@ -92,7 +94,7 @@ fun WeatherCardList(
                                     imageVector = Icons.Rounded.Map,
                                     contentDescription = "Navigate to map button",
                                     modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colors.onPrimary
+                                    tint = colors.onPrimary
                                 )
                             },
                         )

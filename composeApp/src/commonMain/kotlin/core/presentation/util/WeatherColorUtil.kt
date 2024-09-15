@@ -1,7 +1,13 @@
 package core.presentation.util
 
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.Colors
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import core.presentation.ui.theme.cloudyDayOnPrimary
 import core.presentation.ui.theme.cloudyDayPrimary
@@ -28,6 +34,40 @@ import core.presentation.ui.theme.sunnyNightOnPrimary
 import core.presentation.ui.theme.sunnyNightPrimary
 import core.presentation.ui.theme.sunnyNightSecondary
 import weather.domain.model.WeatherType
+
+@Composable
+fun animateWeatherColors(weatherType: WeatherType?): Colors {
+    val transition = updateTransition(targetState = weatherType)
+    val primary by transition.animateColor(
+        transitionSpec = {
+            if (transition.currentState == null) tween(0)
+            else tween(1000)
+        },
+        label = "primary",
+        targetValueByState = { weatherPrimary(it) }
+    )
+    val onPrimary by transition.animateColor(
+        transitionSpec = {
+            if (transition.currentState == null) tween(0)
+            else tween(1000)
+        },
+        label = "onPrimary",
+        targetValueByState = { weatherOnPrimary(it) }
+    )
+    val secondary by transition.animateColor(
+        transitionSpec = {
+            if (transition.currentState == null) tween(0)
+            else tween(1000)
+        },
+        label = "secondary",
+        targetValueByState = { weatherSecondary(it) }
+    )
+    return MaterialTheme.colors.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        secondary = secondary
+    )
+}
 
 @Composable
 fun weatherPrimary(

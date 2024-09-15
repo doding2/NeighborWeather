@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,10 +36,12 @@ import weather.domain.model.Weather
 import kotlin.math.round
 
 @Composable
-fun MapPlaceWeather(
+fun MapPlaceWeatherCard(
     place: Place?,
     weather: Weather?,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colors.primary,
+    tint: Color = MaterialTheme.colors.onPrimary,
 ) {
     /*
     When state value become null,
@@ -58,7 +61,7 @@ fun MapPlaceWeather(
         Column(
             modifier = modifier
                 .background(
-                    color = MaterialTheme.colors.primary,
+                    color = backgroundColor,
                     shape = RoundedCornerShape(25.dp)
                 )
                 .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
@@ -69,7 +72,7 @@ fun MapPlaceWeather(
                 WeatherIcon(
                     weatherType = it.current.weatherType,
                     modifier = Modifier.size(36.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colors.onPrimary)
+                    colorFilter = ColorFilter.tint(tint)
                 )
                 Row(
                     modifier = Modifier.offset(y = (-4).dp),
@@ -77,7 +80,7 @@ fun MapPlaceWeather(
                     Text(
                         text = "${round(it.current.temperature).toInt()}",
                         modifier = Modifier.padding(start = 10.dp, end = 1.dp),
-                        color = MaterialTheme.colors.onPrimary,
+                        color = tint,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -89,7 +92,7 @@ fun MapPlaceWeather(
                             .padding(top = 8.dp)
                             .size(7.5.dp),
                         alignment = Alignment.TopCenter,
-                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onPrimary)
+                        colorFilter = ColorFilter.tint(tint)
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -98,14 +101,14 @@ fun MapPlaceWeather(
                 ) {
                     Text(
                         text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
-                        color = MaterialTheme.colors.onPrimary,
+                        color = tint,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.End
                     )
                     Text(
                         text = placeCache?.toPlaceAddress() ?: "Unknown place",
-                        color = MaterialTheme.colors.onPrimary,
+                        color = tint,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.End,

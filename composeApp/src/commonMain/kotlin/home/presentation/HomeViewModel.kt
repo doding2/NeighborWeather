@@ -81,11 +81,11 @@ class HomeViewModel(
                 if (place != null) {
                     updateWeather(place)
                 } else {
-                    state = state.copy(weather = null)
+                    state = state.copy(myWeather = null)
                 }
             }.launchIn(viewModelScope)
 
-        snapshotFlow { state.weather?.current?.weatherType }
+        snapshotFlow { state.myWeather?.current?.weatherType }
             .onEach { weatherType ->
                 if (weatherType != null) {
                     val drawable = getBackgroundImage(weatherType)
@@ -174,7 +174,8 @@ class HomeViewModel(
             ).collect { result ->
                 result
                     .onSuccess {
-                        state = state.copy(weather = it)
+                        state = state.copy(myWeather = it)
+
                     }
                     .onError {
                         logger.e("[Error] $it")
