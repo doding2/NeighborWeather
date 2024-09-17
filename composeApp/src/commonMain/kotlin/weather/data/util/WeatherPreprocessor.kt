@@ -4,6 +4,7 @@ import core.domain.util.Error
 import core.domain.util.Result
 import core.domain.util.getDataOrNull
 import core.domain.util.map
+import dev.jordond.compass.Place
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import weather.data.model.dto.WeatherDto
@@ -14,6 +15,7 @@ import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
+import weather.domain.model.toNeighbor
 import weather.domain.model.toWeatherCode
 import weather.domain.model.toWeatherType
 import kotlin.coroutines.cancellation.CancellationException
@@ -21,9 +23,10 @@ import kotlin.math.max
 
 class WeatherPreprocessor {
 
-    fun preprocess(results: List<Pair<Neighbor, Result<WeatherDto, Error>>>): List<Result<Weather, Error>> {
+    fun preprocess(results: List<Pair<Neighbor, Result<WeatherDto, Error>>>, place: Place): List<Result<Weather, Error>> {
         // Weather data from remote call may contains null values.
-        // Fill missing values with best matched weather data.
+        // Fill missing values with Local Meteorological Administrations
+        // and best matched weather data.
         // And convert to Weather object.
         val bestWeatherDto = results
             .find { it.first == Neighbor.ALL }
@@ -36,13 +39,22 @@ class WeatherPreprocessor {
                 )
             )
         }
+
+        val myLocationWeatherDto = (results
+            .find { it.first == place.toNeighbor() }
+            ?.second
+            ?.getDataOrNull() as? NeighborWeatherDto)
+            ?.let {
+                fillMissingValues(it, bestWeatherDto)
+            } ?: bestWeatherDto
+
         return results.map outerMap@{ (neighbor, result) ->
             result.map { weatherDto ->
                 when (weatherDto) {
                     is KoreaWeatherDto -> mapToWeather(weatherDto)
                     is NeighborWeatherDto -> {
                         val filled = runCatching {
-                            fillMissingValues(weatherDto, bestWeatherDto)
+                            fillMissingValues(weatherDto, myLocationWeatherDto)
                         }.getOrElse {
                             if (it is CancellationException) throw it
                             it.printStackTrace()

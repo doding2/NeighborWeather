@@ -1,5 +1,7 @@
 package weather.domain.model
 
+import dev.jordond.compass.Place
+
 sealed interface Neighbor {
     data object Korea: Neighbor
     data object Japan: Neighbor
@@ -21,5 +23,18 @@ sealed interface Neighbor {
             is Australia -> "bom_access_global"
             is Germany -> "icon_seamless"
         }
+    }
+}
+
+fun Place.toNeighbor(): Neighbor? {
+    return when (this.isoCountryCode?.lowercase()) {
+        "kr", "kor" -> return Neighbor.Korea
+        "jp", "jpn" -> return Neighbor.Japan
+        "cn", "chn" -> return Neighbor.China
+        "us", "usa" -> return Neighbor.USA
+        "ca", "can" -> return Neighbor.Canada
+        "au", "aus" -> return Neighbor.Australia
+        "de", "deu" -> return Neighbor.Germany
+        else -> null
     }
 }

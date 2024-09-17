@@ -48,7 +48,7 @@ class WeatherRepositoryImpl(
     ): Result<Weather, Error> {
         return withContext(Dispatchers.IO) {
             fetchRemoteWeathers(place, setOf(neighbor, Neighbor.ALL))
-                .let { weatherPreprocessor.preprocess(it).firstOrNull() }
+                .let { weatherPreprocessor.preprocess(it, place).firstOrNull() }
                 ?: Result.Error(NetworkError.UNKNOWN)
         }
     }
@@ -96,7 +96,7 @@ class WeatherRepositoryImpl(
     ) {
         val locationName = place.toPlaceIdentifier()
         val remoteWeatherDtoResults = fetchRemoteWeathers(place, targetNeighbors)
-        val preprocessedWeatherResults = weatherPreprocessor.preprocess(remoteWeatherDtoResults)
+        val preprocessedWeatherResults = weatherPreprocessor.preprocess(remoteWeatherDtoResults, place)
 
         val remoteWeathers = preprocessedWeatherResults.mapNotNull {
             when (it) {

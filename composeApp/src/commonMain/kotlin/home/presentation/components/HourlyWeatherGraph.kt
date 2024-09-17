@@ -65,7 +65,7 @@ fun HourlyWeatherGraph(
         // draw temperature line
         drawPath(
             path = temperaturePath,
-            color = tint.copy(alpha = 0.3f),
+            color = tint.copy(alpha = 0.5f),
             style = Stroke(
                 width = 2.dp.toPx(),
                 cap = StrokeCap.Round,
