@@ -78,9 +78,9 @@ fun String.toWeatherCode(): Int? {
         "구름" to 2,
         "구름조금" to 2,
         "비" to 63,
-        "소나기" to 73,   // 아큐웨더 (overseas)
+        "소나기" to 81,   // 아큐웨더 (overseas)
         "번개뇌우" to 95,   // 아큐웨더 (overseas)
-        "일부 흐림/소나기" to 81,   // 아큐웨더 (overseas)
+        "일부 흐림/소나기" to 80,   // 아큐웨더 (overseas)
         "구름많음" to 2,
         "흐림" to 3,
         "흐리고 한때 비" to 61,

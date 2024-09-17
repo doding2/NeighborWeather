@@ -17,7 +17,7 @@ interface CurrentWeatherDao {
 
     @Query("SELECT * FROM CurrentWeatherEntity " +
             "WHERE locationName = :locationName " +
-            "AND neighbor = :neighbor AND epochTime " +
+            "AND neighbor = :neighbor " +
             "ORDER BY epochTime DESC LIMIT 1")
     suspend fun searchCurrentWeatherList(
         locationName: String,
@@ -26,7 +26,7 @@ interface CurrentWeatherDao {
 
     @Query("SELECT * FROM CurrentWeatherEntity " +
             "WHERE locationName = :locationName " +
-            "AND neighbor = :neighbor AND epochTime " +
+            "AND neighbor = :neighbor " +
             "ORDER BY epochTime DESC LIMIT 1")
     fun searchCurrentWeatherListFlow(
         locationName: String,

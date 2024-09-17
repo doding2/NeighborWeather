@@ -1,6 +1,7 @@
 package home.presentation.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,8 +23,8 @@ fun HomeBackground(
         targetState = backgroundImage,
         modifier = modifier,
         transitionSpec = {
-            fadeIn(animationSpec = tween(1000, delayMillis = 0))
-                .togetherWith(fadeOut(animationSpec = tween(500)))
+            fadeIn(animationSpec = tween(1000, easing = EaseInOut))
+                .togetherWith(fadeOut(animationSpec = tween(1000, 500, easing = EaseInOut)))
         }
     ) { background ->
         Image(

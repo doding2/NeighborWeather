@@ -175,7 +175,6 @@ class HomeViewModel(
                 result
                     .onSuccess {
                         state = state.copy(myWeather = it)
-
                     }
                     .onError {
                         logger.e("[Error] $it")

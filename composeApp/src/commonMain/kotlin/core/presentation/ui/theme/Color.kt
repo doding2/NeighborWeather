@@ -28,7 +28,7 @@ val cloudyNightSecondary = Color(0xFF484A82)
 // Color when rainy day
 val rainyDayPrimary = Color(0xFF7FC3AE)
 val rainyDayOnPrimary = Color(0xFFC9E8E0)
-val rainyDaySecondary = Color(0xFFFC3AE)
+val rainyDaySecondary = Color(0xFF7FC3AE)
 
 // Color when rainy night
 val rainyNightPrimary = Color(0xFF40666A)

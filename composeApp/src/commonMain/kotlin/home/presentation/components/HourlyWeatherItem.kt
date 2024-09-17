@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -24,17 +25,17 @@ import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.HourlyWeather
-import kotlin.math.round
+import kotlin.math.roundToInt
 
 @Composable
 fun HourlyWeatherItem(
     hourlyWeather: HourlyWeather,
     modifier: Modifier = Modifier,
-    tint: Color = Color.White
+    tint: Color = MaterialTheme.colors.onSecondary
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val timeFormat = remember {
             LocalTime.Format {
@@ -43,37 +44,40 @@ fun HourlyWeatherItem(
                 amPmMarker(AmPmMarker.AM.name, AmPmMarker.PM.name)
             }
         }
-        val hourText = remember(hourlyWeather.time) {
+        val hourlyTimeText = remember(hourlyWeather.time) {
             hourlyWeather.time.time.format(timeFormat)
         }
         Text(
-            text = hourText,
+            text = hourlyTimeText,
             color = tint,
-            fontSize = 14.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Normal,
-            lineHeight = 14.sp
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            WeatherIcon(
-                weatherType = hourlyWeather.weatherType,
-                modifier = Modifier.size(16.dp),
-                colorFilter = ColorFilter.tint(tint)
-            )
+        WeatherIcon(
+            weatherType = hourlyWeather.weatherType,
+            modifier = Modifier
+                .padding(4.dp)
+                .size(24.dp),
+            colorFilter = ColorFilter.tint(tint)
+        )
+        Row(
+            modifier = Modifier.padding(start = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = "${round(hourlyWeather.temperature).toInt()}",
-                modifier = Modifier.padding(start = 4.dp, end = 0.5.dp),
+                text = "${hourlyWeather.temperature.roundToInt()}",
+                modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                lineHeight = 14.sp
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
             )
             Image(
                 painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                 contentDescription = "Temperature unit sign",
                 modifier = Modifier
                     .align(Alignment.Top)
-                    .padding(top = 3.dp)
-                    .size(4.dp),
+                    .padding(top = 4.dp)
+                    .size(5.dp),
                 alignment = Alignment.TopCenter,
                 colorFilter = ColorFilter.tint(tint)
             )
