@@ -44,7 +44,7 @@ fun HourlyWeatherItem(
                 amPmMarker(AmPmMarker.AM.name, AmPmMarker.PM.name)
             }
         }
-        val hourlyTimeText = remember(hourlyWeather.time) {
+        val hourlyTimeText = remember(hourlyWeather.time.time) {
             hourlyWeather.time.time.format(timeFormat)
         }
         Text(
