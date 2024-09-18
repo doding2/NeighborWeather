@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.SnackbarResult
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -24,10 +24,6 @@ import core.presentation.navigation.Routes
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import core.presentation.util.animateWeatherColors
-import dev.icerock.moko.permissions.DeniedAlwaysException
-import dev.icerock.moko.permissions.DeniedException
-import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import home.presentation.components.HomeBackground
@@ -46,31 +42,14 @@ fun HomeScreen(
         darkTheme = true,
         navBarColor = Color.Transparent
     )
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarInteractionSource = remember { MutableInteractionSource() }
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
         permissionsControllerFactory.createPermissionsController()
     }
-    val scope = rememberCoroutineScope()
     BindEffect(permissionsController)
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                permissionsController.providePermission(Permission.LOCATION)
-                onEvent(HomeEvent.AcceptedLocationPermission)
-            } catch (e: Throwable) {
-                when (e) {
-                    is DeniedAlwaysException,
-                    is DeniedException,
-                    is RequestCanceledException -> {
-                        onEvent(HomeEvent.DeniedLocationPermission)
-                    }
-                }
-            }
-        }
-    }
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
         flow = effect,
         snackbarHostState
@@ -80,10 +59,20 @@ fun HomeScreen(
                 is HomeSideEffect.NavigateToMap -> {
                     navController.navigate(Routes.Map)
                 }
-                HomeSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                HomeSideEffect.OpenPermissionSettingPage -> {
+                    permissionsController.openAppSettings()
+                }
                 is HomeSideEffect.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar(it.message)
+                    val result = snackbarHostState.showSnackbar(
+                        message = it.event.message,
+                        actionLabel = it.event.action?.name,
+                        duration = it.event.duration
+                    )
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> { it.event.action?.action?.invoke() }
+                        SnackbarResult.Dismissed -> {}
+                    }
                 }
             }
         }

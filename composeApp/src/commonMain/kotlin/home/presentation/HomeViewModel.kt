@@ -9,10 +9,14 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import core.domain.util.onError
 import core.domain.util.onSuccess
+import core.presentation.util.SnackbarAction
+import core.presentation.util.SnackbarEvent
 import dev.jordond.compass.Place
+import dev.jordond.compass.Priority
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
+import dev.jordond.compass.geolocation.GeolocatorResult
 import dev.jordond.compass.geolocation.LocationRequest
 import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.Job
@@ -68,6 +72,7 @@ class HomeViewModel(
     private var weatherJob: Job? = null
 
     init {
+        loadMyLocation()
         initBackgroundImage()
 
         snapshotFlow { state.myLocation }
@@ -105,11 +110,6 @@ class HomeViewModel(
             is HomeEvent.NavigateToMap -> {
                 viewModelScope.launch { sendEffect(HomeSideEffect.NavigateToMap) }
             }
-            HomeEvent.AcceptedLocationPermission -> loadMyLocation()
-            HomeEvent.DeniedLocationPermission -> {
-                // TODO: Show dialog or etc
-                viewModelScope.launch { sendEffect(HomeSideEffect.OpenPermissionSettingPage) }
-            }
         }
     }
 
@@ -120,6 +120,7 @@ class HomeViewModel(
                     TrackingStatus.Idle -> {
                         geolocator.startTracking(
                             request = LocationRequest(
+                                priority = Priority.HighAccuracy,
                                 interval = 60000L,  // 1 minute
                             )
                         )
@@ -129,15 +130,25 @@ class HomeViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        if (state.myLocation == null) {
-                            state = state.copy(myLocation = location)
-                            logger.d("[Success] Update ${status.location}")
-                        }
+                        state = state.copy(myLocation = location)
                     }
                     is TrackingStatus.Error -> {
+                        val isPermissionDenied = status.cause is GeolocatorResult.PermissionDenied
+                                || status.cause is GeolocatorResult.PermissionError
+                        val snackbarEvent = if (isPermissionDenied) {
+                            SnackbarEvent(
+                                message = "Location permission is denied",
+                                action = SnackbarAction(
+                                    name = "Open setting",
+                                    action = { sendEffect(HomeSideEffect.OpenPermissionSettingPage) }
+                                )
+                            )
+                        } else {
+                            SnackbarEvent(message = status.cause.message)
+                        }
+
+                        sendEffect(HomeSideEffect.ShowSnackbar(snackbarEvent))
                         logger.d("[Error] Fail to track location: ${status.cause}")
-                        state = state.copy(myLocation = null)
-                        sendEffect(HomeSideEffect.ShowSnackbar(status.cause.message))
                     }
                 }
             }
@@ -153,7 +164,9 @@ class HomeViewModel(
         return when (result) {
             is GeocoderResult.Success -> result.data.getFirstDetailedPlace()
             is GeocoderResult.Error -> {
-                sendEffect(HomeSideEffect.ShowSnackbar("Fail to load place info"))
+                sendEffect(HomeSideEffect.ShowSnackbar(
+                    SnackbarEvent(message = "Fail to load place info")
+                ))
                 logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
                 null
             }
@@ -178,9 +191,9 @@ class HomeViewModel(
                     }
                     .onError {
                         logger.e("[Error] $it")
-                        sendEffect(
-                            HomeSideEffect.ShowSnackbar(it.toString())
-                        )
+                        sendEffect(HomeSideEffect.ShowSnackbar(
+                            SnackbarEvent(message = it.toString())
+                        ))
                     }
             }
         }

@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarResult
 import androidx.compose.material.Surface
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,10 +35,6 @@ import androidx.navigation.NavController
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
 import core.presentation.util.animateWeatherColors
-import dev.icerock.moko.permissions.DeniedAlwaysException
-import dev.icerock.moko.permissions.DeniedException
-import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.RequestCanceledException
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
@@ -55,46 +51,40 @@ fun MapScreen(
     navController: NavController
 ) {
     EdgeColors(navBarColor = Color.Transparent)
+    val scope = rememberCoroutineScope()
+    val scaffoldState = rememberScaffoldState()
+    val snackbarInteractionSource = remember { MutableInteractionSource() }
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
         permissionsControllerFactory.createPermissionsController()
     }
-    val scope = rememberCoroutineScope()
     BindEffect(permissionsController)
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                permissionsController.providePermission(Permission.LOCATION)
-                onEvent(MapEvent.AcceptedLocationPermission)
-            } catch (e: Throwable) {
-                when (e) {
-                    is DeniedAlwaysException,
-                    is DeniedException,
-                    is RequestCanceledException -> {
-                        onEvent(MapEvent.DeniedLocationPermission)
-                    }
-                }
-            }
-        }
-    }
-
-    val scaffoldState = rememberScaffoldState()
-    val snackbarInteractionSource = remember { MutableInteractionSource() }
     ObserveEffectsOnLifecycle(
         flow = effect
     ) {
         scope.launch {
             when (it) {
-                MapSideEffect.NavigateUp -> navController.navigateUp()
-                MapSideEffect.OpenPermissionSettingPage -> permissionsController.openAppSettings()
+                MapSideEffect.NavigateUp -> {
+                    navController.navigateUp()
+                }
+                MapSideEffect.OpenPermissionSettingPage -> {
+                    permissionsController.openAppSettings()
+                }
                 is MapSideEffect.ShowSnackbar -> {
                     scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    scaffoldState.snackbarHostState.showSnackbar(it.message)
+                    val result = scaffoldState.snackbarHostState.showSnackbar(
+                        message = it.event.message,
+                        actionLabel = it.event.action?.name,
+                        duration = it.event.duration
+                    )
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> { it.event.action?.action?.invoke() }
+                        SnackbarResult.Dismissed -> {}
+                    }
                 }
             }
         }
     }
-
     val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     Surface(modifier = Modifier.fillMaxSize()) {
         Scaffold(

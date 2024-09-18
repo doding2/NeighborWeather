@@ -10,10 +10,14 @@ import co.touchlab.kermit.Logger
 import core.domain.util.Result
 import core.domain.util.onError
 import core.domain.util.onSuccess
+import core.presentation.util.SnackbarAction
+import core.presentation.util.SnackbarEvent
 import dev.jordond.compass.Place
+import dev.jordond.compass.Priority
 import dev.jordond.compass.geocoder.Geocoder
 import dev.jordond.compass.geocoder.GeocoderResult
 import dev.jordond.compass.geolocation.Geolocator
+import dev.jordond.compass.geolocation.GeolocatorResult
 import dev.jordond.compass.geolocation.LocationRequest
 import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.Job
@@ -47,6 +51,8 @@ class MapViewModel(
     private var weatherJob: Job? = null
 
     init {
+        loadMyLocation()
+
         snapshotFlow { state.myLocation }
             .onEach { location ->
                 val place = location?.let { fetchPlace(it) }
@@ -132,13 +138,6 @@ class MapViewModel(
                     sendEffect(MapSideEffect.NavigateUp)
                 }
             }
-            MapEvent.AcceptedLocationPermission -> loadMyLocation()
-            MapEvent.DeniedLocationPermission -> {
-                // TODO: Show dialog or etc
-                viewModelScope.launch {
-                    sendEffect(MapSideEffect.OpenPermissionSettingPage)
-                }
-            }
             is MapEvent.OnMapClick -> {
                 state = state.copy(selectedLocation = event.location)
             }
@@ -158,6 +157,7 @@ class MapViewModel(
                     TrackingStatus.Idle -> {
                         geolocator.startTracking(
                             request = LocationRequest(
+                                priority = Priority.HighAccuracy,
                                 interval = 60000L,  // 1 minute
                             )
                         )
@@ -167,20 +167,30 @@ class MapViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        if (state.myLocation == null) {
-                            state = state.run {
-                                copy(
-                                    myLocation = location,
-                                    selectedLocation = selectedLocation ?: location
-                                )
-                            }
-                            logger.d("[Success] Update ${status.location}")
+                        state = state.run {
+                            copy(
+                                myLocation = location,
+                                selectedLocation = selectedLocation ?: location
+                            )
                         }
                     }
                     is TrackingStatus.Error -> {
-                        logger.d("[Error] Error ${status.cause}")
-                        state = state.copy(myLocation = null)
-                        sendEffect(MapSideEffect.ShowSnackbar(status.cause.message))
+                        val isPermissionDenied = status.cause is GeolocatorResult.PermissionDenied
+                                || status.cause is GeolocatorResult.PermissionError
+                        val snackbarEvent = if (isPermissionDenied) {
+                            SnackbarEvent(
+                                message = "Location permission is denied",
+                                action = SnackbarAction(
+                                    name = "Open setting",
+                                    action = { sendEffect(MapSideEffect.OpenPermissionSettingPage) }
+                                )
+                            )
+                        } else {
+                            SnackbarEvent(status.cause.message)
+                        }
+
+                        sendEffect(MapSideEffect.ShowSnackbar(snackbarEvent))
+                        logger.d("[Error] Fail to track location: ${status.cause}")
                     }
                 }
             }
@@ -197,7 +207,9 @@ class MapViewModel(
             is GeocoderResult.Success -> result.data.getFirstDetailedPlace()
             is GeocoderResult.Error -> {
                 if (result.errorOrNull() != GeocoderResult.NotFound) {
-                    sendEffect(MapSideEffect.ShowSnackbar("Fail to load place info"))
+                    sendEffect(MapSideEffect.ShowSnackbar(
+                        SnackbarEvent(message = "Fail to load place info")
+                    ))
                 }
                 logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
                 null
@@ -209,7 +221,9 @@ class MapViewModel(
         return when (val result = weatherRepository.fetchRemoteWeather(place)) {
             is Result.Success -> result.data
             is Result.Error -> {
-                sendEffect(MapSideEffect.ShowSnackbar(result.error.toString()))
+                sendEffect(MapSideEffect.ShowSnackbar(
+                    SnackbarEvent(message = result.error.toString())
+                ))
                 logger.d("[Error] Fail to load weather: ${result.error}")
                 null
             }
@@ -235,9 +249,9 @@ class MapViewModel(
                     }
                     .onError {
                         logger.e("[Error] $it")
-                        sendEffect(
-                            MapSideEffect.ShowSnackbar(it.toString())
-                        )
+                        sendEffect(MapSideEffect.ShowSnackbar(
+                            SnackbarEvent(message = it.toString())
+                        ))
                     }
             }
         }
