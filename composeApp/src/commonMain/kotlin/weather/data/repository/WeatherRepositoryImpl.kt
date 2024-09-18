@@ -24,7 +24,7 @@ import map.domain.util.toPlaceIdentifier
 import weather.data.local.WeatherDatabase
 import weather.data.mapper.toWeather
 import weather.data.mapper.toWeatherEntity
-import weather.data.model.dto.WeatherDto
+import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.data.remote.WeatherClient
 import weather.data.util.KoreaWeatherParser.KoreaWeatherParserException
 import weather.data.util.WeatherPreprocessor
@@ -103,7 +103,6 @@ class WeatherRepositoryImpl(
                 is Result.Success -> it.data
                 is Result.Error -> {
                     send(Result.Error(it.error))
-
                     /*
                     FIXME: MalformedInputException is occurred in
                      iOS internal charset encoding process randomly.
@@ -130,7 +129,7 @@ class WeatherRepositoryImpl(
     private suspend fun fetchRemoteWeathers(
         place: Place,
         targetNeighbors: Set<Neighbor>,
-    ): List<Pair<Neighbor, Result<WeatherDto, Error>>> {
+    ): List<Pair<Neighbor, Result<NeighborWeatherDto, Error>>> {
         val locationName = place.toPlaceIdentifier()
         return withContext(Dispatchers.IO) {
             targetNeighbors.map { neighbor ->

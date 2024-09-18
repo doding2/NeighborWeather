@@ -190,7 +190,7 @@ class MapViewModel(
                         }
 
                         sendEffect(MapSideEffect.ShowSnackbar(snackbarEvent))
-                        logger.d("[Error] Fail to track location: ${status.cause}")
+                        logger.e("[Error] Fail to track location: ${status.cause}")
                     }
                 }
             }
@@ -211,7 +211,7 @@ class MapViewModel(
                         SnackbarEvent(message = "Fail to load place info")
                     ))
                 }
-                logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
+                logger.e("[Error] Fail to load place info: ${result.errorOrNull()}")
                 null
             }
         }
@@ -224,7 +224,7 @@ class MapViewModel(
                 sendEffect(MapSideEffect.ShowSnackbar(
                     SnackbarEvent(message = result.error.toString())
                 ))
-                logger.d("[Error] Fail to load weather: ${result.error}")
+                logger.e("[Error] Fail to load weather: ${result.error}")
                 null
             }
         }

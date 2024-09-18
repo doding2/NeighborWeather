@@ -1,5 +1,6 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import core.domain.util.Error
 import core.domain.util.Result
 import core.domain.util.getDataOrNull
@@ -7,7 +8,6 @@ import core.domain.util.map
 import dev.jordond.compass.Place
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import weather.data.model.dto.WeatherDto
 import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
 import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
@@ -23,7 +23,9 @@ import kotlin.math.max
 
 class WeatherPreprocessor {
 
-    fun preprocess(results: List<Pair<Neighbor, Result<WeatherDto, Error>>>, place: Place): List<Result<Weather, Error>> {
+    private val logger by lazy { Logger.withTag("WeatherPreprocessor") }
+
+    fun preprocess(results: List<Pair<Neighbor, Result<NeighborWeatherDto, Error>>>, place: Place): List<Result<Weather, Error>> {
         // Weather data from remote call may contains null values.
         // Fill missing values with Local Meteorological Administrations
         // and best matched weather data.
@@ -31,7 +33,7 @@ class WeatherPreprocessor {
         val bestWeatherDto = results
             .find { it.first == Neighbor.ALL }
             ?.second
-            ?.getDataOrNull() as? NeighborWeatherDto
+            ?.getDataOrNull()
         if (bestWeatherDto == null) {
             return listOf(
                 Result.Error(
@@ -39,44 +41,37 @@ class WeatherPreprocessor {
                 )
             )
         }
-
-        val myLocationWeatherDto = (results
+        val myLocationWeatherDto = results
             .find { it.first == place.toNeighbor() }
             ?.second
-            ?.getDataOrNull() as? NeighborWeatherDto)
+            ?.getDataOrNull()
             ?.let {
-                fillMissingValues(it, bestWeatherDto)
+                runCatching {
+                    fillMissingValues(it, bestWeatherDto)
+                }.getOrNull()
             } ?: bestWeatherDto
 
         return results.map outerMap@{ (neighbor, result) ->
             result.map { weatherDto ->
-                when (weatherDto) {
-                    is KoreaWeatherDto -> mapToWeather(weatherDto)
-                    is NeighborWeatherDto -> {
-                        val filled = runCatching {
-                            fillMissingValues(weatherDto, myLocationWeatherDto)
-                        }.getOrElse {
-                            if (it is CancellationException) throw it
-                            it.printStackTrace()
-                            return@outerMap Result.Error(
-                                WeatherPreprocessorError.FAIL_TO_FILL_MISSING_VALUES
-                            )
-                        }
-                        val weather = runCatching {
-                            mapToWeather(neighbor, filled)
-                        }.getOrElse {
-                            if (it is CancellationException) throw it
-                            it.printStackTrace()
-                            return@outerMap Result.Error(
-                                WeatherPreprocessorError.FAIL_TO_MAP_WEATHER
-                            )
-                        }
-                        weather
-                    }
-                    else -> return@outerMap Result.Error(
-                        WeatherPreprocessorError.UNKNOWN_WEATHER_DTO_TYPE
+                val filled = runCatching {
+                    fillMissingValues(weatherDto, myLocationWeatherDto)
+                }.getOrElse {
+                    if (it is CancellationException) throw it
+                    it.printStackTrace()
+                    return@outerMap Result.Error(
+                        WeatherPreprocessorError.FAIL_TO_FILL_MISSING_VALUES
                     )
                 }
+                val weather = runCatching {
+                    mapToWeather(neighbor, filled)
+                }.getOrElse {
+                    if (it is CancellationException) throw it
+                    it.printStackTrace()
+                    return@outerMap Result.Error(
+                        WeatherPreprocessorError.FAIL_TO_MAP_WEATHER
+                    )
+                }
+                weather
             }
         }
     }
@@ -109,71 +104,75 @@ class WeatherPreprocessor {
                 )
             },
             hourly = target.hourly.run {
+                val targetSize = target.hourly.time.size
+                val bestSize = best.hourly.time.size
+                var targetStartIndex = 0
+                var bestStartIndex = 0
+                if (targetSize >= bestSize) {
+                    val firstTarget = best.hourly.time.firstOrNull() ?: target.hourly.time.first()
+                    targetStartIndex = target.hourly.time.indexOfFirst { it == firstTarget }
+                } else {
+                    val firstTarget = target.hourly.time.firstOrNull() ?: best.hourly.time.first()
+                    bestStartIndex = best.hourly.time.indexOfFirst { it == firstTarget }
+                }
                 copy(
-                    temperature2m = temperature2m.mapIndexed { index, value ->
-                        value ?: best.hourly.temperature2m[index]!!
-                    },
-                    relativeHumidity2m = relativeHumidity2m.mapIndexed { index, value ->
-                        value ?: best.hourly.relativeHumidity2m[index]!!
-                    },
-                    apparentTemperature = apparentTemperature.mapIndexed { index, value ->
-                        value ?: best.hourly.apparentTemperature[index]!!
-                    },
-                    precipitation = precipitation.mapIndexed { index, value ->
-                        value ?: best.hourly.precipitation[index]!!
-                    },
-                    precipitationProbability = precipitationProbability.mapIndexed { index, value ->
-                        value ?: best.hourly.precipitationProbability[index]!!
-                    },
-                    weatherCode = weatherCode.mapIndexed { index, value ->
-                        value ?: best.hourly.weatherCode[index]!!
-                    },
-                    windSpeed10m = windSpeed10m.mapIndexed { index, value ->
-                        value ?: best.hourly.windSpeed10m[index]!!
-                    },
-                    windDirection10m = windDirection10m.mapIndexed { index, value ->
-                        value ?: best.hourly.windDirection10m[index]!!
-                    }
+                    time = if (targetSize >= bestSize) best.hourly.time else time,
+                    temperature2m = if (temperature2m.isEmpty()) best.hourly.temperature2m.subList(bestStartIndex, bestSize)
+                        else temperature2m.subList(targetStartIndex, targetSize).zip(best.hourly.temperature2m.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    relativeHumidity2m = if (relativeHumidity2m.isEmpty()) best.hourly.relativeHumidity2m.subList(bestStartIndex, bestSize)
+                        else relativeHumidity2m.subList(targetStartIndex, targetSize).zip(best.hourly.relativeHumidity2m.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    apparentTemperature = if (apparentTemperature.isEmpty()) best.hourly.apparentTemperature.subList(bestStartIndex, bestSize)
+                        else apparentTemperature.subList(targetStartIndex, targetSize).zip(best.hourly.apparentTemperature.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    precipitation = if (precipitation.isEmpty()) best.hourly.precipitation.subList(bestStartIndex, bestSize)
+                        else precipitation.subList(targetStartIndex, targetSize).zip(best.hourly.precipitation.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    precipitationProbability = if (precipitationProbability.isEmpty()) best.hourly.precipitationProbability.subList(bestStartIndex, bestSize)
+                        else precipitationProbability.subList(targetStartIndex, targetSize).zip(best.hourly.precipitationProbability.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    weatherCode = if (weatherCode.isEmpty()) best.hourly.weatherCode.subList(bestStartIndex, bestSize)
+                        else weatherCode.subList(targetStartIndex, targetSize).zip(best.hourly.weatherCode.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    windSpeed10m = if (windSpeed10m.isEmpty()) best.hourly.windSpeed10m.subList(bestStartIndex, bestSize)
+                        else windSpeed10m.subList(targetStartIndex, targetSize).zip(best.hourly.windSpeed10m.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    windDirection10m = if (windDirection10m.isEmpty()) best.hourly.windDirection10m.subList(bestStartIndex, bestSize)
+                        else windDirection10m.subList(targetStartIndex, targetSize).zip(best.hourly.windDirection10m.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
                 )
             },
             daily = target.daily.run {
+                val targetSize = target.daily.time.size
+                val bestSize = best.daily.time.size
+                var targetStartIndex = 0
+                var bestStartIndex = 0
+                if (targetSize >= bestSize) {
+                    val firstTarget = best.daily.time.firstOrNull() ?: target.daily.time.first()
+                    targetStartIndex = target.daily.time.indexOfFirst { it == firstTarget }
+                } else {
+                    val firstTarget = target.daily.time.firstOrNull() ?: best.daily.time.first()
+                    bestStartIndex = best.daily.time.indexOfFirst { it == firstTarget }
+                }
                 copy(
-                    weatherCode = weatherCode.mapIndexed { index, value ->
-                        value ?: best.daily.weatherCode[index]!!
-                    },
-                    temperature2mMax = temperature2mMax.mapIndexed { index, value ->
-                        value ?: best.daily.temperature2mMax[index]!!
-                    },
-                    temperature2mMin = temperature2mMin.mapIndexed { index, value ->
-                        value ?: best.daily.temperature2mMin[index]!!
-                    },
-                    apparentTemperatureMax = apparentTemperatureMax.mapIndexed { index, value ->
-                        value ?: best.daily.apparentTemperatureMax[index]!!
-                    },
-                    apparentTemperatureMin = apparentTemperatureMin.mapIndexed { index, value ->
-                        value ?: best.daily.apparentTemperatureMin[index]!!
-                    },
-                    sunrise = sunrise.mapIndexed { index, value ->
-                        value ?: best.daily.sunrise[index]!!
-                    },
-                    sunset = sunset.mapIndexed { index, value ->
-                        value ?: best.daily.sunset[index]!!
-                    },
-                    precipitationSum = precipitationSum.mapIndexed { index, value ->
-                        value ?: best.daily.precipitationSum[index]!!
-                    },
-                    precipitationHours = precipitationHours.mapIndexed { index, value ->
-                        value ?: best.daily.precipitationHours[index]!!
-                    },
-                    precipitationProbabilityMax = precipitationProbabilityMax.mapIndexed { index, value ->
-                        value ?: best.daily.precipitationProbabilityMax[index]!!
-                    },
-                    windSpeed10mMax = windSpeed10mMax.mapIndexed { index, value ->
-                        value ?: best.daily.windSpeed10mMax[index]!!
-                    },
-                    windDirection10mDominant = windDirection10mDominant.mapIndexed { index, value ->
-                        value ?: best.daily.windDirection10mDominant[index]!!
-                    }
+                    time = if (targetSize >= bestSize) best.daily.time else time,
+                    weatherCode = if (weatherCode.isEmpty()) best.daily.weatherCode.subList(bestStartIndex, bestSize)
+                        else weatherCode.subList(targetStartIndex, targetSize).zip(best.daily.weatherCode.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!! },
+                    temperature2mMax = if (temperature2mMax.isEmpty()) best.daily.temperature2mMax.subList(bestStartIndex, bestSize)
+                        else temperature2mMax.subList(targetStartIndex, targetSize).zip(best.daily.temperature2mMax.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    temperature2mMin = if (temperature2mMin.isEmpty()) best.daily.temperature2mMin.subList(bestStartIndex, bestSize)
+                        else temperature2mMin.subList(targetStartIndex, targetSize).zip(best.daily.temperature2mMin.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    apparentTemperatureMax = if (apparentTemperatureMax.isEmpty()) best.daily.apparentTemperatureMax.subList(bestStartIndex, bestSize)
+                        else apparentTemperatureMax.subList(targetStartIndex, targetSize).zip(best.daily.apparentTemperatureMax.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    apparentTemperatureMin = if (apparentTemperatureMin.isEmpty()) best.daily.apparentTemperatureMin.subList(bestStartIndex, bestSize)
+                        else apparentTemperatureMin.subList(targetStartIndex, targetSize).zip(best.daily.apparentTemperatureMin.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    sunrise = if (sunrise.isEmpty()) best.daily.sunrise.subList(bestStartIndex, bestSize)
+                        else sunrise.subList(targetStartIndex, targetSize).zip(best.daily.sunrise.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    sunset = if (sunset.isEmpty()) best.daily.sunset.subList(bestStartIndex, bestSize)
+                        else sunset.subList(targetStartIndex, targetSize).zip(best.daily.sunset.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    precipitationSum = if (precipitationSum.isEmpty()) best.daily.precipitationSum.subList(bestStartIndex, bestSize)
+                        else precipitationSum.subList(targetStartIndex, targetSize).zip(best.daily.precipitationSum.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    precipitationHours = if (precipitationHours.isEmpty()) best.daily.precipitationHours.subList(bestStartIndex, bestSize)
+                        else precipitationHours.subList(targetStartIndex, targetSize).zip(best.daily.precipitationHours.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    precipitationProbabilityMax = if (precipitationProbabilityMax.isEmpty()) best.daily.precipitationProbabilityMax.subList(bestStartIndex, bestSize)
+                        else precipitationProbabilityMax.subList(targetStartIndex, targetSize).zip(best.daily.precipitationProbabilityMax.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    windSpeed10mMax = if (windSpeed10mMax.isEmpty()) best.daily.windSpeed10mMax.subList(bestStartIndex, bestSize)
+                        else windSpeed10mMax.subList(targetStartIndex, targetSize).zip(best.daily.windSpeed10mMax.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
+                    windDirection10mDominant = if (windDirection10mDominant.isEmpty()) best.daily.windDirection10mDominant.subList(bestStartIndex, bestSize)
+                        else windDirection10mDominant.subList(targetStartIndex, targetSize).zip(best.daily.windDirection10mDominant.subList(bestStartIndex, bestSize)) { target, best -> target ?: best!!},
                 )
             }
         )
@@ -226,6 +225,7 @@ class WeatherPreprocessor {
             }
         )
     }
+
 
     private fun mapToWeather(koreaWeatherDto: KoreaWeatherDto): Weather {
         val unitDegree = 22.5

@@ -148,7 +148,7 @@ class HomeViewModel(
                         }
 
                         sendEffect(HomeSideEffect.ShowSnackbar(snackbarEvent))
-                        logger.d("[Error] Fail to track location: ${status.cause}")
+                        logger.e("[Error] Fail to track location: ${status.cause}")
                     }
                 }
             }
@@ -167,7 +167,7 @@ class HomeViewModel(
                 sendEffect(HomeSideEffect.ShowSnackbar(
                     SnackbarEvent(message = "Fail to load place info")
                 ))
-                logger.d("[Error] Fail to load place info: ${result.errorOrNull()}")
+                logger.e("[Error] Fail to load place info: ${result.errorOrNull()}")
                 null
             }
         }
@@ -182,7 +182,7 @@ class HomeViewModel(
                     Neighbor.Korea to 0.5,
                     Neighbor.Japan to 0.2,
                     Neighbor.China to 0.2,
-                    Neighbor.USA to 0.1
+                    Neighbor.USA to 0.1,
                 )
             ).collect { result ->
                 result

@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import core.domain.util.Error
 import core.domain.util.NetworkError
 import core.domain.util.Result
+import core.domain.util.map
 import core.domain.util.toNetworkError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,7 +20,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
-import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
+import weather.data.mapper.toNeighborWeatherDto
 import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.data.util.KoreaWeatherParser
 import weather.domain.model.Neighbor
@@ -47,7 +48,7 @@ class WeatherClient(
                     parameter("daily", "weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_probability_max")
                     parameter("timezone", TimeZone.currentSystemDefault().toString())
                     parameter("past_days", "0")
-                    parameter("forecast_days", "7")
+                    parameter("forecast_days", "10")
                     parameter("models", neighbor.toModelsString())
                 }
             }
@@ -89,7 +90,7 @@ class WeatherClient(
         longitude: Double,
         locationName: String,
         now: Instant = Clock.System.now()
-    ): Result<KoreaWeatherDto, Error> {
+    ): Result<NeighborWeatherDto, Error> {
         val url = "https://search.naver.com/search.naver"
 
         val response = try {
@@ -125,6 +126,6 @@ class WeatherClient(
             now = now
         )
 
-        return weatherParsingResult
+        return weatherParsingResult.map { it.toNeighborWeatherDto() }
     }
 }
