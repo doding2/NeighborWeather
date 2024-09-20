@@ -44,9 +44,9 @@ class WeatherWeightCalculator {
                 )
 
                 // pick best weather code by weighted voting (categorical data)
-                val currentWeatherCodeMap = mutableMapOf<WeatherType, Double>()
-                val hourlyWeatherCodeMaps = mutableListOf<MutableMap<WeatherType, Double>>()
-                val dailyWeatherCodeMaps = mutableListOf<MutableMap<WeatherType, Double>>()
+                val currentWeatherCodeMap = mutableSetOf<Pair<WeatherType, Double>>()
+                val hourlyWeatherCodeMaps = mutableListOf<MutableSet<Pair<WeatherType, Double>>>()
+                val dailyWeatherCodeMaps = mutableListOf<MutableSet<Pair<WeatherType, Double>>>()
                 updateWeatherCodeMaps(
                     weather = firstWeather,
                     weight = firstWeight,
@@ -118,22 +118,22 @@ class WeatherWeightCalculator {
     }
 
     private fun pickBestWeatherCodes(
-        currentWeatherCodeMap: Map<WeatherType, Double>,
-        hourlyWeatherCodeMaps: List<Map<WeatherType, Double>>,
-        dailyWeatherCodeMaps: List<Map<WeatherType, Double>>,
+        currentWeatherCodeMap: Set<Pair<WeatherType, Double>>,
+        hourlyWeatherCodeMaps: List<Set<Pair<WeatherType, Double>>>,
+        dailyWeatherCodeMaps: List<Set<Pair<WeatherType, Double>>>,
     ): Triple<WeatherType?, List<WeatherType?>, List<WeatherType?>> {
-        val currentWeatherCode = currentWeatherCodeMap.maxByOrNull { it.value }?.key
-        val hourlyWeatherCodes = hourlyWeatherCodeMaps.map { map -> map.maxByOrNull { it.value }?.key }
-        val dailyWeatherCodes = dailyWeatherCodeMaps.map { map -> map.maxByOrNull { it.value }?.key }
+        val currentWeatherCode = currentWeatherCodeMap.maxByOrNull { it.second }?.first
+        val hourlyWeatherCodes = hourlyWeatherCodeMaps.map { map -> map.maxByOrNull { it.second }?.first }
+        val dailyWeatherCodes = dailyWeatherCodeMaps.map { map -> map.maxByOrNull { it.second }?.first }
         return Triple(currentWeatherCode, hourlyWeatherCodes, dailyWeatherCodes)
     }
 
     private fun updateWeatherCodeMaps(
         weather: Weather,
         weight: Double,
-        currentWeatherCodeMap: MutableMap<WeatherType, Double>,
-        hourlyWeatherCodeMaps: MutableList<MutableMap<WeatherType, Double>>,
-        dailyWeatherCodeMaps: MutableList<MutableMap<WeatherType, Double>>,
+        currentWeatherCodeMap: MutableSet<Pair<WeatherType, Double>>,
+        hourlyWeatherCodeMaps: MutableList<MutableSet<Pair<WeatherType, Double>>>,
+        dailyWeatherCodeMaps: MutableList<MutableSet<Pair<WeatherType, Double>>>,
     ) {
         // update current weather code map
         updateWeatherCodeMap(
@@ -145,7 +145,7 @@ class WeatherWeightCalculator {
         // update hourly weather code map
         weather.hourly.forEachIndexed { index, hourlyWeather ->
             val map = hourlyWeatherCodeMaps.getOrElse(index) {
-                val newMap = mutableMapOf<WeatherType, Double>()
+                val newMap = mutableSetOf<Pair<WeatherType, Double>>()
                 hourlyWeatherCodeMaps.add(newMap)
                 newMap
             }
@@ -159,7 +159,7 @@ class WeatherWeightCalculator {
         // update daily weather code map
         weather.daily.forEachIndexed { index, dailyWeather ->
             val map = dailyWeatherCodeMaps.getOrElse(index) {
-                val newMap = mutableMapOf<WeatherType, Double>()
+                val newMap = mutableSetOf<Pair<WeatherType, Double>>()
                 dailyWeatherCodeMaps.add(newMap)
                 newMap
             }
@@ -174,14 +174,14 @@ class WeatherWeightCalculator {
     private fun updateWeatherCodeMap(
         weatherType: WeatherType,
         weight: Double,
-        weatherCodeMap: MutableMap<WeatherType, Double>
+        weatherCodeMap: MutableSet<Pair<WeatherType, Double>>
     ) {
-        val weatherCodeToWeight = weatherCodeMap.entries.find { it.key ==  weatherType}
+        val weatherCodeToWeight = weatherCodeMap.find { it.first ==  weatherType}
         if (weatherCodeToWeight == null) {
-            weatherCodeMap.put(weatherType, weight)
+            weatherCodeMap.add(weatherType to weight)
         } else {
-            weatherCodeMap.remove(weatherCodeToWeight.key)
-            weatherCodeMap.put(weatherCodeToWeight.key, weatherCodeToWeight.value + weight)
+            weatherCodeMap.remove(weatherCodeToWeight)
+            weatherCodeMap.add(weatherCodeToWeight.first to  weatherCodeToWeight.second + weight)
         }
     }
 
