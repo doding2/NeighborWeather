@@ -48,7 +48,7 @@ class WeatherRepositoryImpl(
     ): Result<Weather, Error> {
         return withContext(Dispatchers.IO) {
             fetchRemoteWeathers(place, setOf(neighbor, Neighbor.ALL))
-                .let { weatherPreprocessor.preprocess(it, place).firstOrNull() }
+                .let { weatherPreprocessor.preprocess(it).firstOrNull() }
                 ?: Result.Error(NetworkError.UNKNOWN)
         }
     }
@@ -66,7 +66,7 @@ class WeatherRepositoryImpl(
                 // load from Remote API
                 if (fetchFromRemote) {
                     launch {
-                        this@channelFlow.fetchAndStoreRemoteWeathers(place, targetNeighbors)
+                        this@channelFlow.fetchAndStoreRemoteWeathers(place, neighborWeights)
                     }
                 }
 
@@ -92,11 +92,17 @@ class WeatherRepositoryImpl(
 
     private suspend fun ProducerScope<Result<Weather, Error>>.fetchAndStoreRemoteWeathers(
         place: Place,
-        targetNeighbors: Set<Neighbor>
+        neighborWeights: Map<Neighbor, Double>
     ) {
         val locationName = place.toPlaceIdentifier()
+        val topWeightedNeighbor = neighborWeights.maxBy { it.value }.key
+        val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)
+
         val remoteWeatherDtoResults = fetchRemoteWeathers(place, targetNeighbors)
-        val preprocessedWeatherResults = weatherPreprocessor.preprocess(remoteWeatherDtoResults, place)
+        val preprocessedWeatherResults = weatherPreprocessor.preprocess(
+            results = remoteWeatherDtoResults,
+            topWeightedNeighbor = topWeightedNeighbor
+        )
 
         val remoteWeathers = preprocessedWeatherResults.mapNotNull {
             when (it) {

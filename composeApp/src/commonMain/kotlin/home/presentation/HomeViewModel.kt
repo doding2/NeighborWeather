@@ -131,6 +131,7 @@ class HomeViewModel(
                             Location(it.latitude, it.longitude)
                         }
                         state = state.copy(myLocation = location)
+                        logger.d("[Success] update location: ${status.location}")
                     }
                     is TrackingStatus.Error -> {
                         val isPermissionDenied = status.cause is GeolocatorResult.PermissionDenied
