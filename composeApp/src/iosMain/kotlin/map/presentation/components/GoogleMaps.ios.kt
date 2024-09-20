@@ -15,6 +15,7 @@ import cocoapods.GoogleMaps.GMSCameraUpdate.Companion.fitBounds
 import cocoapods.GoogleMaps.GMSCoordinateBounds
 import cocoapods.GoogleMaps.GMSMapView
 import cocoapods.GoogleMaps.GMSMapViewDelegateProtocol
+import cocoapods.GoogleMaps.GMSMapViewOptions
 import cocoapods.GoogleMaps.GMSMarker
 import cocoapods.GoogleMaps.GMSMutablePath
 import cocoapods.GoogleMaps.GMSPolyline
@@ -63,15 +64,15 @@ actual fun GoogleMaps(
         }
     }
     val mapsView = remember {
-        GMSMapView().apply {
-            myLocationEnabled = true
-            setCamera(
-                GMSCameraPosition.cameraWithLatitude(
-                    latitude = 51.5,
-                    longitude = -0.12,
-                    zoom = 10f
-                )
+        val options = GMSMapViewOptions().apply {
+            camera = GMSCameraPosition.cameraWithLatitude(
+                latitude = 51.5,
+                longitude = -0.12,
+                zoom = 10f
             )
+        }
+        GMSMapView(options = options).apply {
+            myLocationEnabled = true
         }
     }
 
