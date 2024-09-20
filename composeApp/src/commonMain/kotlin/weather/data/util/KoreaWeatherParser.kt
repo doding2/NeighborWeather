@@ -213,13 +213,6 @@ class KoreaWeatherParser {
                     .toLocalDateTime(TimeZone.currentSystemDefault())
             }
 
-        val precipitationProbabilityList = mutableListOf<Double>()
-        precipitationArea.select("div.climate_box > div.icon_wrap > ul > li")
-            .mapTo(precipitationProbabilityList) {
-                it.select("em.value").text()
-                    .dropLast(1).toDoubleOrNull() ?: 0.0
-            }
-
         val precipitationList = mutableListOf<Double>()
         precipitationArea.select("div.climate_box > div.graph_wrap.rainfall > ul > li")
             .mapTo(precipitationList) {
@@ -230,6 +223,17 @@ class KoreaWeatherParser {
                         text
                     }
                 }.toDoubleOrNull() ?: 0.0
+            }
+
+        val precipitationProbabilityList = mutableListOf<Double>()
+        precipitationArea.select("div.climate_box > div.icon_wrap > ul > li")
+            .mapIndexedTo(precipitationProbabilityList) { index, item ->
+                val precipitation = precipitationList.getOrNull(index) ?: 0.0
+                val probabilityByPrecipitation = if (precipitation == 0.0) 0.0 else 100.0
+
+                item.select("em.value").text().trim()
+                    .dropLast(1).toDoubleOrNull()
+                    ?: probabilityByPrecipitation
             }
 
         val windDirectionList = mutableListOf<String>()
