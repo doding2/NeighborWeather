@@ -60,12 +60,30 @@ fun Int.toWeatherType(): WeatherType {
         51, 53, 55 -> Drizzle
         56, 57 -> FreezingDrizzle
         61, 63, 65 -> Rainy
+        80, 81, 82 -> RainShower
         66, 67 -> FreezingRain
         71, 73, 75, 77 -> Snowy
-        80, 81, 82 -> RainShower
         85, 86 -> SnowShower
         95, 96, 99 -> Thunderstorm
         else -> Other
+    }
+}
+
+fun WeatherType.toWeatherCode(): Int {
+    return when (this) {
+        Clear -> 0
+        MainlyClear -> 2
+        Cloudy -> 3
+        Fog -> 45
+        Drizzle -> 51
+        FreezingDrizzle -> 56
+        Rainy -> 61
+        RainShower -> 80
+        FreezingRain -> 66
+        Snowy -> 71
+        SnowShower -> 85
+        Thunderstorm -> 95
+        Other -> -1
     }
 }
 

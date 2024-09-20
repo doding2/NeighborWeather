@@ -121,9 +121,10 @@ class HomeViewModel(
                         geolocator.startTracking(
                             request = LocationRequest(
                                 priority = Priority.HighAccuracy,
-                                interval = 300000L,  // 5 minute
+                                interval = 5000L,  // 5 seconds
                             )
                         )
+                        logger.d("[Success] Start tracking")
                     }
                     TrackingStatus.Tracking -> {}
                     is TrackingStatus.Update -> {

@@ -1,5 +1,6 @@
 package weather.data.util
 
+import co.touchlab.kermit.Logger
 import core.domain.util.CommonError
 import core.domain.util.Error
 import core.domain.util.Result
@@ -13,10 +14,14 @@ import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
+import weather.domain.model.WeatherType
+import weather.domain.model.toWeatherCode
 import weather.domain.model.toWeatherType
 import kotlin.math.max
 
 class WeatherWeightCalculator {
+
+    private val logger by lazy { Logger.withTag("WeatherWeightCalculator") }
 
     suspend fun calculateWeightedSum(
         weathers: List<Weather>,
@@ -28,16 +33,7 @@ class WeatherWeightCalculator {
                     .filter { it.neighbor in targetToWeight.keys }
                     .toMutableList()
 
-                // In iOS, if MALFORMED_INPUT_EXCEPTION is occurred,
-                // korean weather data may not be available.
-                // So this may block calculating process.
                 val targetNeighbors = mutableWeathers.map { it.neighbor }
-//                val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
-//                if (!isValidTarget) {
-//                    return@withContext Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
-//                }
-
-//                val weightSum = targetToWeight.values.sum()
                 val weightSum = targetToWeight.filterKeys { it in targetNeighbors }.values.sum()
                 val firstWeather = mutableWeathers.removeFirstOrNull()
                     ?: return@withContext Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
@@ -47,9 +43,30 @@ class WeatherWeightCalculator {
                     weight = firstWeight
                 )
 
-                val sum = mutableWeathers.fold(initial) { acc, weather ->
+                // pick best weather code by weighted voting (categorical data)
+                val currentWeatherCodeMap = mutableMapOf<WeatherType, Double>()
+                val hourlyWeatherCodeMaps = mutableListOf<MutableMap<WeatherType, Double>>()
+                val dailyWeatherCodeMaps = mutableListOf<MutableMap<WeatherType, Double>>()
+                updateWeatherCodeMaps(
+                    weather = firstWeather,
+                    weight = firstWeight,
+                    currentWeatherCodeMap = currentWeatherCodeMap,
+                    hourlyWeatherCodeMaps = hourlyWeatherCodeMaps,
+                    dailyWeatherCodeMaps = dailyWeatherCodeMaps
+                )
+
+                // calculate numeric data by summing with weights
+                val sumNumeric = mutableWeathers.fold(initial) { acc, weather ->
                     val weight = targetToWeight[weather.neighbor]!! / weightSum
                     val weighted = calculateWeight(weather, weight)
+
+                    updateWeatherCodeMaps(
+                        weather = weather,
+                        weight = weight,
+                        currentWeatherCodeMap = currentWeatherCodeMap,
+                        hourlyWeatherCodeMaps = hourlyWeatherCodeMaps,
+                        dailyWeatherCodeMaps = dailyWeatherCodeMaps
+                    )
 
                     Weather(
                         latitude = acc.latitude,
@@ -65,15 +82,109 @@ class WeatherWeightCalculator {
                     )
                 }
 
+                // apply picked best weather codes (categorical data)
+                val (currentWeatherType, hourlyWeatherTypes, dailyWeatherTypes) =
+                    pickBestWeatherCodes(currentWeatherCodeMap, hourlyWeatherCodeMaps, dailyWeatherCodeMaps)
+                val sumAll = sumNumeric.run {
+                    copy(
+                        current = current.copy(
+                            weatherCode = currentWeatherType?.toWeatherCode() ?: current.weatherCode,
+                            weatherType = currentWeatherType ?: current.weatherType
+                        ),
+                        hourly = hourly.mapIndexed { index, hourlyWeather ->
+                            hourlyWeather.copy(
+                                weatherCode = hourlyWeatherTypes[index]?.toWeatherCode() ?: hourlyWeather.weatherCode,
+                                weatherType = hourlyWeatherTypes[index] ?: hourlyWeather.weatherType
+                            )
+                        },
+                        daily = daily.mapIndexed { index, dailyWeather ->
+                            dailyWeather.copy(
+                                weatherCode = dailyWeatherTypes[index]?.toWeatherCode() ?: dailyWeather.weatherCode,
+                                weatherType = dailyWeatherTypes[index] ?: dailyWeather.weatherType
+                            )
+                        }
+                    )
+                }
+
                 return@withContext Result.Success(
-                    data = sum.roundToFirst()
+                    data = sumAll.roundToFirst()
                 )
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
+                e.printStackTrace()
                 return@withContext Result.Error(WeatherCalculatorError.CALCULATION_FAILED)
             }
         }
     }
+
+    private fun pickBestWeatherCodes(
+        currentWeatherCodeMap: Map<WeatherType, Double>,
+        hourlyWeatherCodeMaps: List<Map<WeatherType, Double>>,
+        dailyWeatherCodeMaps: List<Map<WeatherType, Double>>,
+    ): Triple<WeatherType?, List<WeatherType?>, List<WeatherType?>> {
+        val currentWeatherCode = currentWeatherCodeMap.maxByOrNull { it.value }?.key
+        val hourlyWeatherCodes = hourlyWeatherCodeMaps.map { map -> map.maxByOrNull { it.value }?.key }
+        val dailyWeatherCodes = dailyWeatherCodeMaps.map { map -> map.maxByOrNull { it.value }?.key }
+        return Triple(currentWeatherCode, hourlyWeatherCodes, dailyWeatherCodes)
+    }
+
+    private fun updateWeatherCodeMaps(
+        weather: Weather,
+        weight: Double,
+        currentWeatherCodeMap: MutableMap<WeatherType, Double>,
+        hourlyWeatherCodeMaps: MutableList<MutableMap<WeatherType, Double>>,
+        dailyWeatherCodeMaps: MutableList<MutableMap<WeatherType, Double>>,
+    ) {
+        // update current weather code map
+        updateWeatherCodeMap(
+            weatherType = weather.current.weatherCode.toWeatherType(),
+            weight = weight,
+            weatherCodeMap = currentWeatherCodeMap
+        )
+
+        // update hourly weather code map
+        weather.hourly.forEachIndexed { index, hourlyWeather ->
+            val map = hourlyWeatherCodeMaps.getOrElse(index) {
+                val newMap = mutableMapOf<WeatherType, Double>()
+                hourlyWeatherCodeMaps.add(newMap)
+                newMap
+            }
+            updateWeatherCodeMap(
+                weatherType = hourlyWeather.weatherCode.toWeatherType(),
+                weight = weight,
+                weatherCodeMap = map
+            )
+        }
+
+        // update daily weather code map
+        weather.daily.forEachIndexed { index, dailyWeather ->
+            val map = dailyWeatherCodeMaps.getOrElse(index) {
+                val newMap = mutableMapOf<WeatherType, Double>()
+                dailyWeatherCodeMaps.add(newMap)
+                newMap
+            }
+            updateWeatherCodeMap(
+                weatherType = dailyWeather.weatherCode.toWeatherType(),
+                weight = weight,
+                weatherCodeMap = map
+            )
+        }
+    }
+
+    private fun updateWeatherCodeMap(
+        weatherType: WeatherType,
+        weight: Double,
+        weatherCodeMap: MutableMap<WeatherType, Double>
+    ) {
+        val weatherCodeToWeight = weatherCodeMap.entries.find { it.key ==  weatherType}
+        if (weatherCodeToWeight == null) {
+            weatherCodeMap.put(weatherType, weight)
+        } else {
+            weatherCodeMap.remove(weatherCodeToWeight.key)
+            weatherCodeMap.put(weatherCodeToWeight.key, weatherCodeToWeight.value + weight)
+        }
+    }
+
 
     private fun calculateWeight(weather: Weather, weight: Double): Weather {
         return weather.run {

@@ -76,9 +76,6 @@ class WeatherRepositoryImpl(
                 combine(*localWeatherFlows.toTypedArray()) { it }
                     .mapNotNull { nullableWeathers ->
                         val weathers = nullableWeathers.filterNotNull()
-                        if (weathers.isEmpty() || !weathers.any { it.neighbor == Neighbor.ALL }) {
-                            return@mapNotNull null
-                        }
                         val successNeighbors = weathers.map { it.neighbor }
                         val successTargetToWeight =
                             neighborWeights.filterKeys { it in successNeighbors }
