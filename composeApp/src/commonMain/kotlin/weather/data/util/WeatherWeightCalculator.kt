@@ -1,6 +1,5 @@
 package weather.data.util
 
-import co.touchlab.kermit.Logger
 import core.domain.util.CommonError
 import core.domain.util.Error
 import core.domain.util.Result
@@ -25,14 +24,14 @@ class WeatherWeightCalculator {
     ): Result<Weather, Error> {
         return withContext(Dispatchers.IO) {
             try {
-                val mutableTargetWeathers = weathers
+                val mutableWeathers = weathers
                     .filter { it.neighbor in targetToWeight.keys }
                     .toMutableList()
 
                 // In iOS, if MALFORMED_INPUT_EXCEPTION is occurred,
                 // korean weather data may not be available.
                 // So this may block calculating process.
-                val targetNeighbors = mutableTargetWeathers.map { it.neighbor }
+                val targetNeighbors = mutableWeathers.map { it.neighbor }
 //                val isValidTarget = targetToWeight.keys.all { it in targetNeighbors }
 //                if (!isValidTarget) {
 //                    return@withContext Result.Error(WeatherCalculatorError.INVALID_TARGET_NEIGHBOR)
@@ -40,7 +39,7 @@ class WeatherWeightCalculator {
 
 //                val weightSum = targetToWeight.values.sum()
                 val weightSum = targetToWeight.filterKeys { it in targetNeighbors }.values.sum()
-                val firstWeather = mutableTargetWeathers.removeFirstOrNull()
+                val firstWeather = mutableWeathers.removeFirstOrNull()
                     ?: return@withContext Result.Error(CommonError.INDEX_OUT_OF_BOUNDS)
                 val firstWeight = targetToWeight[firstWeather.neighbor]!! / weightSum
                 val initial = calculateWeight(
@@ -48,7 +47,7 @@ class WeatherWeightCalculator {
                     weight = firstWeight
                 )
 
-                val sum = mutableTargetWeathers.fold(initial) { acc, weather ->
+                val sum = mutableWeathers.fold(initial) { acc, weather ->
                     val weight = targetToWeight[weather.neighbor]!! / weightSum
                     val weighted = calculateWeight(weather, weight)
 

@@ -121,7 +121,7 @@ class HomeViewModel(
                         geolocator.startTracking(
                             request = LocationRequest(
                                 priority = Priority.HighAccuracy,
-                                interval = 60000L,  // 1 minute
+                                interval = 300000L,  // 5 minute
                             )
                         )
                     }
@@ -130,8 +130,10 @@ class HomeViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        state = state.copy(myLocation = location)
-                        logger.d("[Success] update location: ${status.location}")
+                        if (state.myLocation == null) {
+                            state = state.copy(myLocation = location)
+                            logger.d("[Success] update location: ${status.location}")
+                        }
                     }
                     is TrackingStatus.Error -> {
                         val isPermissionDenied = status.cause is GeolocatorResult.PermissionDenied
@@ -189,6 +191,7 @@ class HomeViewModel(
                 result
                     .onSuccess {
                         state = state.copy(myWeather = it)
+                        logger.d("[Success] $it")
                     }
                     .onError {
                         logger.e("[Error] $it")

@@ -82,6 +82,10 @@ class WeatherRepositoryImpl(
                         val successNeighbors = weathers.map { it.neighbor }
                         val successTargetToWeight =
                             neighborWeights.filterKeys { it in successNeighbors }
+                        if (weathers.none { it.neighbor in successTargetToWeight.keys }) {
+                            return@mapNotNull null
+                        }
+
                         weightCalculator.calculateWeightedSum(weathers, successTargetToWeight)
                     }
                     .distinctUntilChanged()

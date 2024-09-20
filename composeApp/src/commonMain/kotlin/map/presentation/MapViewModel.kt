@@ -158,7 +158,7 @@ class MapViewModel(
                         geolocator.startTracking(
                             request = LocationRequest(
                                 priority = Priority.HighAccuracy,
-                                interval = 60000L,  // 1 minute
+                                interval = 300000L,  // 5 minute
                             )
                         )
                     }
@@ -167,13 +167,15 @@ class MapViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        state = state.run {
-                            copy(
-                                myLocation = location,
-                                selectedLocation = selectedLocation ?: location
-                            )
+                        if (state.myLocation == null) {
+                            state = state.run {
+                                copy(
+                                    myLocation = location,
+                                    selectedLocation = selectedLocation ?: location
+                                )
+                            }
+                            logger.d("[Success] update location: ${status.location}")
                         }
-                        logger.d("[Success] update location: ${status.location}")
                     }
                     is TrackingStatus.Error -> {
                         val isPermissionDenied = status.cause is GeolocatorResult.PermissionDenied
