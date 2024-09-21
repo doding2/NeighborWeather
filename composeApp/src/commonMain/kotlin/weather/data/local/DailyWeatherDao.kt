@@ -35,4 +35,6 @@ interface DailyWeatherDao {
         now: Long   // 86400 seconds = 1 day
     ): Flow<List<DailyWeatherEntity>>
 
+    @Query("DELETE FROM DailyWeatherEntity WHERE epochTime < :now - 86400")
+    fun deletePastDailyWeather(now: Long)    // 86400 seconds = 1 day
 }

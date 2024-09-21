@@ -35,4 +35,6 @@ interface HourlyWeatherDao {
         now: Long
     ): Flow<List<HourlyWeatherEntity>>
 
+    @Query("DELETE FROM HourlyWeatherEntity WHERE epochTime < :now - 3600")
+    fun deletePastHourlyWeather(now: Long)    // 3600 seconds = 1 hour
 }
