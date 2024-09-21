@@ -17,13 +17,17 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import weather.domain.model.HourlyWeather
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @Composable
 fun HourlyWeatherGraph(
     hourlyWeathers: List<HourlyWeather>,
     modifier: Modifier = Modifier,
     itemWidth: Dp = Dp.Unspecified,
-    smoothness: Float = 0.35f,
+    smoothness: Float = 0.3f,
     tint: Color = MaterialTheme.colors.onSecondary
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
@@ -56,16 +60,17 @@ fun HourlyWeatherGraph(
             val center = Offset(centerX, centerY)
 
             // add temperature line to path
-            // https://github.com/PaoloConte/smooth-line-chart/blob/master/SmoothChartSample/src/org/paoloconte/smoothchart/SmoothLineChartEquallySpaced.java
+            // https://github.com/PaoloConte/smooth-line-chart/blob/master/SmoothChartSample/src/org/paoloconte/smoothchart/SmoothLineChart.java
             val prevWeather = updatedHourlyWeathers.getOrNull(index - 1)
             val nextWeather = updatedHourlyWeathers.getOrNull(index + 1)
             if (prevWeather != null) {
-                val p1 = center
+                val p = center
 
                 // first control point
                 val p0 = prevCenter
-                val x1 = p0.x + dx
-                val y1 = p0.y + dy
+                val d0 = sqrt((p.x - p0.x).pow(2) + (p.y - p0.y).pow(2))
+                val x1 = min(p0.x + dx * d0, (p0.x + p.x) / 2)
+                val y1 = p0.y + dy * d0
 
                 // second control point
                 val nextX = if (nextWeather == null) x else itemWidthPx * (index + 1)
@@ -73,15 +78,14 @@ fun HourlyWeatherGraph(
                 val nextCenterY = if (nextWeather == null) centerY else {
                     (((maxTemperature - nextWeather.temperature) / (maxTemperature - minTemperature)) * size.height).toFloat()
                 }
-                val p2 = Offset(nextCenterX, nextCenterY)
-                dx = (p2.x - p0.x) / 2 * smoothness
-                dy = (p2.y - p0.y) / 2 * smoothness
-                val x2 = p1.x - dx
-                val y2 = p1.y - dy
+                val p1 = Offset(nextCenterX, nextCenterY)
+                val d1 = sqrt((p1.x - p0.x).pow(2) + (p1.y - p0.y).pow(2))
+                dx = (p1.x - p0.x) / d1 * smoothness
+                dy = (p1.y - p0.y) / d1 * smoothness
+                val x2 = max(p.x - dx * d0, (p0.x + p.x) / 2)
+                val y2 = p.y - dy * d0
 
-                temperaturePath.cubicTo(x1, y1, x2, y2, p1.x, p1.y)
-
-                temperaturePath.lineTo(center.x, center.y)
+                temperaturePath.cubicTo(x1, y1, x2, y2, p.x, p.y)
             }
 
             // move focus
