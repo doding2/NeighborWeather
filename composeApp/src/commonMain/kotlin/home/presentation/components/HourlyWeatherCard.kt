@@ -20,8 +20,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -30,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import weather.domain.model.HourlyWeather
+import weather.domain.model.WeatherType
 
 @Composable
 fun HourlyWeatherCard(
@@ -38,6 +42,22 @@ fun HourlyWeatherCard(
     baseGradientColor: Color = MaterialTheme.colors.secondary,
     tint: Color = MaterialTheme.colors.onSecondary,
 ) {
+    val updatedHourlyWeather by rememberUpdatedState(hourlyWeathers)
+    val precipitationItemsHeight by remember {
+        derivedStateOf {
+            val containsRainy = updatedHourlyWeather.any {
+                val isRainy = it.run {
+                    (weatherType == WeatherType.Rainy || weatherType == WeatherType.Drizzle
+                            || weatherType == WeatherType.RainShower || weatherType == WeatherType.Snowy
+                            || weatherType == WeatherType.FreezingRain || weatherType == WeatherType.FreezingDrizzle
+                            || weatherType == WeatherType.SnowShower || weatherType == WeatherType.Thunderstorm
+                            ) && precipitation > 0.0
+                }
+                isRainy
+            }
+            if (containsRainy) 25.dp else 12.5.dp
+        }
+    }
     val weatherItemLazyState = rememberLazyListState()
     val precipitationItemLazyState = rememberLazyListState()
     val temperatureGraphScrollState = rememberScrollState()
@@ -65,7 +85,7 @@ fun HourlyWeatherCard(
                 ),
                 shape = RoundedCornerShape(25.dp)
             )
-            .padding(top = 15.dp, bottom = 15.dp, start = 15.dp, end = 15.dp)
+            .padding(top = 15.dp, bottom = 20.dp, start = 15.dp, end = 15.dp)
             .scrollable(
                 state = scrollState,
                 orientation = Orientation.Horizontal,
@@ -124,7 +144,7 @@ fun HourlyWeatherCard(
                     hourlyWeather = it,
                     modifier = Modifier.size(
                         width = itemWidth,
-                        height = 25.dp
+                        height = precipitationItemsHeight
                     ),
                     tint = tint
                 )
