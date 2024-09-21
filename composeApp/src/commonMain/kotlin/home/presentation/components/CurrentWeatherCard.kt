@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,13 +36,12 @@ import kotlinx.datetime.format.char
 import map.domain.util.toPlaceIdentifier
 import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.home_current_weather_title
+import neighborweather.composeapp.generated.resources.humidity_unit
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
-import neighborweather.composeapp.generated.resources.precipitation_probability_unit
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import weather.domain.model.CurrentWeather
 import weather.domain.model.toFormattedName
-import kotlin.math.round
 
 @Composable
 fun CurrentWeatherCard(
@@ -80,7 +78,7 @@ fun CurrentWeatherCard(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // padding of each items: 25, 5, -10, 15, 15, 15, 28 -> 103 - 10
+                // padding of each items: 25, 5, -10, 15, 15, 15, 35 -> 110 - 10
                 // -> approximately round to to 100
                 Spacer(modifier = Modifier.weight(0.25f))
                 Text(
@@ -96,22 +94,23 @@ fun CurrentWeatherCard(
                     Spacer(modifier = Modifier.weight(1f))
                     WeatherIcon(
                         weatherType = it.weatherType,
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(60.dp),
                         colorFilter = ColorFilter.tint(tint)
                     )
                     Text(
-                        text = "${round(it.temperature).toInt()}",
-                        modifier = Modifier.padding(start = 20.dp, end = 2.dp),
+                        text = "${it.temperature}",
+                        modifier = Modifier.padding(start = 20.dp, end = 1.dp, top = 10.dp, bottom = 10.dp),
                         color = tint,
-                        fontSize = 100.sp,
-                        fontWeight = FontWeight.Medium
+                        fontSize = 60.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                     Image(
                         painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                         contentDescription = "Temperature unit sign",
                         modifier = Modifier
                             .align(Alignment.Top)
-                            .padding(top = 23.dp),
+                            .padding(top = 24.dp)
+                            .size(12.dp),
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(tint)
                     )
@@ -119,7 +118,6 @@ fun CurrentWeatherCard(
                 }
                 Text(
                     text = it.weatherType.toFormattedName(),
-                    modifier = Modifier.offset(y = (-10).dp),
                     color = tint,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold
@@ -159,7 +157,7 @@ fun CurrentWeatherCard(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "Feels like ${round(it.apparentTemperature).toInt()}",
+                        text = "Feels like ${it.apparentTemperature}",
                         modifier = Modifier.padding(end = 0.5.dp),
                         color = tint,
                         fontSize = 15.sp,
@@ -186,14 +184,14 @@ fun CurrentWeatherCard(
                             )
                     )
                     Text(
-                        text = "Rain by ${it.precipitationProbability}${stringResource(Res.string.precipitation_probability_unit)}",
+                        text = "Humidity ${it.relativeHumidity}${stringResource(Res.string.humidity_unit)}",
                         color = tint,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
-                Spacer(modifier = Modifier.weight(0.28f))
+                Spacer(modifier = Modifier.weight(0.35f))
             }
         }
     }

@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import weather.domain.model.HourlyWeather
-import kotlin.math.roundToInt
 
 @Composable
 fun HourlyWeatherGraph(
@@ -28,18 +27,11 @@ fun HourlyWeatherGraph(
     tint: Color = MaterialTheme.colors.onSecondary
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
-    val roundedWeathers by remember {
-        derivedStateOf {
-            updatedHourlyWeathers.map {
-                it.copy(temperature = it.temperature.roundToInt().toDouble())
-            }
-        }
-    }
     val maxTemperature by remember {
-        derivedStateOf { roundedWeathers.maxOf { it.temperature } }
+        derivedStateOf { updatedHourlyWeathers.maxOf { it.temperature } }
     }
     val minTemperature by remember {
-        derivedStateOf { roundedWeathers.minOf { it.temperature } }
+        derivedStateOf { updatedHourlyWeathers.minOf { it.temperature } }
     }
     Canvas(
         modifier = modifier,
@@ -54,7 +46,7 @@ fun HourlyWeatherGraph(
         var prevCenter = Offset(0f, 0f)
         val itemWidthPx = itemWidth.toPx()
 
-        roundedWeathers.forEachIndexed { index, weather ->
+        updatedHourlyWeathers.forEachIndexed { index, weather ->
 
             // calculate center point
             val x = itemWidthPx * index
@@ -65,8 +57,8 @@ fun HourlyWeatherGraph(
 
             // add temperature line to path
             // https://github.com/PaoloConte/smooth-line-chart/blob/master/SmoothChartSample/src/org/paoloconte/smoothchart/SmoothLineChartEquallySpaced.java
-            val prevWeather = roundedWeathers.getOrNull(index - 1)
-            val nextWeather = roundedWeathers.getOrNull(index + 1)
+            val prevWeather = updatedHourlyWeathers.getOrNull(index - 1)
+            val nextWeather = updatedHourlyWeathers.getOrNull(index + 1)
             if (prevWeather != null) {
                 val p1 = center
 

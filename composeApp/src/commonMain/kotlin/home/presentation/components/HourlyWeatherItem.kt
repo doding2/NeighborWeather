@@ -25,7 +25,6 @@ import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.HourlyWeather
-import kotlin.math.roundToInt
 
 @Composable
 fun HourlyWeatherItem(
@@ -65,18 +64,18 @@ fun HourlyWeatherItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${hourlyWeather.temperature.roundToInt()}",
+                text = "${hourlyWeather.temperature}",
                 modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
             )
             Image(
                 painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                 contentDescription = "Temperature unit sign",
                 modifier = Modifier
                     .align(Alignment.Top)
-                    .padding(top = 4.dp)
+                    .padding(top = 4.5.dp)
                     .size(5.dp),
                 alignment = Alignment.TopCenter,
                 colorFilter = ColorFilter.tint(tint)

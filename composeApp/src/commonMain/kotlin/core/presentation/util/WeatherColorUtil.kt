@@ -71,7 +71,7 @@ fun animateWeatherColors(weatherType: WeatherType?): Colors {
 }
 
 @Composable
-fun weatherPrimary(
+private fun weatherPrimary(
     weatherType: WeatherType?,
     darkTheme: Boolean = isSystemInDarkTheme(),
 ): Color {
@@ -101,7 +101,7 @@ fun weatherPrimary(
 }
 
 @Composable
-fun weatherOnPrimary(
+private fun weatherOnPrimary(
     weatherType: WeatherType?,
     darkTheme: Boolean = isSystemInDarkTheme(),
 ): Color {
@@ -131,7 +131,7 @@ fun weatherOnPrimary(
 }
 
 @Composable
-fun weatherSecondary(
+private fun weatherSecondary(
     weatherType: WeatherType?,
     darkTheme: Boolean = isSystemInDarkTheme(),
 ): Color {
