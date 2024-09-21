@@ -66,7 +66,7 @@ class WeatherRepositoryImpl(
                 // load from Remote API
                 if (fetchFromRemote) {
                     launch {
-                        this@channelFlow.fetchAndStoreRemoteWeathers(place, neighborWeights)
+                        this@channelFlow.fetchAndUpdateRemoteWeathers(place, neighborWeights)
                     }
                 }
 
@@ -91,46 +91,63 @@ class WeatherRepositoryImpl(
         }
     }
 
-    private suspend fun ProducerScope<Result<Weather, Error>>.fetchAndStoreRemoteWeathers(
+    private suspend fun ProducerScope<Result<Weather, Error>>.fetchAndUpdateRemoteWeathers(
         place: Place,
         neighborWeights: Map<Neighbor, Double>
     ) {
-        val locationName = place.toPlaceIdentifier()
-        val topWeightedNeighbor = neighborWeights.maxBy { it.value }.key
-        val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)
+        return withContext(Dispatchers.IO) {
+            val locationName = place.toPlaceIdentifier()
+            val topWeightedNeighbor = neighborWeights.maxBy { it.value }.key
+            val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)
 
-        val remoteWeatherDtoResults = fetchRemoteWeathers(place, targetNeighbors)
-        val preprocessedWeatherResults = weatherPreprocessor.preprocess(
-            results = remoteWeatherDtoResults,
-            topWeightedNeighbor = topWeightedNeighbor
-        )
+            val remoteWeatherDtoResults = fetchRemoteWeathers(place, targetNeighbors)
+            val preprocessedWeatherResults = weatherPreprocessor.preprocess(
+                results = remoteWeatherDtoResults,
+                topWeightedNeighbor = topWeightedNeighbor
+            )
 
-        val remoteWeathers = preprocessedWeatherResults.mapNotNull {
-            when (it) {
-                is Result.Success -> it.data
-                is Result.Error -> {
-                    send(Result.Error(it.error))
-                    /*
-                    FIXME: MalformedInputException is occurred in
-                     iOS internal charset encoding process randomly.
-                     We can't expect it, so this error is ignored until bug is fixed.
-                     Otherwise, unwrap the result data or return the error.
-                     (MalformedInputException implement KoreaWeatherParserException)
-                     */
-                    when (it.error) {
-                        is KoreaWeatherParserException -> null
-                        else -> return
+            val remoteWeathers = preprocessedWeatherResults.mapNotNull {
+                when (it) {
+                    is Result.Success -> it.data
+                    is Result.Error -> {
+                        send(Result.Error(it.error))
+                        /*
+                        FIXME: MalformedInputException is occurred in
+                         iOS internal charset encoding process randomly.
+                         We can't expect it, so this error is ignored until bug is fixed.
+                         Otherwise, unwrap the result data or return the error.
+                         (MalformedInputException implement KoreaWeatherParserException)
+                         */
+                        when (it.error) {
+                            is KoreaWeatherParserException -> null
+                            else -> return@withContext
+                        }
                     }
                 }
             }
+
+            val (currentList, hourlyList, dailyList) =
+                remoteWeathers.map { it.toWeatherEntity(locationName) }.unzip()
+                    .run { Triple(first, second.flatten(), third.flatten()) }
+
+            weatherDatabase.run {
+                // upsert new data
+                currentWeatherDao.upsertCurrentWeatherList(currentList)
+                hourlyWeatherDao.upsertHourlyWeatherList(hourlyList)
+                dailyWeatherDao.upsertDailyWeatherList(dailyList)
+
+                // delete old data
+                currentList.minOfOrNull { it.epochTime }?.let {
+                    currentWeatherDao.deletePastCurrentWeather(locationName, it)
+                }
+                hourlyList.minOfOrNull { it.epochTime }?.let {
+                    hourlyWeatherDao.deletePastHourlyWeather(locationName, it)
+                }
+                dailyList.minOfOrNull { it.epochTime }?.let {
+                    dailyWeatherDao.deletePastDailyWeather(locationName, it)
+                }
+            }
         }
-
-        val (currentList, hourlyList, dailyList) =
-            remoteWeathers.map { it.toWeatherEntity(locationName) }.unzip()
-
-        weatherDatabase.currentWeatherDao.upsertCurrentWeatherList(currentList)
-        weatherDatabase.hourlyWeatherDao.upsertHourlyWeatherList(hourlyList.flatten())
-        weatherDatabase.dailyWeatherDao.upsertDailyWeatherList(dailyList.flatten())
     }
 
     private suspend fun fetchRemoteWeathers(
