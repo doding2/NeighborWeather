@@ -33,7 +33,6 @@ import neighborweather.composeapp.generated.resources.Res
 import neighborweather.composeapp.generated.resources.icon_temperature_unit_sign
 import org.jetbrains.compose.resources.painterResource
 import weather.domain.model.Weather
-import kotlin.math.round
 
 @Composable
 fun MapPlaceWeatherCard(
@@ -77,7 +76,7 @@ fun MapPlaceWeatherCard(
                     modifier = Modifier.offset(y = (-4).dp),
                 ) {
                     Text(
-                        text = "${round(it.current.temperature).toInt()}",
+                        text = "${it.current.temperature}",
                         modifier = Modifier.padding(start = 10.dp, end = 1.dp),
                         color = tint,
                         fontSize = 32.sp,
