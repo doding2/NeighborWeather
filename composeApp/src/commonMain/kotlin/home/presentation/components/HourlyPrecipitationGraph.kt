@@ -4,9 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -34,13 +32,6 @@ fun HourlyPrecipitationGraph(
     fillColor: Color = MaterialTheme.colors.onSecondary
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
-    val fakePrecipitationWeathers by remember {
-        derivedStateOf {
-            updatedHourlyWeathers.map {
-                it.copy(precipitation = (0..5).random().toDouble())
-            }
-        }
-    }
     Canvas(
         modifier = modifier
             .size(
@@ -56,14 +47,14 @@ fun HourlyPrecipitationGraph(
         val strokeWidthPx = strokeWidth.toPx()
         val heightPerPrecipitation = size.height / displayedMaxPrecipitation
 
-        fakePrecipitationWeathers.forEachIndexed { index, hourlyWeather ->
+        updatedHourlyWeathers.forEachIndexed { index, hourlyWeather ->
             // skip drawing with zero precipitation
             val isRainy = hourlyWeather.run {
                 (weatherType == WeatherType.Rainy || weatherType == WeatherType.Drizzle
                         || weatherType == WeatherType.RainShower || weatherType == WeatherType.Snowy
                         || weatherType == WeatherType.FreezingRain || weatherType == WeatherType.FreezingDrizzle
                         || weatherType == WeatherType.SnowShower || weatherType == WeatherType.Thunderstorm
-                ) && precipitation >= 0.0
+                ) && precipitation > 0.0
             }
             if (!isRainy) {
                 return@forEachIndexed

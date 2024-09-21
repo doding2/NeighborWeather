@@ -7,9 +7,11 @@ import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -36,13 +38,15 @@ fun HourlyWeatherCard(
     baseGradientColor: Color = MaterialTheme.colors.secondary,
     tint: Color = MaterialTheme.colors.onSecondary,
 ) {
-    val itemLazyState = rememberLazyListState()
+    val weatherItemLazyState = rememberLazyListState()
+    val precipitationItemLazyState = rememberLazyListState()
     val temperatureGraphScrollState = rememberScrollState()
     val precipitationGraphScrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollableState { delta ->
         scope.launch {
-            itemLazyState.scrollBy(-delta)
+            weatherItemLazyState.scrollBy(-delta)
+            precipitationItemLazyState.scrollBy(-delta)
             temperatureGraphScrollState.scrollBy(-delta)
             precipitationGraphScrollState.scrollBy(-delta)
         }
@@ -61,16 +65,17 @@ fun HourlyWeatherCard(
                 ),
                 shape = RoundedCornerShape(25.dp)
             )
-            .padding(top = 15.dp, bottom = 20.dp, start = 15.dp, end = 15.dp)
+            .padding(top = 15.dp, bottom = 15.dp, start = 15.dp, end = 15.dp)
             .scrollable(
                 state = scrollState,
                 orientation = Orientation.Horizontal,
                 flingBehavior = ScrollableDefaults.flingBehavior()
             ),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         val itemWidth = remember { 50.dp }
         LazyRow(
-            state = itemLazyState,
+            state = weatherItemLazyState,
             userScrollEnabled = false
         ) {
             items(hourlyWeathers, key = { it.time.toString() }) {
@@ -87,7 +92,6 @@ fun HourlyWeatherCard(
             HourlyTemperatureGraph(
                 hourlyWeathers = hourlyWeathers,
                 modifier = Modifier
-                    .padding(top = 4.dp)
                     .horizontalScroll(
                         state = temperatureGraphScrollState,
                         enabled = false,
@@ -100,7 +104,6 @@ fun HourlyWeatherCard(
             HourlyPrecipitationGraph(
                 hourlyWeathers = hourlyWeathers,
                 modifier = Modifier
-                    .padding(top = 4.dp)
                     .horizontalScroll(
                         state = precipitationGraphScrollState,
                         enabled = false,
@@ -111,6 +114,21 @@ fun HourlyWeatherCard(
                 lineColor = tint,
                 fillColor = tint.copy(alpha = 0.3f)
             )
+        }
+        LazyRow(
+            state = precipitationItemLazyState,
+            userScrollEnabled = false
+        ) {
+            items(hourlyWeathers, key = { it.time.toString() }) {
+                HourlyPrecipitationItem(
+                    hourlyWeather = it,
+                    modifier = Modifier.size(
+                        width = itemWidth,
+                        height = 25.dp
+                    ),
+                    tint = tint
+                )
+            }
         }
     }
 }

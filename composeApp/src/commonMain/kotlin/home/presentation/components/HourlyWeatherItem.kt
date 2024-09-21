@@ -1,6 +1,7 @@
 package home.presentation.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -34,7 +35,8 @@ fun HourlyWeatherItem(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val timeFormat = remember {
             LocalTime.Format {
@@ -54,9 +56,7 @@ fun HourlyWeatherItem(
         )
         WeatherIcon(
             weatherType = hourlyWeather.weatherType,
-            modifier = Modifier
-                .padding(4.dp)
-                .size(24.dp),
+            modifier = Modifier.size(24.dp),
             colorFilter = ColorFilter.tint(tint)
         )
         Row(

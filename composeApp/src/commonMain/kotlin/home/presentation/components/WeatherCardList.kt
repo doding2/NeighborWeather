@@ -119,9 +119,5 @@ fun WeatherCardList(
                 tint = colors.onSecondary
             )
         }
-
-
-
-
     }
 }
