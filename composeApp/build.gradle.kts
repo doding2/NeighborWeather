@@ -2,7 +2,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 import java.util.Properties
 
 plugins {
@@ -186,15 +185,11 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
-// for recognizing ksp, add another dependencies block
+// add room compiler dependency to each platform modules
 dependencies {
-    // add room annotation compiler using ksp
-    add("kspCommonMainMetadata", libs.room.compiler)
-}
-
-// for  ksp
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
-    if (name != "kspCommonMainKotlinMetadata" ) {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
+    add("kspAndroid", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+//    add("kspJvm", libs.room.compiler)
 }

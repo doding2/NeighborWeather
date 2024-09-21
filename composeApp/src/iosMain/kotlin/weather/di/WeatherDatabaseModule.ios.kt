@@ -11,14 +11,12 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSUserDomainMask
 import weather.data.local.WeatherDatabase
-import weather.data.local.instantiateImpl
 
 actual val weatherDatabaseModule: Module = module {
     factory<WeatherDatabase> {
         val dbFile = documentDirectory() + "/weather.db"
         Room.databaseBuilder<WeatherDatabase>(
             name = dbFile,
-            factory = { WeatherDatabase::class.instantiateImpl() }
         ).setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
