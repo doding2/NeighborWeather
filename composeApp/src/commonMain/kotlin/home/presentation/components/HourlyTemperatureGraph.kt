@@ -1,6 +1,7 @@
 package home.presentation.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -23,10 +24,11 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @Composable
-fun HourlyWeatherGraph(
+fun HourlyTemperatureGraph(
     hourlyWeathers: List<HourlyWeather>,
     modifier: Modifier = Modifier,
     itemWidth: Dp = Dp.Unspecified,
+    height: Dp = Dp.Unspecified,
     smoothness: Float = 0.3f,
     tint: Color = MaterialTheme.colors.onSecondary
 ) {
@@ -38,16 +40,19 @@ fun HourlyWeatherGraph(
         derivedStateOf { updatedHourlyWeathers.minOf { it.temperature } }
     }
     Canvas(
-        modifier = modifier,
-        contentDescription = "Temperature and precipitation graph of hourly weather"
+        modifier = modifier
+            .size(
+                width = itemWidth * updatedHourlyWeathers.size,
+                height = height
+            ),
+        contentDescription = "Temperature graph of hourly weather"
     ) {
         val temperaturePath = Path()
-//        val precipitationPath = Path()
 
-        // slope of the line
+        // slope of the temperature line
         var dx = 0f
         var dy = 0f
-        var prevCenter = Offset(0f, 0f)
+        var prevCenter: Offset? = null
         val itemWidthPx = itemWidth.toPx()
 
         updatedHourlyWeathers.forEachIndexed { index, weather ->
@@ -61,18 +66,17 @@ fun HourlyWeatherGraph(
 
             // add temperature line to path
             // https://github.com/PaoloConte/smooth-line-chart/blob/master/SmoothChartSample/src/org/paoloconte/smoothchart/SmoothLineChart.java
-            val prevWeather = updatedHourlyWeathers.getOrNull(index - 1)
-            val nextWeather = updatedHourlyWeathers.getOrNull(index + 1)
-            if (prevWeather != null) {
+            if (prevCenter != null) {
                 val p = center
 
                 // first control point
-                val p0 = prevCenter
+                val p0 = prevCenter!!
                 val d0 = sqrt((p.x - p0.x).pow(2) + (p.y - p0.y).pow(2))
                 val x1 = min(p0.x + dx * d0, (p0.x + p.x) / 2)
                 val y1 = p0.y + dy * d0
 
                 // second control point
+                val nextWeather = updatedHourlyWeathers.getOrNull(index + 1)
                 val nextX = if (nextWeather == null) x else itemWidthPx * (index + 1)
                 val nextCenterX = if (nextWeather == null) centerX else nextX + itemWidthPx / 2
                 val nextCenterY = if (nextWeather == null) centerY else {
@@ -88,7 +92,7 @@ fun HourlyWeatherGraph(
                 temperaturePath.cubicTo(x1, y1, x2, y2, p.x, p.y)
             }
 
-            // move focus
+            // move focus of temperature path
             temperaturePath.moveTo(center.x, center.y)
             prevCenter = center
 
@@ -103,7 +107,7 @@ fun HourlyWeatherGraph(
         // draw temperature lines
         drawPath(
             path = temperaturePath,
-            color = tint.copy(alpha = 0.5f),
+            color = tint.copy(alpha = 0.7f),
             style = Stroke(
                 width = 2.dp.toPx(),
                 cap = StrokeCap.Round,

@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -21,6 +20,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -37,12 +37,14 @@ fun HourlyWeatherCard(
     tint: Color = MaterialTheme.colors.onSecondary,
 ) {
     val itemLazyState = rememberLazyListState()
-    val graphScrollState = rememberScrollState()
+    val temperatureGraphScrollState = rememberScrollState()
+    val precipitationGraphScrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollableState { delta ->
         scope.launch {
             itemLazyState.scrollBy(-delta)
-            graphScrollState.scrollBy(-delta)
+            temperatureGraphScrollState.scrollBy(-delta)
+            precipitationGraphScrollState.scrollBy(-delta)
         }
         delta
     }
@@ -79,23 +81,35 @@ fun HourlyWeatherCard(
                 )
             }
         }
-        // Scroll wrapper of graph
         Box(
-            modifier = Modifier
-                .horizontalScroll(
-                    state = graphScrollState,
-                    enabled = false,
-                    flingBehavior = ScrollableDefaults.flingBehavior()
-                )
+            contentAlignment = Alignment.BottomCenter
         ) {
-            HourlyWeatherGraph(
+            HourlyTemperatureGraph(
                 hourlyWeathers = hourlyWeathers,
                 modifier = Modifier
                     .padding(top = 4.dp)
-                    .width(itemWidth * hourlyWeathers.size)
-                    .height(40.dp),
+                    .horizontalScroll(
+                        state = temperatureGraphScrollState,
+                        enabled = false,
+                        flingBehavior = ScrollableDefaults.flingBehavior()
+                    ),
                 itemWidth = itemWidth,
+                height = 50.dp,
                 tint = tint
+            )
+            HourlyPrecipitationGraph(
+                hourlyWeathers = hourlyWeathers,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .horizontalScroll(
+                        state = precipitationGraphScrollState,
+                        enabled = false,
+                        flingBehavior = ScrollableDefaults.flingBehavior()
+                    ),
+                itemWidth = itemWidth,
+                height = 50.dp,
+                lineColor = tint,
+                fillColor = tint.copy(alpha = 0.3f)
             )
         }
     }
