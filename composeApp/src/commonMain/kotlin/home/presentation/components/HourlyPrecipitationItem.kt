@@ -3,6 +3,9 @@ package home.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -15,10 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import neighborweather.composeapp.generated.resources.Res
+import neighborweather.composeapp.generated.resources.icon_precipitation_probability_high
+import neighborweather.composeapp.generated.resources.icon_precipitation_probability_low
+import neighborweather.composeapp.generated.resources.icon_precipitation_probability_mid
 import neighborweather.composeapp.generated.resources.precipitation_probability_unit
 import neighborweather.composeapp.generated.resources.precipitation_unit
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import weather.domain.model.HourlyWeather
 import weather.domain.model.WeatherType
@@ -42,12 +50,35 @@ fun HourlyPrecipitationItem(
             isRainy
         }
     }
+    val precipitationProbabilityIcon by remember {
+        derivedStateOf {
+            updatedHourlyWeather.precipitationProbability.let {
+                if (it >= 70) {
+                    Res.drawable.icon_precipitation_probability_high
+                } else if (it >= 30) {
+                    Res.drawable.icon_precipitation_probability_mid
+                } else {
+                    Res.drawable.icon_precipitation_probability_low
+                }
+            }
+        }
+    }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                painter = painterResource(precipitationProbabilityIcon),
+                contentDescription = "Precipitation probability icon",
+                modifier = Modifier
+                    .padding(top = 1.5.dp)
+                    .size(10.dp),
+                tint = tint,
+            )
             Text(
                 text = "${updatedHourlyWeather.precipitationProbability}",
                 modifier = Modifier.alignByBaseline(),
