@@ -128,7 +128,7 @@ fun MapScreen(
                     visible = isPlaceWeatherVisible,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .sizeIn(maxWidth = 360.dp)
+                        .sizeIn(maxWidth = 500.dp)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
                         .padding(horizontal = 20.dp, vertical = 5.dp),
                     enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),

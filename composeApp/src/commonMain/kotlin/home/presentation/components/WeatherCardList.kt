@@ -25,11 +25,17 @@ import androidx.compose.material.icons.rounded.Map
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import dev.jordond.compass.Place
 import home.presentation.HomeEvent
 import weather.domain.model.Weather
@@ -45,6 +51,7 @@ fun WeatherCardList(
 ) {
     val updatedWeather by rememberUpdatedState(weather)
     val isWeatherVisible by remember { derivedStateOf { updatedWeather != null } }
+    var hourlyWeatherCardSize by remember { mutableStateOf(IntSize.Zero) }
     val scrollState = rememberScrollState()
     Column(
         modifier = modifier
@@ -54,7 +61,9 @@ fun WeatherCardList(
     ) {
         AnimatedVisibility(
             visible = isWeatherVisible,
-            modifier = Modifier.sizeIn(maxWidth = 360.dp),
+            modifier = Modifier
+                .sizeIn(maxWidth = 360.dp)
+                .zIndex(2f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
         ) {
@@ -63,14 +72,33 @@ fun WeatherCardList(
                     place = place,
                     currentWeather = updatedWeather?.current,
                     modifier = Modifier
-                        .padding(top = 28.dp, bottom = 0.dp, start = 28.dp, end = 28.dp)
+                        .padding(top = 28.dp, start = 28.dp, end = 28.dp)
                         .fillMaxWidth(),
                     backgroundColor = colors.primary,
-                    tint = colors.onPrimary
+                    tint = colors.onPrimary,
                 )
                 IconButton(
                     onClick = { onEvent(HomeEvent.NavigateToMap) },
                     modifier = Modifier
+                        .graphicsLayer {
+                            val currentWidthPx = 304.dp.toPx()
+                            val currentHeightPx = 324.dp.toPx()
+                            val middlePaddingPx = 15.dp.toPx()
+                            val currentBottomPx = currentHeightPx - middlePaddingPx
+                            val hourlyTopPx = currentHeightPx + middlePaddingPx
+
+                            val hourlyWidth = hourlyWeatherCardSize.width - 2f * 28.dp.toPx()
+                            val widthDiff = (hourlyWidth - currentWidthPx) / 2f
+
+                            translationX = if (scrollState.value < currentBottomPx) {
+                                0f
+                            } else if (scrollState.value >= currentBottomPx && scrollState.value < hourlyTopPx) {
+                                widthDiff * (scrollState.value - currentBottomPx) / (middlePaddingPx * 2)
+                            } else {
+                                widthDiff
+                            }
+                            translationY = scrollState.value.toFloat()
+                        }
                         .padding(8.dp)
                         .align(Alignment.TopEnd)
                         .background(
@@ -91,7 +119,10 @@ fun WeatherCardList(
         }
         AnimatedVisibility(
             visible = isWeatherVisible,
-            modifier = Modifier.sizeIn(maxWidth = 360.dp),
+            modifier = Modifier
+                .onGloballyPositioned { hourlyWeatherCardSize = it.size }
+                .sizeIn(maxWidth = 500.dp)
+                .zIndex(1f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
         ) {
@@ -106,7 +137,9 @@ fun WeatherCardList(
         }
         AnimatedVisibility(
             visible = isWeatherVisible,
-            modifier = Modifier.sizeIn(maxWidth = 360.dp),
+            modifier = Modifier
+                .sizeIn(maxWidth = 500.dp)
+                .zIndex(0f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
         ) {

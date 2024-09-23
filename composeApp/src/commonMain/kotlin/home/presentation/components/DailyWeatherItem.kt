@@ -117,7 +117,7 @@ fun DailyWeatherItem(
                 .padding(start = 20.dp, end = 10.dp)
                 .size(24.dp),
             colorFilter = ColorFilter.tint(tint),
-            forceLight = true
+            darkTheme = false
         )
         Row(
             modifier = Modifier.weight(1f),
