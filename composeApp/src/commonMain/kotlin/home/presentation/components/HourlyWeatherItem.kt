@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +41,7 @@ fun HourlyWeatherItem(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val updatedHourlyWeather by rememberUpdatedState(hourlyWeather)
         val timeFormat = remember {
             LocalTime.Format {
                 amPmHour(Padding.NONE)
@@ -45,8 +49,10 @@ fun HourlyWeatherItem(
                 amPmMarker(AmPmMarker.AM.name, AmPmMarker.PM.name)
             }
         }
-        val hourlyTimeText = remember(hourlyWeather.time.time) {
-            hourlyWeather.time.time.format(timeFormat)
+        val hourlyTimeText by remember {
+            derivedStateOf {
+                updatedHourlyWeather.time.time.format(timeFormat)
+            }
         }
         Text(
             text = hourlyTimeText,
@@ -55,7 +61,7 @@ fun HourlyWeatherItem(
             fontWeight = FontWeight.Normal,
         )
         WeatherIcon(
-            weatherType = hourlyWeather.weatherType,
+            weatherType = updatedHourlyWeather.weatherType,
             modifier = Modifier.size(24.dp),
             colorFilter = ColorFilter.tint(tint)
         )
@@ -64,7 +70,7 @@ fun HourlyWeatherItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${hourlyWeather.temperature}",
+                text = "${updatedHourlyWeather.temperature}",
                 modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
                 fontSize = 13.sp,

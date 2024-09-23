@@ -42,10 +42,10 @@ fun HourlyWeatherCard(
     baseGradientColor: Color = MaterialTheme.colors.secondary,
     tint: Color = MaterialTheme.colors.onSecondary,
 ) {
-    val updatedHourlyWeather by rememberUpdatedState(hourlyWeathers)
+    val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
     val precipitationItemsHeight by remember {
         derivedStateOf {
-            val containsRainy = updatedHourlyWeather.any {
+            val containsRainy = updatedHourlyWeathers.any {
                 val isRainy = it.run {
                     (weatherType == WeatherType.Rainy || weatherType == WeatherType.Drizzle
                             || weatherType == WeatherType.RainShower || weatherType == WeatherType.Snowy
@@ -98,7 +98,7 @@ fun HourlyWeatherCard(
             state = weatherItemLazyState,
             userScrollEnabled = false
         ) {
-            items(hourlyWeathers, key = { it.time.toString() }) {
+            items(updatedHourlyWeathers, key = { it.time.toString() }) {
                 HourlyWeatherItem(
                     hourlyWeather = it,
                     modifier = Modifier.width(itemWidth),
@@ -110,7 +110,7 @@ fun HourlyWeatherCard(
             contentAlignment = Alignment.BottomCenter
         ) {
             HourlyTemperatureGraph(
-                hourlyWeathers = hourlyWeathers,
+                hourlyWeathers = updatedHourlyWeathers,
                 modifier = Modifier
                     .horizontalScroll(
                         state = temperatureGraphScrollState,
@@ -122,7 +122,7 @@ fun HourlyWeatherCard(
                 tint = tint
             )
             HourlyPrecipitationGraph(
-                hourlyWeathers = hourlyWeathers,
+                hourlyWeathers = updatedHourlyWeathers,
                 modifier = Modifier
                     .horizontalScroll(
                         state = precipitationGraphScrollState,
@@ -139,7 +139,7 @@ fun HourlyWeatherCard(
             state = precipitationItemLazyState,
             userScrollEnabled = false
         ) {
-            items(hourlyWeathers, key = { it.time.toString() }) {
+            items(updatedHourlyWeathers, key = { it.time.toString() }) {
                 HourlyPrecipitationItem(
                     hourlyWeather = it,
                     modifier = Modifier.size(

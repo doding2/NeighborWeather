@@ -9,8 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,19 +23,15 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.jordond.compass.Place
 import home.presentation.HomeEvent
-import kotlinx.coroutines.delay
 import weather.domain.model.Weather
 
 @Composable
@@ -50,12 +44,7 @@ fun WeatherCardList(
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val updatedWeather by rememberUpdatedState(weather)
-    val isCurrentWeatherVisible by remember { derivedStateOf { updatedWeather != null } }
-    var isHourlyWeatherVisible by remember { mutableStateOf(isCurrentWeatherVisible) }
-    LaunchedEffect(isCurrentWeatherVisible) {
-        delay(100)
-        isHourlyWeatherVisible = isCurrentWeatherVisible
-    }
+    val isWeatherVisible by remember { derivedStateOf { updatedWeather != null } }
     val scrollState = rememberScrollState()
     Column(
         modifier = modifier
@@ -63,58 +52,70 @@ fun WeatherCardList(
             .padding(contentPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row {
-            Spacer(modifier = Modifier.weight(1f))
-            AnimatedVisibility(
-                visible = isCurrentWeatherVisible,
-                modifier = Modifier.sizeIn(maxWidth = 360.dp),
-                enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
-                exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
-            ) {
-                Box {
-                    CurrentWeatherCard(
-                        place = place,
-                        currentWeather = weather?.current,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 28.dp, bottom = 28.dp, start = 28.dp, end = 28.dp),
-                        backgroundColor = colors.primary,
-                        tint = colors.onPrimary
-                    )
-                    IconButton(
-                        onClick = { onEvent(HomeEvent.NavigateToMap) },
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .align(Alignment.TopEnd)
-                            .background(
-                                color = colors.primary,
-                                shape = CircleShape
-                            )
-                            .size(48.dp),
-                        content = {
-                            Icon(
-                                imageVector = Icons.Rounded.Map,
-                                contentDescription = "Navigate to map button",
-                                modifier = Modifier.size(24.dp),
-                                tint = colors.onPrimary
-                            )
-                        },
-                    )
-                }
+        AnimatedVisibility(
+            visible = isWeatherVisible,
+            modifier = Modifier.sizeIn(maxWidth = 360.dp),
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically(),
+        ) {
+            Box {
+                CurrentWeatherCard(
+                    place = place,
+                    currentWeather = updatedWeather?.current,
+                    modifier = Modifier
+                        .padding(top = 28.dp, bottom = 0.dp, start = 28.dp, end = 28.dp)
+                        .fillMaxWidth(),
+                    backgroundColor = colors.primary,
+                    tint = colors.onPrimary
+                )
+                IconButton(
+                    onClick = { onEvent(HomeEvent.NavigateToMap) },
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .align(Alignment.TopEnd)
+                        .background(
+                            color = colors.primary,
+                            shape = CircleShape
+                        )
+                        .size(48.dp),
+                    content = {
+                        Icon(
+                            imageVector = Icons.Rounded.Map,
+                            contentDescription = "Navigate to map button",
+                            modifier = Modifier.size(24.dp),
+                            tint = colors.onPrimary
+                        )
+                    },
+                )
             }
-            Spacer(modifier = Modifier.weight(1f))
         }
         AnimatedVisibility(
-            visible = isHourlyWeatherVisible,
+            visible = isWeatherVisible,
             modifier = Modifier.sizeIn(maxWidth = 360.dp),
-            enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { -it / 2 }),
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically(),
         ) {
             HourlyWeatherCard(
-                hourlyWeathers = weather?.hourly ?: emptyList(),
+                hourlyWeathers = updatedWeather?.hourly ?: emptyList(),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 28.dp),
+                    .padding(horizontal = 28.dp, vertical = 15.dp)
+                    .fillMaxWidth(),
+                baseGradientColor = colors.secondary,
+                tint = colors.onSecondary
+            )
+        }
+        AnimatedVisibility(
+            visible = isWeatherVisible,
+            modifier = Modifier.sizeIn(maxWidth = 360.dp),
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically(),
+        ) {
+            DailyWeatherCard(
+                dailyWeathers = updatedWeather?.daily ?: emptyList(),
+                modifier = Modifier
+                    .padding(horizontal = 28.dp)
+                    .padding(bottom = 28.dp)
+                    .fillMaxWidth(),
                 baseGradientColor = colors.secondary,
                 tint = colors.onSecondary
             )
