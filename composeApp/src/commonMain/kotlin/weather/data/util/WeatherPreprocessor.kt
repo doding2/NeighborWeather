@@ -148,9 +148,6 @@ class WeatherPreprocessor {
                     val firstTarget = target.daily.time.firstOrNull() ?: best.daily.time.first()
                     bestStartIndex = best.daily.time.indexOfFirst { it == firstTarget }
                 }
-                logger.d { "---------------------------------------------------------" }
-                logger.d { "target time size: ${time.size}, target time: ${time}" }
-                logger.d { "best time size: ${best.daily.time.size}, best time: ${best.daily.time}" }
                 copy(
                     time = if (targetSize >= bestSize) best.daily.time else time,
                     weatherCode = if (weatherCode.isEmpty()) best.daily.weatherCode.subList(bestStartIndex, bestSize)

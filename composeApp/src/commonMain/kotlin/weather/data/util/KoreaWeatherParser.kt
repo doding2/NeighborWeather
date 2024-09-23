@@ -287,6 +287,13 @@ class KoreaWeatherParser {
                     .toLocalDateTime(TimeZone.currentSystemDefault())
                     .date
             }
+
+            // There are cases where yesterday's weather data is included
+            // because Naver's weather has not yet been updated immediately after 12 a.m.
+            // In this case, pass this date and parse the next day's data.
+            if (koreaDatetime.date > date) {
+                return@forEach
+            }
             dateList.add(date)
 
             val am = it.select("div.cell_weather > span.weather_inner")[0]
