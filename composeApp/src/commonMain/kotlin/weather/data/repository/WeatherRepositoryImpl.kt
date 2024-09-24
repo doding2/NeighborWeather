@@ -46,11 +46,9 @@ class WeatherRepositoryImpl(
         place: Place,
         neighbor: Neighbor,
     ): Result<Weather, Error> {
-        return withContext(Dispatchers.IO) {
-            fetchRemoteWeathers(place, setOf(neighbor, Neighbor.ALL))
-                .let { weatherPreprocessor.preprocess(it).firstOrNull() }
-                ?: Result.Error(NetworkError.UNKNOWN)
-        }
+        return fetchRemoteWeathers(place, setOf(neighbor, Neighbor.ALL))
+            .let { weatherPreprocessor.preprocess(it).firstOrNull() }
+            ?: Result.Error(NetworkError.UNKNOWN)
     }
 
     override suspend fun loadWeathers(
@@ -58,36 +56,34 @@ class WeatherRepositoryImpl(
         neighborWeights: Map<Neighbor, Double>,
         fetchFromRemote: Boolean
     ): Flow<Result<Weather, Error>> {
-        return withContext(Dispatchers.IO) {
-            val locationName = place.toPlaceIdentifier()
-            val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)
+        val locationName = place.toPlaceIdentifier()
+        val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)
 
-            channelFlow {
-                // load from Remote API
-                if (fetchFromRemote) {
-                    launch {
-                        this@channelFlow.fetchAndUpdateRemoteWeathers(place, neighborWeights)
-                    }
+        return channelFlow {
+            // load from Remote API
+            if (fetchFromRemote) {
+                launch {
+                    this@channelFlow.fetchAndUpdateRemoteWeathers(place, neighborWeights)
                 }
-
-                // load from Database
-                val localWeatherFlows = getLocalWeatherFlows(locationName, targetNeighbors)
-
-                combine(*localWeatherFlows.toTypedArray()) { it }
-                    .mapNotNull { nullableWeathers ->
-                        val weathers = nullableWeathers.filterNotNull()
-                        val successNeighbors = weathers.map { it.neighbor }
-                        val successTargetToWeight =
-                            neighborWeights.filterKeys { it in successNeighbors }
-                        if (weathers.none { it.neighbor in successTargetToWeight.keys }) {
-                            return@mapNotNull null
-                        }
-
-                        weightCalculator.calculateWeightedSum(weathers, successTargetToWeight)
-                    }
-                    .distinctUntilChanged()
-                    .collect(::send)
             }
+
+            // load from Database
+            val localWeatherFlows = getLocalWeatherFlows(locationName, targetNeighbors)
+
+            combine(*localWeatherFlows.toTypedArray()) { it }
+                .mapNotNull { nullableWeathers ->
+                    val weathers = nullableWeathers.filterNotNull()
+                    val successNeighbors = weathers.map { it.neighbor }
+                    val successTargetToWeight =
+                        neighborWeights.filterKeys { it in successNeighbors }
+                    if (weathers.none { it.neighbor in successTargetToWeight.keys }) {
+                        return@mapNotNull null
+                    }
+
+                    weightCalculator.calculateWeightedSum(weathers, successTargetToWeight)
+                }
+                .distinctUntilChanged()
+                .collect(::send)
         }
     }
 
@@ -95,7 +91,7 @@ class WeatherRepositoryImpl(
         place: Place,
         neighborWeights: Map<Neighbor, Double>
     ) {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.Default) {
             val locationName = place.toPlaceIdentifier()
             val topWeightedNeighbor = neighborWeights.maxBy { it.value }.key
             val targetNeighbors = setOf(*neighborWeights.keys.toTypedArray(), Neighbor.ALL)

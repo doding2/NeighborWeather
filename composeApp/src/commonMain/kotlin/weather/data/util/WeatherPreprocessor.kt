@@ -5,79 +5,80 @@ import core.domain.util.Error
 import core.domain.util.Result
 import core.domain.util.getDataOrNull
 import core.domain.util.map
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import weather.data.model.dto.korean_weather_dto.KoreaWeatherDto
 import weather.data.model.dto.neighbor_weather_dto.NeighborWeatherDto
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
 import weather.domain.model.HourlyWeather
 import weather.domain.model.Neighbor
 import weather.domain.model.Weather
-import weather.domain.model.toWeatherCode
 import weather.domain.model.toWeatherType
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.math.max
 
 class WeatherPreprocessor {
 
     private val logger by lazy { Logger.withTag("WeatherPreprocessor") }
 
-    fun preprocess(
+    suspend fun preprocess(
         results: List<Pair<Neighbor, Result<NeighborWeatherDto, Error>>>,
         topWeightedNeighbor: Neighbor = Neighbor.ALL,
     ): List<Result<Weather, Error>> {
-        // Weather data from remote call may contains null values.
-        // Fill missing values with top weighted neighbor
-        // and best matched weather data.
-        // And convert to Weather object.
-        val bestWeatherDto = results
-            .find { it.first == Neighbor.ALL }
-            ?.second
-            ?.getDataOrNull()
-        if (bestWeatherDto == null) {
-            return listOf(
-                Result.Error(
-                    WeatherPreprocessorError.FAIL_TO_LOAD_BEST_WEATHER
+        return withContext(Dispatchers.Default) {
+            // Weather data from remote call may contains null values.
+            // Fill missing values with top weighted neighbor
+            // and best matched weather data.
+            // And convert to Weather object.
+            val bestWeatherDto = results
+                .find { it.first == Neighbor.ALL }
+                ?.second
+                ?.getDataOrNull()
+            if (bestWeatherDto == null) {
+                return@withContext listOf(
+                    Result.Error(
+                        WeatherPreprocessorError.FAIL_TO_LOAD_BEST_WEATHER
+                    )
                 )
-            )
-        }
-        val topWeightedWeatherDto = results
-            .find { it.first == topWeightedNeighbor }
-            ?.second
-            ?.getDataOrNull()
-            ?.let {
-                runCatching {
-                    fillMissingValues(it, bestWeatherDto)
-                }.getOrNull()
-            } ?: bestWeatherDto
+            }
+            val topWeightedWeatherDto = results
+                .find { it.first == topWeightedNeighbor }
+                ?.second
+                ?.getDataOrNull()
+                ?.let {
+                    runCatching {
+                        fillMissingValues(it, bestWeatherDto)
+                    }.getOrNull()
+                } ?: bestWeatherDto
 
-        return results.map outerMap@{ (neighbor, result) ->
-            result.map { weatherDto ->
-                val filled = runCatching {
-                    fillMissingValues(weatherDto, topWeightedWeatherDto)
-                }.getOrElse {
-                    if (it is CancellationException) throw it
-                    it.printStackTrace()
-                    return@outerMap Result.Error(
-                        WeatherPreprocessorError.FAIL_TO_FILL_MISSING_VALUES
-                    )
+            return@withContext results.map outerMap@{ (neighbor, result) ->
+                result.map { weatherDto ->
+                    val filled = runCatching {
+                        fillMissingValues(weatherDto, topWeightedWeatherDto)
+                    }.getOrElse {
+                        if (it is CancellationException) throw it
+                        it.printStackTrace()
+                        return@outerMap Result.Error(
+                            WeatherPreprocessorError.FAIL_TO_FILL_MISSING_VALUES
+                        )
+                    }
+                    val weather = runCatching {
+                        mapToWeather(neighbor, filled)
+                    }.getOrElse {
+                        if (it is CancellationException) throw it
+                        it.printStackTrace()
+                        return@outerMap Result.Error(
+                            WeatherPreprocessorError.FAIL_TO_MAP_WEATHER
+                        )
+                    }
+                    weather
                 }
-                val weather = runCatching {
-                    mapToWeather(neighbor, filled)
-                }.getOrElse {
-                    if (it is CancellationException) throw it
-                    it.printStackTrace()
-                    return@outerMap Result.Error(
-                        WeatherPreprocessorError.FAIL_TO_MAP_WEATHER
-                    )
-                }
-                weather
             }
         }
     }
 
-    fun fillMissingValues(target: NeighborWeatherDto, best: NeighborWeatherDto): NeighborWeatherDto {
+    private fun fillMissingValues(target: NeighborWeatherDto, best: NeighborWeatherDto): NeighborWeatherDto {
         return target.copy(
             current = target.current.run {
                 copy(
@@ -222,83 +223,6 @@ class WeatherPreprocessor {
                     precipitationProbability = weatherDto.daily.precipitationProbabilityMax[index]!!,
                     weatherCode = weatherCode,
                     weatherType = weatherCode.toWeatherType(),
-                )
-            }
-        )
-    }
-
-
-    private fun mapToWeather(koreaWeatherDto: KoreaWeatherDto): Weather {
-        val unitDegree = 22.5
-        val windDirectionMap = mapOf(
-            "북풍" to 0,
-            "북북동풍" to 1,
-            "북동풍" to 2,
-            "동북동풍" to 3,
-            "동풍" to 4,
-            "동남동풍" to 5,
-            "남동풍" to 6,
-            "남남동풍" to 7,
-            "남풍" to 8,
-            "남남서풍" to 9,
-            "남서풍" to 10,
-            "서남서풍" to 11,
-            "서풍" to 12,
-            "서북서풍" to 13,
-            "북서풍" to 14,
-            "북북서풍" to 15
-        ).mapValues { it.value * unitDegree }
-        return Weather(
-            latitude = koreaWeatherDto.latitude,
-            longitude = koreaWeatherDto.longitude,
-            neighbor = Neighbor.Korea,
-            current = koreaWeatherDto.current.run {
-                val weatherCode = weather.toWeatherCode() ?: 0
-                CurrentWeather(
-                    time = time,
-                    temperature = temperature,
-                    relativeHumidity = relativeHumidity,
-                    apparentTemperature = apparentTemperature,
-                    precipitation = precipitation,
-                    precipitationProbability = koreaWeatherDto.hourly.precipitationProbability[0],
-                    weatherCode = weatherCode,
-                    weatherType = weatherCode.toWeatherType(),
-                    windSpeed = windSpeed,
-                    windDirection = windDirectionMap.let { map ->
-                        map[windDirection]
-                            ?: map[koreaWeatherDto.hourly.windDirection.getOrElse(0) { map.keys.first() }]!!
-                    }
-                )
-            },
-            hourly = List(koreaWeatherDto.hourly.time.size) { index ->
-                val weatherCode = koreaWeatherDto.hourly.weather[index]
-                    .toWeatherCode() ?: 0
-                HourlyWeather(
-                    time = koreaWeatherDto.hourly.time[index],
-                    temperature = koreaWeatherDto.hourly.temperature[index],
-                    relativeHumidity = koreaWeatherDto.hourly.relativeHumidity[index],
-                    precipitation = koreaWeatherDto.hourly.precipitation[index],
-                    precipitationProbability = koreaWeatherDto.hourly.precipitationProbability[index],
-                    weatherCode = weatherCode,
-                    weatherType = weatherCode.toWeatherType(),
-                    windSpeed = koreaWeatherDto.hourly.windSpeed[index],
-                    windDirection = windDirectionMap[koreaWeatherDto.hourly.windDirection[index]] ?: windDirectionMap.values.first()
-                )
-            },
-            daily = List(koreaWeatherDto.daily.time.size) { index ->
-                val weatherAMCode = koreaWeatherDto.daily.weatherAM[index].toWeatherCode() ?: 0
-                val weatherPMCode = koreaWeatherDto.daily.weatherPM[index].toWeatherCode() ?: 0
-                val weatherCode = max(weatherAMCode, weatherPMCode)
-                DailyWeather(
-                    time = koreaWeatherDto.daily.time[index],
-                    temperatureMax = koreaWeatherDto.daily.temperatureMax[index],
-                    temperatureMin = koreaWeatherDto.daily.temperatureMin[index],
-                    precipitationProbability = max(
-                        koreaWeatherDto.daily.precipitationProbabilityAM[index],
-                        koreaWeatherDto.daily.precipitationProbabilityPM[index]
-                    ),
-                    weatherCode = weatherCode,
-                    weatherType = weatherCode.toWeatherType()
                 )
             }
         )

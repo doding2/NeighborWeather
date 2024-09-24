@@ -80,75 +80,73 @@ fun MapScreen(
         }
     }
     val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            scaffoldState = scaffoldState,
-            snackbarHost = { scaffoldState.snackbarHostState }
-        ) { innerPadding ->
-            Box(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        scaffoldState = scaffoldState,
+        snackbarHost = { scaffoldState.snackbarHostState }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            val selectedWeather by rememberUpdatedState(state.selectedWeather)
+            val isPlaceWeatherVisible by remember {
+                derivedStateOf { selectedWeather != null }
+            }
+            val markers = remember(state.markers, state.selectedMarker) {
+                listOfNotNull(state.selectedMarker) + state.markers
+            }
+            GoogleMaps(
+                modifier = Modifier.fillMaxSize(),
+                isControlsVisible = !isPlaceWeatherVisible,
+                onMarkerClick = { onEvent(MapEvent.OnMarkerClick(it)) },
+                onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
+                onMyLocationClick = { onEvent(MapEvent.OnMyLocationClick(it)) },
+                markers = markers,
+                cameraPosition = state.cameraPosition,
+                contentPadding = WindowInsets.safeDrawing.asPaddingValues()
+            )
+            MapSearchBar(
+                onEvent = onEvent,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .align(Alignment.TopCenter)
+                    .windowInsetsPadding(WindowInsets.safeDrawing),
+                backgroundColor = weatherColors.primary,
+                tint = weatherColors.onPrimary
+            )
+            AnimatedVisibility(
+                visible = isPlaceWeatherVisible,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .sizeIn(maxWidth = 500.dp)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(horizontal = 20.dp, vertical = 5.dp),
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
             ) {
-                val selectedWeather by rememberUpdatedState(state.selectedWeather)
-                val isPlaceWeatherVisible by remember {
-                    derivedStateOf { selectedWeather != null }
-                }
-                val markers = remember(state.markers, state.selectedMarker) {
-                    listOfNotNull(state.selectedMarker) + state.markers
-                }
-                GoogleMaps(
-                    modifier = Modifier.fillMaxSize(),
-                    isControlsVisible = !isPlaceWeatherVisible,
-                    onMarkerClick = { onEvent(MapEvent.OnMarkerClick(it)) },
-                    onMapClick = { onEvent(MapEvent.OnMapClick(it)) },
-                    onMyLocationClick = { onEvent(MapEvent.OnMyLocationClick(it)) },
-                    markers = markers,
-                    cameraPosition = state.cameraPosition,
-                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
-                )
-                MapSearchBar(
-                    onEvent = onEvent,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .align(Alignment.TopCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                MapPlaceWeatherCard(
+                    place = state.selectedPlace,
+                    weather = state.selectedWeather,
+                    modifier = Modifier.fillMaxWidth(),
                     backgroundColor = weatherColors.primary,
                     tint = weatherColors.onPrimary
                 )
-                AnimatedVisibility(
-                    visible = isPlaceWeatherVisible,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .sizeIn(maxWidth = 500.dp)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .padding(horizontal = 20.dp, vertical = 5.dp),
-                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2}),
-                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
-                ) {
-                    MapPlaceWeatherCard(
-                        place = state.selectedPlace,
-                        weather = state.selectedWeather,
-                        modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = weatherColors.primary,
-                        tint = weatherColors.onPrimary
-                    )
-                }
-                SnackbarHost(
-                    hostState = scaffoldState.snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                        .clickable(
-                            interactionSource = snackbarInteractionSource,
-                            indication = null
-                        ) {
-                            scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                        },
-                )
             }
+            SnackbarHost(
+                hostState = scaffoldState.snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .clickable(
+                        interactionSource = snackbarInteractionSource,
+                        indication = null
+                    ) {
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                    },
+            )
         }
     }
 }

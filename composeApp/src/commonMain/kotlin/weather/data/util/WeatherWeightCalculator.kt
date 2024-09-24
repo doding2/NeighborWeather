@@ -7,7 +7,6 @@ import core.domain.util.Result
 import core.domain.util.roundToFirst
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import weather.domain.model.CurrentWeather
 import weather.domain.model.DailyWeather
@@ -27,7 +26,7 @@ class WeatherWeightCalculator {
         weathers: List<Weather>,
         targetToWeight: Map<Neighbor, Double>
     ): Result<Weather, Error> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.Default) {
             try {
                 val mutableWeathers = weathers
                     .filter { it.neighbor in targetToWeight.keys }

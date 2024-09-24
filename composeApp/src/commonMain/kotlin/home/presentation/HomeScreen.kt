@@ -13,7 +13,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -75,43 +74,41 @@ fun HomeScreen(
     }
 
     val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = snackbarInteractionSource,
-                            indication = null
-                        ) {
-                            snackbarHostState.currentSnackbarData?.dismiss()
-                        }
-                        .windowInsetsPadding(WindowInsets.safeDrawing)
-                )
-            },
-        ) { innerPadding ->
-            Box(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                state.backgroundImage?.let {
-                    HomeBackground(
-                        backgroundImage = it,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                WeatherCardList(
-                    weather = state.myWeather,
-                    place = state.myPlace,
-                    onEvent = onEvent,
-                    modifier = Modifier.fillMaxSize(),
-                    colors = weatherColors,
-                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
+                    .clickable(
+                        interactionSource = snackbarInteractionSource,
+                        indication = null
+                    ) {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                    }
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+            )
+        },
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            state.backgroundImage?.let {
+                HomeBackground(
+                    backgroundImage = it,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+            WeatherCardList(
+                weather = state.myWeather,
+                place = state.myPlace,
+                onEvent = onEvent,
+                modifier = Modifier.fillMaxSize(),
+                colors = weatherColors,
+                contentPadding = WindowInsets.safeDrawing.asPaddingValues()
+            )
         }
     }
 }

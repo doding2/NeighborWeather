@@ -8,7 +8,6 @@ import core.domain.util.Result
 import io.ktor.utils.io.charsets.MalformedInputException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -33,7 +32,7 @@ class KoreaWeatherParser {
         html: String,
         now: Instant
     ): Result<KoreaWeatherDto, KoreaWeatherParserException> {
-        return withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.Default) {
             try {
                 val doc = Ksoup.parse(html)
 

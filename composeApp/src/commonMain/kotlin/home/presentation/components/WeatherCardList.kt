@@ -128,8 +128,8 @@ fun WeatherCardList(
         AnimatedVisibility(
             visible = isHourlyWeatherVisible,
             modifier = Modifier
-                .padding(horizontal = 28.dp, vertical = 15.dp)
                 .sizeIn(maxWidth = 500.dp)
+                .padding(horizontal = 28.dp, vertical = 15.dp)
                 .zIndex(1f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
@@ -146,9 +146,9 @@ fun WeatherCardList(
         AnimatedVisibility(
             visible = isDailyWeatherVisible,
             modifier = Modifier
+                .sizeIn(maxWidth = 500.dp)
                 .padding(horizontal = 28.dp)
                 .padding(bottom = 28.dp)
-                .sizeIn(maxWidth = 500.dp)
                 .zIndex(0f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
