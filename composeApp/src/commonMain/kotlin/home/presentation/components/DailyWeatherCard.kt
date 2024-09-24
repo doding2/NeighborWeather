@@ -39,20 +39,17 @@ fun DailyWeatherCard(
                 ),
                 shape = RoundedCornerShape(25.dp)
             )
-            .padding(top = 15.dp, bottom = 20.dp, start = 15.dp, end = 15.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .padding(top = 19.dp, bottom = 24.dp, start = 15.dp, end = 15.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         updatedDailyWeathers.forEach {
             key(it.time.toString()) {
                 DailyWeatherItem(
                     dailyWeather = it,
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     tint = tint
                 )
             }
         }
-
     }
 }

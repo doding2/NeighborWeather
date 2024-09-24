@@ -40,14 +40,13 @@ fun HourlyPrecipitationItem(
     val updatedHourlyWeather by rememberUpdatedState(hourlyWeather)
     val isRainy by remember {
         derivedStateOf {
-            val isRainy = updatedHourlyWeather.run {
+            updatedHourlyWeather.run {
                 (weatherType == WeatherType.Rainy || weatherType == WeatherType.Drizzle
                         || weatherType == WeatherType.RainShower || weatherType == WeatherType.Snowy
                         || weatherType == WeatherType.FreezingRain || weatherType == WeatherType.FreezingDrizzle
                         || weatherType == WeatherType.SnowShower || weatherType == WeatherType.Thunderstorm
                         ) && precipitation > 0.0
             }
-            isRainy
         }
     }
     val precipitationProbabilityIcon by remember {

@@ -50,9 +50,12 @@ fun WeatherCardList(
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val updatedWeather by rememberUpdatedState(weather)
-    val isWeatherVisible by remember { derivedStateOf { updatedWeather != null } }
-    var hourlyWeatherCardSize by remember { mutableStateOf(IntSize.Zero) }
+    val isCurrentWeatherVisible by remember { derivedStateOf { updatedWeather?.current != null } }
+    val isHourlyWeatherVisible by remember { derivedStateOf { !updatedWeather?.hourly.isNullOrEmpty() } }
+    val isDailyWeatherVisible by remember { derivedStateOf { !updatedWeather?.daily.isNullOrEmpty() } }
     val scrollState = rememberScrollState()
+    var currentWeatherSize by remember { mutableStateOf(IntSize.Zero) }
+    var hourlyWeatherSize by remember { mutableStateOf(IntSize.Zero) }
     Column(
         modifier = modifier
             .verticalScroll(scrollState)
@@ -60,20 +63,21 @@ fun WeatherCardList(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AnimatedVisibility(
-            visible = isWeatherVisible,
+            visible = isCurrentWeatherVisible,
             modifier = Modifier
                 .sizeIn(maxWidth = 360.dp)
                 .zIndex(2f),
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically(),
         ) {
-            Box {
+            Box(contentAlignment = Alignment.Center) {
                 CurrentWeatherCard(
                     place = place,
                     currentWeather = updatedWeather?.current,
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(top = 28.dp, start = 28.dp, end = 28.dp)
-                        .fillMaxWidth(),
+                        .onGloballyPositioned { currentWeatherSize = it.size },
                     backgroundColor = colors.primary,
                     tint = colors.onPrimary,
                 )
@@ -81,21 +85,25 @@ fun WeatherCardList(
                     onClick = { onEvent(HomeEvent.NavigateToMap) },
                     modifier = Modifier
                         .graphicsLayer {
-                            val currentWidthPx = 304.dp.toPx()
-                            val currentHeightPx = 324.dp.toPx()
-                            val middlePaddingPx = 15.dp.toPx()
-                            val currentBottomPx = currentHeightPx - middlePaddingPx
-                            val hourlyTopPx = currentHeightPx + middlePaddingPx
+                            val parentPaddingPx = 56.dp.toPx()
+                            val currentWidthPx = currentWeatherSize.width.toFloat()
+                            val currentHeightPx = currentWeatherSize.height.toFloat()
 
-                            val hourlyWidth = hourlyWeatherCardSize.width - 2f * 28.dp.toPx()
-                            val widthDiff = (hourlyWidth - currentWidthPx) / 2f
+                            val hourlyWidthPx = hourlyWeatherSize.width.toFloat()
+                            val widthDifference = hourlyWidthPx - currentWidthPx
+                            val spacingOffset = maxOf(0f, minOf(widthDifference - parentPaddingPx, parentPaddingPx))
+                            val distanceToMoveX = (widthDifference + spacingOffset) / 2f
+
+                            val middlePaddingPxHalf = 15.dp.toPx()
+                            val currentBottomPx = currentHeightPx - middlePaddingPxHalf
+                            val hourlyTopPx = currentHeightPx + middlePaddingPxHalf
 
                             translationX = if (scrollState.value < currentBottomPx) {
                                 0f
                             } else if (scrollState.value >= currentBottomPx && scrollState.value < hourlyTopPx) {
-                                widthDiff * (scrollState.value - currentBottomPx) / (middlePaddingPx * 2)
+                                distanceToMoveX * (scrollState.value - currentBottomPx) / (middlePaddingPxHalf * 2)
                             } else {
-                                widthDiff
+                                distanceToMoveX
                             }
                             translationY = scrollState.value.toFloat()
                         }
@@ -118,9 +126,9 @@ fun WeatherCardList(
             }
         }
         AnimatedVisibility(
-            visible = isWeatherVisible,
+            visible = isHourlyWeatherVisible,
             modifier = Modifier
-                .onGloballyPositioned { hourlyWeatherCardSize = it.size }
+                .padding(horizontal = 28.dp, vertical = 15.dp)
                 .sizeIn(maxWidth = 500.dp)
                 .zIndex(1f),
             enter = fadeIn() + slideInVertically(),
@@ -129,15 +137,17 @@ fun WeatherCardList(
             HourlyWeatherCard(
                 hourlyWeathers = updatedWeather?.hourly ?: emptyList(),
                 modifier = Modifier
-                    .padding(horizontal = 28.dp, vertical = 15.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .onGloballyPositioned { hourlyWeatherSize = it.size },
                 baseGradientColor = colors.secondary,
                 tint = colors.onSecondary
             )
         }
         AnimatedVisibility(
-            visible = isWeatherVisible,
+            visible = isDailyWeatherVisible,
             modifier = Modifier
+                .padding(horizontal = 28.dp)
+                .padding(bottom = 28.dp)
                 .sizeIn(maxWidth = 500.dp)
                 .zIndex(0f),
             enter = fadeIn() + slideInVertically(),
@@ -145,10 +155,7 @@ fun WeatherCardList(
         ) {
             DailyWeatherCard(
                 dailyWeathers = updatedWeather?.daily ?: emptyList(),
-                modifier = Modifier
-                    .padding(horizontal = 28.dp)
-                    .padding(bottom = 28.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 baseGradientColor = colors.secondary,
                 tint = colors.onSecondary
             )

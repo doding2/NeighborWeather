@@ -4,8 +4,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -71,11 +73,11 @@ fun HourlyWeatherItem(
         ) {
             Text(
                 text = "${updatedHourlyWeather.temperature}",
-                modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
             )
+            Spacer(modifier = Modifier.width(0.5.dp))
             Image(
                 painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                 contentDescription = "Temperature unit sign",

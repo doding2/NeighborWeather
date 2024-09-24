@@ -1,5 +1,6 @@
 package home.presentation.components
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableDefaults
@@ -43,21 +44,21 @@ fun HourlyWeatherCard(
     tint: Color = MaterialTheme.colors.onSecondary,
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
-    val precipitationItemsHeight by remember {
+    val isRainy by remember {
         derivedStateOf {
-            val containsRainy = updatedHourlyWeathers.any {
-                val isRainy = it.run {
+            updatedHourlyWeathers.any {
+                it.run {
                     (weatherType == WeatherType.Rainy || weatherType == WeatherType.Drizzle
                             || weatherType == WeatherType.RainShower || weatherType == WeatherType.Snowy
                             || weatherType == WeatherType.FreezingRain || weatherType == WeatherType.FreezingDrizzle
                             || weatherType == WeatherType.SnowShower || weatherType == WeatherType.Thunderstorm
                             ) && precipitation > 0.0
                 }
-                isRainy
             }
-            if (containsRainy) 25.dp else 12.5.dp
         }
     }
+    val precipitationItemsHeight by animateDpAsState(if (isRainy) 25.dp else 12.5.dp)
+    val itemSize = remember { 50.dp }
     val weatherItemLazyState = rememberLazyListState()
     val precipitationItemLazyState = rememberLazyListState()
     val temperatureGraphScrollState = rememberScrollState()
@@ -93,7 +94,6 @@ fun HourlyWeatherCard(
             ),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        val itemWidth = remember { 50.dp }
         LazyRow(
             state = weatherItemLazyState,
             userScrollEnabled = false
@@ -101,14 +101,12 @@ fun HourlyWeatherCard(
             items(updatedHourlyWeathers, key = { it.time.toString() }) {
                 HourlyWeatherItem(
                     hourlyWeather = it,
-                    modifier = Modifier.width(itemWidth),
+                    modifier = Modifier.width(itemSize),
                     tint = tint
                 )
             }
         }
-        Box(
-            contentAlignment = Alignment.BottomCenter
-        ) {
+        Box(contentAlignment = Alignment.BottomCenter) {
             HourlyTemperatureGraph(
                 hourlyWeathers = updatedHourlyWeathers,
                 modifier = Modifier
@@ -117,8 +115,8 @@ fun HourlyWeatherCard(
                         enabled = false,
                         flingBehavior = ScrollableDefaults.flingBehavior()
                     ),
-                itemWidth = itemWidth,
-                height = 50.dp,
+                itemWidth = itemSize,
+                height = itemSize,
                 tint = tint
             )
             HourlyPrecipitationGraph(
@@ -129,8 +127,8 @@ fun HourlyWeatherCard(
                         enabled = false,
                         flingBehavior = ScrollableDefaults.flingBehavior()
                     ),
-                itemWidth = itemWidth,
-                height = 50.dp,
+                itemWidth = itemSize,
+                height = itemSize,
                 lineColor = tint,
                 fillColor = tint.copy(alpha = 0.3f)
             )
@@ -143,7 +141,7 @@ fun HourlyWeatherCard(
                 HourlyPrecipitationItem(
                     hourlyWeather = it,
                     modifier = Modifier.size(
-                        width = itemWidth,
+                        width = itemSize,
                         height = precipitationItemsHeight
                     ),
                     tint = tint

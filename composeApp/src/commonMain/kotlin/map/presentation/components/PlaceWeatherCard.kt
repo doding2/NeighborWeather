@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -64,9 +65,7 @@ fun MapPlaceWeatherCard(
             .padding(top = 20.dp, bottom = 32.dp, start = 30.dp, end = 30.dp),
     ) {
         weatherCache?.let {
-            Row(
-                verticalAlignment = Alignment.Top
-            ) {
+            Row(verticalAlignment = Alignment.Top) {
                 WeatherIcon(
                     weatherType = it.current.weatherType,
                     modifier = Modifier.size(36.dp),
@@ -75,13 +74,14 @@ fun MapPlaceWeatherCard(
                 Row(
                     modifier = Modifier.offset(y = (-4).dp),
                 ) {
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "${it.current.temperature}",
-                        modifier = Modifier.padding(start = 10.dp, end = 1.dp),
                         color = tint,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Medium
                     )
+                    Spacer(modifier = Modifier.width(1.dp))
                     Image(
                         painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                         contentDescription = "Temperature unit sign",
@@ -94,9 +94,7 @@ fun MapPlaceWeatherCard(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
                         color = tint,

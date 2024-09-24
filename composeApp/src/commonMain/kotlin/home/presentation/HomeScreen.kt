@@ -56,12 +56,8 @@ fun HomeScreen(
     ) {
         scope.launch {
             when (it) {
-                is HomeSideEffect.NavigateToMap -> {
-                    navController.navigate(Routes.Map)
-                }
-                HomeSideEffect.OpenPermissionSettingPage -> {
-                    permissionsController.openAppSettings()
-                }
+                is HomeSideEffect.NavigateToMap -> { navController.navigate(Routes.Map) }
+                HomeSideEffect.OpenPermissionSettingPage -> { permissionsController.openAppSettings() }
                 is HomeSideEffect.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
@@ -115,8 +111,6 @@ fun HomeScreen(
                     colors = weatherColors,
                     contentPadding = WindowInsets.safeDrawing.asPaddingValues()
                 )
-
-
             }
         }
     }

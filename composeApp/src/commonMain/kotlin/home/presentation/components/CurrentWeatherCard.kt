@@ -72,7 +72,8 @@ fun CurrentWeatherCard(
                 shape = RoundedCornerShape(25.dp)
             )
             .padding(horizontal = 15.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         currentWeatherCache?.let {
             Column(
@@ -89,21 +90,23 @@ fun CurrentWeatherCard(
                 )
                 Spacer(modifier = Modifier.weight(0.05f))
                 Row(
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
                     WeatherIcon(
                         weatherType = it.weatherType,
                         modifier = Modifier.size(60.dp),
                         colorFilter = ColorFilter.tint(tint)
                     )
+                    Spacer(modifier = Modifier.width(20.dp))
                     Text(
                         text = "${it.temperature}",
-                        modifier = Modifier.padding(start = 20.dp, end = 1.dp, top = 10.dp, bottom = 10.dp),
+                        modifier = Modifier.padding(vertical = 10.dp),
                         color = tint,
                         fontSize = 60.sp,
                         fontWeight = FontWeight.Medium,
                     )
+                    Spacer(modifier = Modifier.width(1.dp))
                     Image(
                         painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                         contentDescription = "Temperature unit sign",
@@ -114,7 +117,6 @@ fun CurrentWeatherCard(
                         alignment = Alignment.TopCenter,
                         colorFilter = ColorFilter.tint(tint)
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
                 Text(
                     text = it.weatherType.toFormattedName(),
@@ -153,16 +155,16 @@ fun CurrentWeatherCard(
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 Row(
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "Feels like ${it.apparentTemperature}",
-                        modifier = Modifier.padding(end = 0.5.dp),
                         color = tint,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
+                    Spacer(modifier = Modifier.width(0.5.dp))
                     Image(
                         painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                         contentDescription = "Temperature unit sign",
@@ -189,7 +191,6 @@ fun CurrentWeatherCard(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Spacer(modifier = Modifier.weight(1f))
                 }
                 Spacer(modifier = Modifier.weight(0.35f))
             }

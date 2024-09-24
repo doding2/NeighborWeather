@@ -1,9 +1,12 @@
 package home.presentation.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -111,25 +114,26 @@ fun DailyWeatherItem(
                 textAlign = TextAlign.Center
             )
         }
-        WeatherIcon(
-            weatherType = updatedDailyWeather.weatherType,
-            modifier = Modifier
-                .padding(start = 20.dp, end = 10.dp)
-                .size(24.dp),
-            colorFilter = ColorFilter.tint(tint),
-            darkTheme = false
-        )
+        Spacer(modifier = Modifier.width(20.dp))
+        Box(modifier = Modifier.weight(1f)) {
+            WeatherIcon(
+                weatherType = updatedDailyWeather.weatherType,
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(tint),
+                darkTheme = false
+            )
+        }
         Row(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "${updatedDailyWeather.temperatureMax}",
-                modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
             )
+            Spacer(modifier = Modifier.width(0.5.dp))
             Image(
                 painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                 contentDescription = "Temperature unit sign",
@@ -141,19 +145,18 @@ fun DailyWeatherItem(
                 colorFilter = ColorFilter.tint(tint)
             )
         }
+        Spacer(modifier = Modifier.width(5.dp))
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 5.dp),
+            modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "${updatedDailyWeather.temperatureMin}",
-                modifier = Modifier.padding(end = 0.5.dp),
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
             )
+            Spacer(modifier = Modifier.width(0.5.dp))
             Image(
                 painter = painterResource(Res.drawable.icon_temperature_unit_sign),
                 contentDescription = "Temperature unit sign",

@@ -59,17 +59,11 @@ fun MapScreen(
         permissionsControllerFactory.createPermissionsController()
     }
     BindEffect(permissionsController)
-    ObserveEffectsOnLifecycle(
-        flow = effect
-    ) {
+    ObserveEffectsOnLifecycle(flow = effect) {
         scope.launch {
             when (it) {
-                MapSideEffect.NavigateUp -> {
-                    navController.navigateUp()
-                }
-                MapSideEffect.OpenPermissionSettingPage -> {
-                    permissionsController.openAppSettings()
-                }
+                MapSideEffect.NavigateUp -> { navController.navigateUp() }
+                MapSideEffect.OpenPermissionSettingPage -> { permissionsController.openAppSettings() }
                 is MapSideEffect.ShowSnackbar -> {
                     scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                     val result = scaffoldState.snackbarHostState.showSnackbar(
