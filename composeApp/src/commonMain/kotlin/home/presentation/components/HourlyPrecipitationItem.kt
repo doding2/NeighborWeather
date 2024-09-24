@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import neighborweather.composeapp.generated.resources.Res
@@ -85,7 +86,9 @@ fun HourlyPrecipitationItem(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 10.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
             Text(
                 text = stringResource(Res.string.precipitation_probability_unit),
@@ -94,7 +97,9 @@ fun HourlyPrecipitationItem(
                 fontSize = 8.sp,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 8.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
         }
         if (isRainy) {
@@ -106,7 +111,9 @@ fun HourlyPrecipitationItem(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = 10.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
                 Text(
                     text = stringResource(Res.string.precipitation_unit),
@@ -115,6 +122,8 @@ fun HourlyPrecipitationItem(
                     fontSize = 8.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = 8.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jordond.compass.Place
@@ -86,7 +87,9 @@ fun CurrentWeatherCard(
                     text = stringResource(Res.string.home_current_weather_title),
                     color = tint,
                     fontSize = 25.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.weight(0.05f))
                 Row(
@@ -105,6 +108,8 @@ fun CurrentWeatherCard(
                         color = tint,
                         fontSize = 60.sp,
                         fontWeight = FontWeight.Medium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
                     )
                     Spacer(modifier = Modifier.width(1.dp))
                     Image(
@@ -122,14 +127,18 @@ fun CurrentWeatherCard(
                     text = it.weatherType.toFormattedName(),
                     color = tint,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 Text(
                     text = placeCache?.toPlaceIdentifier() ?: "Unknown place",
                     color = tint,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 val datetimeFormatter = remember {
@@ -151,7 +160,9 @@ fun CurrentWeatherCard(
                     text = it.time.format(datetimeFormatter),
                     color = tint,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.weight(0.15f))
                 Row(
@@ -162,7 +173,9 @@ fun CurrentWeatherCard(
                         text = "Feels like ${it.apparentTemperature}",
                         color = tint,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
                     )
                     Spacer(modifier = Modifier.width(0.5.dp))
                     Image(
@@ -189,7 +202,9 @@ fun CurrentWeatherCard(
                         text = "Humidity ${it.relativeHumidity}${stringResource(Res.string.humidity_unit)}",
                         color = tint,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1
                     )
                 }
                 Spacer(modifier = Modifier.weight(0.35f))

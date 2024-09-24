@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.LocalTime
@@ -61,6 +62,8 @@ fun HourlyWeatherItem(
             color = tint,
             fontSize = 11.sp,
             fontWeight = FontWeight.Normal,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1
         )
         WeatherIcon(
             weatherType = updatedHourlyWeather.weatherType,
@@ -76,6 +79,8 @@ fun HourlyWeatherItem(
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.width(0.5.dp))
             Image(

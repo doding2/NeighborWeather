@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.datetime.Clock
@@ -84,9 +85,11 @@ fun DailyWeatherItem(
             color = tint,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1
         )
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1.4f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -102,7 +105,9 @@ fun DailyWeatherItem(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 10.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
             Text(
                 text = stringResource(Res.string.precipitation_probability_unit),
@@ -111,10 +116,11 @@ fun DailyWeatherItem(
                 fontSize = 8.sp,
                 fontWeight = FontWeight.Normal,
                 lineHeight = 8.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
         }
-        Spacer(modifier = Modifier.width(20.dp))
         Box(modifier = Modifier.weight(1f)) {
             WeatherIcon(
                 weatherType = updatedDailyWeather.weatherType,
@@ -132,6 +138,8 @@ fun DailyWeatherItem(
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.width(0.5.dp))
             Image(
@@ -155,6 +163,8 @@ fun DailyWeatherItem(
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.width(0.5.dp))
             Image(
