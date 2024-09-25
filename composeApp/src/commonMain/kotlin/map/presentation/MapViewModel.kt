@@ -168,7 +168,7 @@ class MapViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        if (state.myLocation == null) {
+                        if (state.myPlace == null) {
                             state = state.run {
                                 copy(
                                     myLocation = location,

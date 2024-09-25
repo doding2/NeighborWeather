@@ -55,6 +55,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import weather.domain.model.Neighbor
 import weather.domain.model.WeatherType
 import weather.domain.repository.WeatherRepository
+import kotlin.math.roundToInt
 
 class HomeViewModel(
     private val weatherRepository: WeatherRepository,
@@ -131,7 +132,7 @@ class HomeViewModel(
                         val location = status.location.coordinates.let {
                             Location(it.latitude, it.longitude)
                         }
-                        if (state.myLocation == null) {
+                        if (state.myPlace == null) {
                             state = state.copy(myLocation = location)
                             logger.d("[Success] update location: ${status.location}")
                         }

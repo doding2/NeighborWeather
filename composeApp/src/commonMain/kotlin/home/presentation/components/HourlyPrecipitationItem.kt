@@ -80,7 +80,7 @@ fun HourlyPrecipitationItem(
                 tint = tint,
             )
             Text(
-                text = "${updatedHourlyWeather.precipitationProbability}",
+                text = "${updatedHourlyWeather.precipitationProbability.toInt()}",
                 modifier = Modifier.alignByBaseline(),
                 color = tint,
                 fontSize = 10.sp,

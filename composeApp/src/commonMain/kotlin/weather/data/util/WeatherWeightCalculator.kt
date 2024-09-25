@@ -17,6 +17,7 @@ import weather.domain.model.WeatherType
 import weather.domain.model.toWeatherCode
 import weather.domain.model.toWeatherType
 import kotlin.math.max
+import kotlin.math.round
 
 class WeatherWeightCalculator {
 
@@ -106,7 +107,7 @@ class WeatherWeightCalculator {
                 }
 
                 return@withContext Result.Success(
-                    data = sumAll.roundToFirst()
+                    data = sumAll.round()
                 )
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
@@ -262,7 +263,7 @@ class WeatherWeightCalculator {
         )
     }
 
-    private fun Weather.roundToFirst(): Weather {
+    private fun Weather.round(): Weather {
         return this.copy(
             latitude = latitude,
             longitude = longitude,
@@ -279,19 +280,19 @@ class WeatherWeightCalculator {
             ),
             hourly = hourly.map {
                 it.copy(
-                    temperature = roundToFirst(it.temperature),
-                    relativeHumidity = roundToFirst(it.relativeHumidity),
+                    temperature = round(it.temperature),
+                    relativeHumidity = round(it.relativeHumidity),
                     precipitation = roundToFirst(it.precipitation),
-                    precipitationProbability = roundToFirst(it.precipitationProbability),
-                    windSpeed = roundToFirst(it.windSpeed),
-                    windDirection = roundToFirst(it.windDirection)
+                    precipitationProbability = round(it.precipitationProbability),
+                    windSpeed = round(it.windSpeed),
+                    windDirection = round(it.windDirection)
                 )
             },
             daily = daily.map {
                 it.copy(
-                    temperatureMax = roundToFirst(it.temperatureMax),
-                    temperatureMin = roundToFirst(it.temperatureMin),
-                    precipitationProbability = roundToFirst(it.precipitationProbability),
+                    temperatureMax = round(it.temperatureMax),
+                    temperatureMin = round(it.temperatureMin),
+                    precipitationProbability = round(it.precipitationProbability),
                 )
             }
         )

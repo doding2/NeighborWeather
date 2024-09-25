@@ -89,7 +89,7 @@ fun DailyWeatherItem(
             maxLines = 1
         )
         Row(
-            modifier = Modifier.weight(1.4f),
+            modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -99,7 +99,7 @@ fun DailyWeatherItem(
                 tint = tint,
             )
             Text(
-                text = "${updatedDailyWeather.precipitationProbability}",
+                text = "${updatedDailyWeather.precipitationProbability.toInt()}",
                 modifier = Modifier.alignByBaseline(),
                 color = tint,
                 fontSize = 10.sp,
@@ -121,7 +121,7 @@ fun DailyWeatherItem(
                 maxLines = 1
             )
         }
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(0.9f)) {
             WeatherIcon(
                 weatherType = updatedDailyWeather.weatherType,
                 modifier = Modifier.size(24.dp),
@@ -130,11 +130,11 @@ fun DailyWeatherItem(
             )
         }
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.5f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${updatedDailyWeather.temperatureMax}",
+                text = "${updatedDailyWeather.temperatureMax.toInt()}",
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -153,13 +153,13 @@ fun DailyWeatherItem(
                 colorFilter = ColorFilter.tint(tint)
             )
         }
-        Spacer(modifier = Modifier.width(5.dp))
+        Spacer(modifier = Modifier.weight(0.2f))
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.5f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${updatedDailyWeather.temperatureMin}",
+                text = "${updatedDailyWeather.temperatureMin.toInt()}",
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,

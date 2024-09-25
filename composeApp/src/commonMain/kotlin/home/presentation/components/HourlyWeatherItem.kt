@@ -75,7 +75,7 @@ fun HourlyWeatherItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${updatedHourlyWeather.temperature}",
+                text = "${updatedHourlyWeather.temperature.toInt()}",
                 color = tint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
