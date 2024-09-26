@@ -1,6 +1,6 @@
 package core.presentation.util
 
-import androidx.compose.material.SnackbarDuration
+import androidx.compose.material3.SnackbarDuration
 
 data class SnackbarEvent(
     val message: String,

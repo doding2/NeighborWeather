@@ -55,7 +55,6 @@ import org.jetbrains.compose.resources.DrawableResource
 import weather.domain.model.Neighbor
 import weather.domain.model.WeatherType
 import weather.domain.repository.WeatherRepository
-import kotlin.math.roundToInt
 
 class HomeViewModel(
     private val weatherRepository: WeatherRepository,

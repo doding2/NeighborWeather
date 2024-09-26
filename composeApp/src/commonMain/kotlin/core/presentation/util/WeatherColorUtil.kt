@@ -4,8 +4,8 @@ import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.Colors
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -36,7 +36,7 @@ import core.presentation.ui.theme.sunnyNightSecondary
 import weather.domain.model.WeatherType
 
 @Composable
-fun animateWeatherColors(weatherType: WeatherType?): Colors {
+fun animateWeatherColors(weatherType: WeatherType?): ColorScheme {
     val transition = updateTransition(targetState = weatherType)
     val primary by transition.animateColor(
         transitionSpec = {
@@ -62,7 +62,7 @@ fun animateWeatherColors(weatherType: WeatherType?): Colors {
         label = "secondary",
         targetValueByState = { weatherSecondary(it) }
     )
-    return MaterialTheme.colors.copy(
+    return MaterialTheme.colorScheme.copy(
         primary = primary,
         onPrimary = onPrimary,
         secondary = secondary,

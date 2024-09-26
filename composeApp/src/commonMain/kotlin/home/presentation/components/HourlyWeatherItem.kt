@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -37,7 +37,7 @@ import weather.domain.model.HourlyWeather
 fun HourlyWeatherItem(
     hourlyWeather: HourlyWeather,
     modifier: Modifier = Modifier,
-    tint: Color = MaterialTheme.colors.onSecondary
+    tint: Color = MaterialTheme.colorScheme.onSecondary
 ) {
     Column(
         modifier = modifier,

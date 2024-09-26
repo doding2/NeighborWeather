@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,8 +49,8 @@ fun CurrentWeatherCard(
     place: Place?,
     currentWeather: CurrentWeather?,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colors.primary,
-    tint: Color = MaterialTheme.colors.onPrimary
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    tint: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     /*
     When state value become null,

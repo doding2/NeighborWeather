@@ -1,7 +1,7 @@
 package core.presentation.ui.theme
 
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 
-val LightColors = lightColors()
-val DarkColors = darkColors()
+val LightColorScheme = lightColorScheme()
+val DarkColorScheme = darkColorScheme()

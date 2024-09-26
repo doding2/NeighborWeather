@@ -1,6 +1,6 @@
 package core.presentation.ui.theme
 
-import androidx.compose.material.Typography
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -21,19 +21,21 @@ import org.jetbrains.compose.resources.Font
 fun neighborWeatherTypography() = Typography().run {
     val fontFamily = poppinsKr()
     copy(
-        h1 = h1.copy(fontFamily = fontFamily),
-        h2 = h2.copy(fontFamily = fontFamily),
-        h3 = h3.copy(fontFamily = fontFamily),
-        h4 = h4.copy(fontFamily = fontFamily),
-        h5 = h5.copy(fontFamily = fontFamily),
-        h6 = h6.copy(fontFamily = fontFamily),
-        subtitle1 = subtitle1.copy(fontFamily = fontFamily),
-        subtitle2 = subtitle2.copy(fontFamily = fontFamily),
-        body1 = body1.copy(fontFamily = fontFamily),
-        body2 = body2.copy(fontFamily = fontFamily),
-        button = button.copy(fontFamily = fontFamily),
-        caption = caption.copy(fontFamily = fontFamily),
-        overline = overline.copy(fontFamily = fontFamily)
+        displayLarge = displayLarge.copy(fontFamily = fontFamily),
+        displayMedium = displayMedium.copy(fontFamily = fontFamily),
+        displaySmall = displaySmall.copy(fontFamily = fontFamily),
+        headlineLarge = headlineLarge.copy(fontFamily = fontFamily),
+        headlineMedium = headlineMedium.copy(fontFamily = fontFamily),
+        headlineSmall = headlineSmall.copy(fontFamily = fontFamily),
+        titleLarge = titleLarge.copy(fontFamily = fontFamily),
+        titleMedium = titleMedium.copy(fontFamily = fontFamily),
+        titleSmall = titleSmall.copy(fontFamily = fontFamily),
+        bodyLarge = bodyLarge.copy(fontFamily = fontFamily),
+        bodyMedium = bodyMedium.copy(fontFamily = fontFamily),
+        bodySmall = bodySmall.copy(fontFamily = fontFamily),
+        labelLarge = labelLarge.copy(fontFamily = fontFamily),
+        labelMedium = labelMedium.copy(fontFamily = fontFamily),
+        labelSmall = labelSmall.copy(fontFamily = fontFamily)
     )
 }
 

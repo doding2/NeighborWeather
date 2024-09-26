@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -22,8 +22,8 @@ import weather.domain.model.DailyWeather
 fun DailyWeatherCard(
     dailyWeathers: List<DailyWeather>,
     modifier: Modifier = Modifier,
-    baseGradientColor: Color = MaterialTheme.colors.secondary,
-    tint: Color = MaterialTheme.colors.onSecondary,
+    baseGradientColor: Color = MaterialTheme.colorScheme.secondary,
+    tint: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
     val updatedDailyWeathers by rememberUpdatedState(dailyWeathers)
     Column(

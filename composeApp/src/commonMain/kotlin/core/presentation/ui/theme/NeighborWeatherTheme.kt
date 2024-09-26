@@ -1,7 +1,7 @@
 package core.presentation.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import core.presentation.util.EdgeColors
@@ -17,7 +17,7 @@ fun NeighborWeatherTheme(
     )
 
     MaterialTheme(
-        colors = if (darkTheme) DarkColors else LightColors,
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = neighborWeatherTypography(),
         content = content
     )

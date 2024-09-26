@@ -19,7 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -40,8 +40,8 @@ import weather.domain.model.WeatherType
 fun HourlyWeatherCard(
     hourlyWeathers: List<HourlyWeather>,
     modifier: Modifier = Modifier,
-    baseGradientColor: Color = MaterialTheme.colors.secondary,
-    tint: Color = MaterialTheme.colors.onSecondary,
+    baseGradientColor: Color = MaterialTheme.colorScheme.secondary,
+    tint: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
     val isRainy by remember {

@@ -16,12 +16,12 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Colors
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Map
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,7 +46,7 @@ fun WeatherCardList(
     place: Place?,
     onEvent: (HomeEvent) -> Unit,
     modifier: Modifier,
-    colors: Colors = MaterialTheme.colors,
+    colors: ColorScheme = MaterialTheme.colorScheme,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val updatedWeather by rememberUpdatedState(weather)

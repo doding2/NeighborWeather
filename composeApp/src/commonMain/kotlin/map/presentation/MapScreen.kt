@@ -16,11 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Surface
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -52,7 +51,7 @@ fun MapScreen(
 ) {
     EdgeColors(navBarColor = Color.Transparent)
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberScaffoldState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
     val permissionsControllerFactory = rememberPermissionsControllerFactory()
     val permissionsController = remember(permissionsControllerFactory) {
@@ -65,8 +64,8 @@ fun MapScreen(
                 MapSideEffect.NavigateUp -> { navController.navigateUp() }
                 MapSideEffect.OpenPermissionSettingPage -> { permissionsController.openAppSettings() }
                 is MapSideEffect.ShowSnackbar -> {
-                    scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    val result = scaffoldState.snackbarHostState.showSnackbar(
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    val result = snackbarHostState.showSnackbar(
                         message = it.event.message,
                         actionLabel = it.event.action?.name,
                         duration = it.event.duration
@@ -82,14 +81,21 @@ fun MapScreen(
     val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        scaffoldState = scaffoldState,
-        snackbarHost = { scaffoldState.snackbarHostState }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .clickable(
+                        interactionSource = snackbarInteractionSource,
+                        indication = null
+                    ) {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                    },
+            )
+        }
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             val selectedWeather by rememberUpdatedState(state.selectedWeather)
             val isPlaceWeatherVisible by remember {
                 derivedStateOf { selectedWeather != null }
@@ -135,18 +141,6 @@ fun MapScreen(
                     tint = weatherColors.onPrimary
                 )
             }
-            SnackbarHost(
-                hostState = scaffoldState.snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .windowInsetsPadding(WindowInsets.safeDrawing)
-                    .clickable(
-                        interactionSource = snackbarInteractionSource,
-                        indication = null
-                    ) {
-                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    },
-            )
         }
     }
 }

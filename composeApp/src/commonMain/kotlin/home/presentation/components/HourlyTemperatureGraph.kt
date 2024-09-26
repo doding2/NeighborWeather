@@ -2,7 +2,7 @@ package home.presentation.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,7 +30,7 @@ fun HourlyTemperatureGraph(
     itemWidth: Dp = Dp.Unspecified,
     height: Dp = Dp.Unspecified,
     smoothness: Float = 0.3f,
-    tint: Color = MaterialTheme.colors.onSecondary
+    tint: Color = MaterialTheme.colorScheme.onSecondary
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
     val maxTemperature by remember {

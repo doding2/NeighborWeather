@@ -6,13 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,6 +40,7 @@ fun HomeScreen(
         darkTheme = true,
         navBarColor = Color.Transparent
     )
+    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
@@ -72,8 +72,6 @@ fun HomeScreen(
             }
         }
     }
-
-    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
@@ -89,18 +87,29 @@ fun HomeScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
             )
         },
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             state.backgroundImage?.let {
                 HomeBackground(
                     backgroundImage = it,
                     modifier = Modifier.fillMaxSize()
                 )
             }
+//            HomeNavigationDrawer(
+//                width = getScreenWidth() * 0.6f,
+//                height = getScreenHeight(),
+//                modifier = Modifier,
+//                colors = weatherColors,
+//            ) {
+//                WeatherCardList(
+//                    weather = state.myWeather,
+//                    place = state.myPlace,
+//                    onEvent = onEvent,
+//                    modifier = Modifier.fillMaxSize(),
+//                    colors = weatherColors,
+//                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
+//                )
+//            }
             WeatherCardList(
                 weather = state.myWeather,
                 place = state.myPlace,

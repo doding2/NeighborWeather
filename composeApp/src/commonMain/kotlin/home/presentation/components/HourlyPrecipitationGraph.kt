@@ -2,7 +2,7 @@ package home.presentation.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -28,8 +28,8 @@ fun HourlyPrecipitationGraph(
     itemWidth: Dp = Dp.Unspecified,
     height: Dp = Dp.Unspecified,
     strokeWidth: Dp = 1.5.dp,
-    lineColor: Color = MaterialTheme.colors.onSecondary,
-    fillColor: Color = MaterialTheme.colors.onSecondary
+    lineColor: Color = MaterialTheme.colorScheme.onSecondary,
+    fillColor: Color = MaterialTheme.colorScheme.onSecondary
 ) {
     val updatedHourlyWeathers by rememberUpdatedState(hourlyWeathers)
     Canvas(

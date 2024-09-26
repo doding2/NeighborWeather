@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,7 +36,7 @@ import weather.domain.model.WeatherType
 fun HourlyPrecipitationItem(
     hourlyWeather: HourlyWeather,
     modifier: Modifier = Modifier,
-    tint: Color = MaterialTheme.colors.onSecondary
+    tint: Color = MaterialTheme.colorScheme.onSecondary
 ) {
     val updatedHourlyWeather by rememberUpdatedState(hourlyWeather)
     val isRainy by remember {
