@@ -110,6 +110,9 @@ class HomeViewModel(
             is HomeEvent.NavigateToMap -> {
                 viewModelScope.launch { sendEffect(HomeSideEffect.NavigateToMap) }
             }
+            is HomeEvent.OnClickNavigationItem -> {
+//                updateWeather(event.item.first)
+            }
         }
     }
 

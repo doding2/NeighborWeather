@@ -13,8 +13,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
@@ -25,6 +28,7 @@ import core.presentation.util.animateWeatherColors
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import home.presentation.components.HomeBackground
+import home.presentation.components.HomeNavigationDrawer
 import home.presentation.components.WeatherCardList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -40,7 +44,7 @@ fun HomeScreen(
         darkTheme = true,
         navBarColor = Color.Transparent
     )
-    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
+    val weatherColorScheme = animateWeatherColors(state.myWeather?.current?.weatherType)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
@@ -95,29 +99,35 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-//            HomeNavigationDrawer(
-//                width = getScreenWidth() * 0.6f,
-//                height = getScreenHeight(),
-//                modifier = Modifier,
-//                colors = weatherColors,
-//            ) {
-//                WeatherCardList(
-//                    weather = state.myWeather,
-//                    place = state.myPlace,
-//                    onEvent = onEvent,
-//                    modifier = Modifier.fillMaxSize(),
-//                    colors = weatherColors,
-//                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
-//                )
-//            }
-            WeatherCardList(
-                weather = state.myWeather,
-                place = state.myPlace,
-                onEvent = onEvent,
-                modifier = Modifier.fillMaxSize(),
-                colors = weatherColors,
-                contentPadding = WindowInsets.safeDrawing.asPaddingValues()
-            )
+
+            val updatedState by rememberUpdatedState(state)
+            val selectedItem by remember {
+                derivedStateOf {
+                    val myPlace = updatedState.myPlace
+                    val myWeather = updatedState.myWeather
+                    if (myPlace != null && myWeather != null) {
+                        myPlace to myWeather
+                    } else {
+                        null
+                    }
+                }
+            }
+            HomeNavigationDrawer(
+                items = selectedItem?.let { listOf(it) } ?: emptyList(),
+                selectedItem = selectedItem,
+                modifier = Modifier,
+                onItemClick = { onEvent(HomeEvent.OnClickNavigationItem(it)) },
+                colorScheme = weatherColorScheme,
+            ) {
+                WeatherCardList(
+                    weather = state.myWeather,
+                    place = state.myPlace,
+                    onEvent = onEvent,
+                    modifier = Modifier.fillMaxSize(),
+                    colorScheme = weatherColorScheme,
+                    contentPadding = WindowInsets.safeDrawing.asPaddingValues()
+                )
+            }
         }
     }
 }

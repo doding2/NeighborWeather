@@ -46,7 +46,7 @@ fun WeatherCardList(
     place: Place?,
     onEvent: (HomeEvent) -> Unit,
     modifier: Modifier,
-    colors: ColorScheme = MaterialTheme.colorScheme,
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
     val updatedWeather by rememberUpdatedState(weather)
@@ -78,8 +78,8 @@ fun WeatherCardList(
                         .fillMaxWidth()
                         .padding(top = 28.dp, start = 28.dp, end = 28.dp)
                         .onGloballyPositioned { currentWeatherSize = it.size },
-                    backgroundColor = colors.primary,
-                    tint = colors.onPrimary,
+                    backgroundColor = colorScheme.primary,
+                    tint = colorScheme.onPrimary,
                 )
                 IconButton(
                     onClick = { onEvent(HomeEvent.NavigateToMap) },
@@ -110,7 +110,7 @@ fun WeatherCardList(
                         .padding(8.dp)
                         .align(Alignment.TopEnd)
                         .background(
-                            color = colors.primary,
+                            color = colorScheme.primary,
                             shape = CircleShape
                         )
                         .size(48.dp),
@@ -119,7 +119,7 @@ fun WeatherCardList(
                             imageVector = Icons.Rounded.Map,
                             contentDescription = "Navigate to map button",
                             modifier = Modifier.size(24.dp),
-                            tint = colors.onPrimary
+                            tint = colorScheme.onPrimary
                         )
                     },
                 )
@@ -139,8 +139,8 @@ fun WeatherCardList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .onGloballyPositioned { hourlyWeatherSize = it.size },
-                baseGradientColor = colors.secondary,
-                tint = colors.onSecondary
+                baseGradientColor = colorScheme.secondary,
+                tint = colorScheme.onSecondary
             )
         }
         AnimatedVisibility(
@@ -156,8 +156,8 @@ fun WeatherCardList(
             DailyWeatherCard(
                 dailyWeathers = updatedWeather?.daily ?: emptyList(),
                 modifier = Modifier.fillMaxWidth(),
-                baseGradientColor = colors.secondary,
-                tint = colors.onSecondary
+                baseGradientColor = colorScheme.secondary,
+                tint = colorScheme.onSecondary
             )
         }
     }
