@@ -115,7 +115,6 @@ fun HomeScreen(
             HomeNavigationDrawer(
                 items = selectedItem?.let { listOf(it) } ?: emptyList(),
                 selectedItem = selectedItem,
-                modifier = Modifier,
                 onItemClick = { onEvent(HomeEvent.OnClickNavigationItem(it)) },
                 colorScheme = weatherColorScheme,
             ) {
