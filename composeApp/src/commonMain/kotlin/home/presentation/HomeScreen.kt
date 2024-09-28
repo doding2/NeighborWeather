@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -52,6 +54,7 @@ fun HomeScreen(
     val permissionsController = remember(permissionsControllerFactory) {
         permissionsControllerFactory.createPermissionsController()
     }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
     BindEffect(permissionsController)
     ObserveEffectsOnLifecycle(
         flow = effect,
@@ -59,8 +62,19 @@ fun HomeScreen(
     ) {
         scope.launch {
             when (it) {
-                is HomeSideEffect.NavigateToMap -> { navController.navigate(Routes.Map) }
-                HomeSideEffect.OpenPermissionSettingPage -> { permissionsController.openAppSettings() }
+                HomeSideEffect.NavigateToMap -> {
+                    navController.navigate(Routes.Map)
+                }
+                HomeSideEffect.ToggleNavigationDrawer -> {
+                    if (drawerState.isOpen) {
+                        drawerState.close()
+                    } else {
+                        drawerState.open()
+                    }
+                }
+                HomeSideEffect.OpenPermissionSettingPage -> {
+                    permissionsController.openAppSettings()
+                }
                 is HomeSideEffect.ShowSnackbar -> {
                     snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
@@ -115,7 +129,11 @@ fun HomeScreen(
             HomeNavigationDrawer(
                 items = selectedItem?.let { listOf(it) } ?: emptyList(),
                 selectedItem = selectedItem,
-                onItemClick = { onEvent(HomeEvent.OnClickNavigationItem(it)) },
+                drawerState = drawerState,
+                onItemClick = {
+//                    onEvent(HomeEvent.OnClickNavigationItem(it))
+                    onEvent(HomeEvent.NavigateToMap)
+                },
                 colorScheme = weatherColorScheme,
             ) {
                 WeatherCardList(

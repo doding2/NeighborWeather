@@ -9,16 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DismissibleDrawerSheet
 import androidx.compose.material3.DismissibleNavigationDrawer
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
@@ -61,6 +60,7 @@ fun HomeNavigationDrawer(
     items: List<Pair<Place, Weather>>,
     selectedItem: Pair<Place, Weather>?,
     modifier: Modifier = Modifier,
+    drawerState: DrawerState = rememberDrawerState(DrawerValue.Closed),
     topMaxWidth: Dp = 360.dp,
     bottomMaxWidth: Dp = 500.dp,
     onItemClick: (Pair<Place, Weather>) -> Unit = {},
@@ -68,7 +68,6 @@ fun HomeNavigationDrawer(
     content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        val drawerState = rememberDrawerState(DrawerValue.Closed)
         val density = LocalDensity.current
         val screenWidth = getScreenWidth()
         var contentSizePx by remember { mutableStateOf(IntSize.Zero) }
@@ -93,11 +92,10 @@ fun HomeNavigationDrawer(
         val calculatedContentWidth = remember(calculatedDrawerWidthPx) {
             with(density) { calculatedDrawerWidthPx.toDp() }
         }
-
         // Fix drawer automatically opening bug when initial composition is triggered
         LaunchedEffect(drawerState.targetValue, selectedItem) {
             if (selectedItem == null) {
-                drawerState.close()
+                drawerState.snapTo(DrawerValue.Closed)
             }
         }
 
@@ -115,15 +113,24 @@ fun HomeNavigationDrawer(
                             .fillMaxHeight(),
                         drawerContainerColor = Color.Transparent,
                         drawerContentColor = Color.Transparent,
-                        windowInsets = WindowInsets.safeDrawing
                     ) {
-                        val isOpening by remember { derivedStateOf { drawerState.currentOffset > -calculatedDrawerWidthPx } }
+                        val isOpening by remember { derivedStateOf {
+                            (drawerState.currentOffset > -calculatedDrawerWidthPx * 0.9)
+                                    || (drawerState.isClosed && drawerState.targetValue == DrawerValue.Open)
+                                    || drawerState.isOpen
+                        } }
                         AnimatedVisibility(
                             visible = isOpening,
                             modifier = Modifier,
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
+//                            // Fix drawer automatically opening bug when initial composition is triggered
+//                            LaunchedEffect(Unit) {
+//                                if (drawerState.currentValue == DrawerValue.Open) {
+//                                    drawerState.snapTo(DrawerValue.Closed)
+//                                }
+//                            }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 items.forEach { item ->
                                     key(item.first) {

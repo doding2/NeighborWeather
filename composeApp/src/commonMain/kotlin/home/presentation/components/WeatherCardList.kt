@@ -82,7 +82,7 @@ fun WeatherCardList(
                     tint = colorScheme.onPrimary,
                 )
                 IconButton(
-                    onClick = { onEvent(HomeEvent.NavigateToMap) },
+                    onClick = { onEvent(HomeEvent.ToggleNavigationDrawer) },
                     modifier = Modifier
                         .graphicsLayer {
                             val parentPaddingPx = 56.dp.toPx()
