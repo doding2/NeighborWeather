@@ -112,6 +112,8 @@ kotlin {
 
             // navigation
             implementation(libs.compose.navigation)
+
+            // json
             implementation(libs.kotlinx.serialization.json)
 
             // datetime
@@ -135,6 +137,10 @@ kotlin {
             implementation(libs.compass.geolocation.mobile)
             implementation(libs.compass.geocoder)
             implementation(libs.compass.geocoder.mobile)
+
+            // multiplatform preference settings
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.no.arg)
         }
         nativeMain.dependencies {
             // ktor client

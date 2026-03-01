@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +24,7 @@ fun MapSearchBar(
     tint: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     Row(modifier = modifier) {
-        IconButton(
+        FilledIconButton(
             onClick = { onEvent(MapEvent.NavigateUp) },
             modifier = Modifier
                 .background(
@@ -31,11 +32,13 @@ fun MapSearchBar(
                     shape = CircleShape
                 )
                 .size(48.dp),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = backgroundColor
+            )
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = "Back button",
-                modifier = Modifier.size(24.dp),
                 tint = tint
             )
         }

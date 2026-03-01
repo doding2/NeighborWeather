@@ -18,4 +18,8 @@ interface WeatherRepository {
         neighborWeights: Map<Neighbor, Double>,
         fetchFromRemote: Boolean = true,
     ): Flow<Result<Weather, Error>>
+
+    suspend fun saveNeighborWeights(neighborWeights: Map<Neighbor, Double>)
+
+    suspend fun loadNeighborWeights(): Map<Neighbor, Double>
 }

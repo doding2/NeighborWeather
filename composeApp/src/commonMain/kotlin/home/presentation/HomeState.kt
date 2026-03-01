@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import dev.jordond.compass.Place
 import map.domain.model.Location
 import org.jetbrains.compose.resources.DrawableResource
+import weather.domain.model.Neighbor
 import weather.domain.model.Weather
 
 @Stable
@@ -12,4 +13,5 @@ data class HomeState(
     val myLocation: Location? = null,
     val myPlace: Place? = null,
     val backgroundImage: DrawableResource? = null,
+    val neighborWeights: Map<Neighbor, Double>? = null
 )

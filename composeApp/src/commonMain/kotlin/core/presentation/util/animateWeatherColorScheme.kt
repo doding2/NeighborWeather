@@ -36,7 +36,9 @@ import core.presentation.ui.theme.sunnyNightSecondary
 import weather.domain.model.WeatherType
 
 @Composable
-fun animateWeatherColors(weatherType: WeatherType?): ColorScheme {
+fun animateWeatherColorScheme(
+    weatherType: WeatherType?,
+): ColorScheme {
     val transition = updateTransition(targetState = weatherType)
     val primary by transition.animateColor(
         transitionSpec = {

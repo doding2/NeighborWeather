@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,13 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -81,7 +80,7 @@ fun WeatherCardList(
                     backgroundColor = colorScheme.primary,
                     tint = colorScheme.onPrimary,
                 )
-                IconButton(
+                FilledIconButton(
                     onClick = { onEvent(HomeEvent.ToggleNavigationDrawer) },
                     modifier = Modifier
                         .graphicsLayer {
@@ -109,16 +108,14 @@ fun WeatherCardList(
                         }
                         .padding(8.dp)
                         .align(Alignment.TopEnd)
-                        .background(
-                            color = colorScheme.primary,
-                            shape = CircleShape
-                        )
                         .size(48.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = colorScheme.primary
+                    ),
                     content = {
                         Icon(
                             imageVector = Icons.Rounded.Map,
                             contentDescription = "Navigate to map button",
-                            modifier = Modifier.size(24.dp),
                             tint = colorScheme.onPrimary
                         )
                     },
@@ -128,7 +125,8 @@ fun WeatherCardList(
         AnimatedVisibility(
             visible = isHourlyWeatherVisible,
             modifier = Modifier
-                .padding(horizontal = 28.dp, vertical = 15.dp)
+                .padding(horizontal = 28.dp)
+                .padding(top = 15.dp)
                 .sizeIn(maxWidth = 500.dp)
                 .zIndex(1f),
             enter = fadeIn() + slideInVertically(),
@@ -147,6 +145,7 @@ fun WeatherCardList(
             visible = isDailyWeatherVisible,
             modifier = Modifier
                 .padding(horizontal = 28.dp)
+                .padding(top = 15.dp)
                 .padding(bottom = 28.dp)
                 .sizeIn(maxWidth = 500.dp)
                 .zIndex(0f),

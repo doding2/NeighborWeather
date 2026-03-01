@@ -1,5 +1,6 @@
 package weather.di
 
+import com.russhwolf.settings.Settings
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -16,5 +17,6 @@ val weatherModule = module {
     factoryOf(::KoreaWeatherParser)
     factoryOf(::WeatherPreprocessor)
     factoryOf(::WeatherWeightCalculator)
+    factoryOf(::Settings)
     singleOf(::WeatherRepositoryImpl).bind<WeatherRepository>()
 }

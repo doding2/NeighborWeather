@@ -1,6 +1,7 @@
 package weather.data.repository
 
 import co.touchlab.kermit.Logger
+import com.russhwolf.settings.Settings
 import core.domain.util.Error
 import core.domain.util.NetworkError
 import core.domain.util.Result
@@ -30,6 +31,13 @@ import weather.data.util.KoreaWeatherParser.KoreaWeatherParserException
 import weather.data.util.WeatherPreprocessor
 import weather.data.util.WeatherWeightCalculator
 import weather.domain.model.Neighbor
+import weather.domain.model.Neighbor.Australia
+import weather.domain.model.Neighbor.Canada
+import weather.domain.model.Neighbor.China
+import weather.domain.model.Neighbor.Germany
+import weather.domain.model.Neighbor.Japan
+import weather.domain.model.Neighbor.Korea
+import weather.domain.model.Neighbor.USA
 import weather.domain.model.Weather
 import weather.domain.repository.WeatherRepository
 
@@ -37,7 +45,8 @@ class WeatherRepositoryImpl(
     private val weatherDatabase: WeatherDatabase,
     private val weatherClient: WeatherClient,
     private val weatherPreprocessor: WeatherPreprocessor,
-    private val weightCalculator: WeatherWeightCalculator
+    private val weightCalculator: WeatherWeightCalculator,
+    private val settings: Settings
 ): WeatherRepository {
 
     private val logger by lazy { Logger.withTag("WeatherRepositoryImpl") }
@@ -154,7 +163,7 @@ class WeatherRepositoryImpl(
         return withContext(Dispatchers.IO) {
             targetNeighbors.map { neighbor ->
                 async {
-                    val result = if (neighbor == Neighbor.Korea) {
+                    val result = if (neighbor == Korea) {
                         weatherClient.getKoreaWeather(
                             latitude = place.coordinates.latitude,
                             longitude = place.coordinates.longitude,
@@ -199,6 +208,38 @@ class WeatherRepositoryImpl(
                 val lastCurrent = current.lastOrNull() ?: return@combine null
                 Triple(lastCurrent, hourlyList, dailyList)
             }.map { it?.toWeather() }
+        }
+    }
+
+    override suspend fun saveNeighborWeights(neighborWeights: Map<Neighbor, Double>) {
+        withContext(Dispatchers.IO) {
+            neighborWeights.forEach {
+                settings.putDouble(it.key.toTextString(), it.value)
+            }
+        }
+    }
+
+    override suspend fun loadNeighborWeights(): Map<Neighbor, Double> {
+        return withContext(Dispatchers.IO) {
+            val allNeighbors = listOf(
+                Korea,
+                Australia,
+                Canada,
+                China,
+                Germany,
+                Japan,
+                USA
+            )
+
+            if (settings.size == 0) {
+                allNeighbors.associateWith { neighbor ->
+                    if (neighbor == Korea) 1.0 else 0.0
+                }
+            } else {
+                allNeighbors.associateWith { key ->
+                    settings.getDouble(key.toTextString(), 0.0)
+                }
+            }
         }
     }
 }

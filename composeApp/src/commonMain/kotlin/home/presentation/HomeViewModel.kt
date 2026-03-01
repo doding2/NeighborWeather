@@ -21,6 +21,7 @@ import dev.jordond.compass.geolocation.LocationRequest
 import dev.jordond.compass.geolocation.TrackingStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -83,8 +84,30 @@ class HomeViewModel(
 
         snapshotFlow { state.myPlace }
             .onEach { place ->
-                if (place != null) {
-                    updateWeather(place)
+                if (state.neighborWeights == null) {
+                    val neighborWeights = loadNeighborWeights()
+                    state = state.copy(neighborWeights = neighborWeights)
+                }
+
+                val weights = state.neighborWeights
+                if (place != null && weights != null) {
+                    updateWeather(place, weights, true)
+                } else {
+                    state = state.copy(myWeather = null)
+                }
+            }.launchIn(viewModelScope)
+
+        snapshotFlow { state.neighborWeights }
+            // wait 300ms after last change before emitting
+            // if another change happens within 300ms, the timer resets
+            // this prevents heavy calculations from running too frequently during sliding
+            .debounce(300)
+            .onEach { weights ->
+                val place = state.myPlace
+                if (place != null && weights != null) {
+                    // fetch weather data from remote only when myPlace is changed
+                    // if only neighbor weights are changed, just use local data
+                    updateWeather(place, weights, false)
                 } else {
                     state = state.copy(myWeather = null)
                 }
@@ -116,6 +139,50 @@ class HomeViewModel(
             is HomeEvent.OnClickNavigationItem -> {
 //                updateWeather(event.item.first)
             }
+            is HomeEvent.OnSlideNeighborWeight -> {
+                updateNeighborWeights(event.item)
+            }
+        }
+    }
+
+    private suspend fun loadNeighborWeights(): Map<Neighbor, Double> {
+        return weatherRepository.loadNeighborWeights()
+    }
+
+    private fun updateNeighborWeights(item: Pair<Neighbor, Double>) {
+        viewModelScope.launch {
+            val current = state.neighborWeights ?: return@launch
+            val updated = current.toMutableMap()
+
+            // update selected neighbor's weight
+            val changedNeighbor = item.first
+            val newWeight = item.second.coerceIn(0.0, 1.0)
+            updated[changedNeighbor] = newWeight
+
+            // get all other neighbors except changed neighbor
+            val others = updated.filterKeys { it != changedNeighbor }
+            val othersOldSum = others.values.sum()
+            // remaining weight to distribute so total becomes 1.0
+            val remain = (1.0 - newWeight).coerceAtLeast(0.0)
+
+            if (othersOldSum > 0.0) {
+                // scale other weights proportionally to keep their ratio
+                val scale = remain / othersOldSum
+
+                others.forEach { (neighbor, weight) ->
+                    updated[neighbor] = weight * scale
+                }
+            } else {
+                // if all other weights were 0, distribute equally
+                val equalValue = if (others.isNotEmpty()) remain / others.size else 0.0
+                others.keys.forEach { neighbor ->
+                    updated[neighbor] = equalValue
+                }
+            }
+
+            // save and update state
+            weatherRepository.saveNeighborWeights(updated)
+            state = state.copy(neighborWeights = updated)
         }
     }
 
@@ -183,17 +250,17 @@ class HomeViewModel(
         }
     }
 
-    private fun updateWeather(place: Place) {
+    private fun updateWeather(
+        place: Place,
+        neighborWeight: Map<Neighbor, Double>,
+        fetchFromRemote: Boolean
+    ) {
         weatherJob?.cancel()
         weatherJob = viewModelScope.launch {
             weatherRepository.loadWeathers(
                 place = place,
-                neighborWeights = mapOf(
-                    Neighbor.Korea to 0.5,
-                    Neighbor.Japan to 0.2,
-                    Neighbor.China to 0.2,
-                    Neighbor.USA to 0.1,
-                )
+                neighborWeights = neighborWeight,
+                fetchFromRemote = fetchFromRemote
             ).collect { result ->
                 result
                     .onSuccess {

@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
-import core.presentation.util.animateWeatherColors
+import core.presentation.util.animateWeatherColorScheme
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import kotlinx.coroutines.flow.Flow
@@ -78,7 +78,8 @@ fun MapScreen(
             }
         }
     }
-    val weatherColors = animateWeatherColors(state.myWeather?.current?.weatherType)
+
+    val weatherColors = animateWeatherColorScheme(state.myWeather?.current?.weatherType)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {

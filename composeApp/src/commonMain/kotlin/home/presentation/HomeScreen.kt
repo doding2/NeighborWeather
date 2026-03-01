@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.DrawerValue
@@ -22,11 +23,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import core.presentation.navigation.Routes
 import core.presentation.util.EdgeColors
 import core.presentation.util.ObserveEffectsOnLifecycle
-import core.presentation.util.animateWeatherColors
+import core.presentation.util.animateWeatherColorScheme
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import home.presentation.components.HomeBackground
@@ -46,7 +48,6 @@ fun HomeScreen(
         darkTheme = true,
         navBarColor = Color.Transparent
     )
-    val weatherColorScheme = animateWeatherColors(state.myWeather?.current?.weatherType)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarInteractionSource = remember { MutableInteractionSource() }
@@ -90,6 +91,8 @@ fun HomeScreen(
             }
         }
     }
+
+    val weatherColorScheme = animateWeatherColorScheme(state.myWeather?.current?.weatherType)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
@@ -128,11 +131,15 @@ fun HomeScreen(
             }
             HomeNavigationDrawer(
                 items = selectedItem?.let { listOf(it) } ?: emptyList(),
+                neighborWeights = updatedState.neighborWeights ?: emptyMap(),
                 selectedItem = selectedItem,
                 drawerState = drawerState,
                 onItemClick = {
 //                    onEvent(HomeEvent.OnClickNavigationItem(it))
                     onEvent(HomeEvent.NavigateToMap)
+                },
+                onSlideNeighborWeight = {
+                    onEvent(HomeEvent.OnSlideNeighborWeight(it))
                 },
                 colorScheme = weatherColorScheme,
             ) {

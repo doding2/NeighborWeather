@@ -24,6 +24,19 @@ sealed interface Neighbor {
             is Germany -> "icon_seamless"
         }
     }
+
+    fun toTextString(): String {
+        return when(this) {
+            ALL -> "All"
+            Australia -> "Australia"
+            Canada -> "Canada"
+            China -> "China"
+            Germany -> "Germany"
+            Japan -> "Japan"
+            Korea -> "Korea"
+            USA -> "USA"
+        }
+    }
 }
 
 fun Place.toNeighbor(): Neighbor? {
