@@ -142,6 +142,19 @@ class HomeViewModel(
             is HomeEvent.OnSlideNeighborWeight -> {
                 updateNeighborWeights(event.item)
             }
+            HomeEvent.RequestLocationPermission -> {
+                viewModelScope.launch {
+                    sendEffect(HomeSideEffect.ShowSnackbar(
+                        SnackbarEvent(
+                            message = "Location permission is denied",
+                            action = SnackbarAction(
+                                name = "Open setting",
+                                action = { sendEffect(HomeSideEffect.OpenPermissionSettingPage) }
+                            )
+                        )
+                    ))
+                }
+            }
         }
     }
 
