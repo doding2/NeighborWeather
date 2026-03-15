@@ -159,7 +159,7 @@ Presentation Layer는 MVI 기반으로 구성되어있음
 **해결 방법**
 
 - compose-multiplatform의 GitHub issue를 확인하여 정확히 문제 인지
-- 낮은 버전의 navigation compose에선 UiKitView의 default 파라미터 설정이 달라서 외부의 composable에서 터치 입력을 소모하지 않게 됨
+- 낮은 버전의 navigation compose에선 UiKitView의 `interactiveMode` 파라미터 설정이 달라서 외부의 composable에서 터치 입력을 소모하지 않게 됨
 - navigation compose 라이브러리를 다운그레이드 하여 문제를 해결
 
 **결과**
